@@ -57,15 +57,21 @@
   .btn-ranking:hover { background: #1a4a1a; color: #fff; }
 
   /* Genre achievement bars */
-  .genre-bar-item {
-    display: flex; align-items: center; gap: 6px; font-size: 0.68rem;
-    background: #111120; border: 1px solid #2a2a3a; border-radius: 6px;
-    padding: 4px 8px; cursor: default;
+  .genre-bars-section { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 0 20px 10px; }
+  .genre-bars-heading {
+    font-size: 0.7rem; font-weight: 700; color: #7c3aed; white-space: nowrap;
+    letter-spacing: 0.05em; flex-shrink: 0;
   }
-  .genre-bar-label { color: #888; white-space: nowrap; }
-  .genre-bar-track { width: 50px; height: 4px; background: #2a2a3a; border-radius: 2px; overflow: hidden; flex-shrink: 0; }
-  .genre-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
-  .genre-bar-count { color: #666; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 32px; text-align: right; }
+  .genre-bars-list { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .genre-bar-item {
+    display: flex; align-items: center; gap: 7px; font-size: 0.75rem;
+    background: #111120; border: 1px solid #2a2a3a; border-radius: 7px;
+    padding: 6px 10px; cursor: default;
+  }
+  .genre-bar-label { color: #aaa; white-space: nowrap; }
+  .genre-bar-track { width: 80px; height: 7px; background: #2a2a3a; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+  .genre-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+  .genre-bar-count { color: #888; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 36px; text-align: right; font-size: 0.72rem; }
 
   /* ---- Ranking Panel ---- */
   .ranking-overlay {
@@ -722,7 +728,10 @@
     </div>
   </div>
   <div class="header-row2-wrap collapsed" id="genre-bars-wrap">
-    <div class="header-row2" id="genre-bars"></div>
+    <div class="genre-bars-section">
+      <div class="genre-bars-heading">会場形態別の進捗状況</div>
+      <div class="genre-bars-list header-row2" id="genre-bars"></div>
+    </div>
   </div>
   <button class="genre-toggle-btn" id="genre-toggle-btn" title="ジャンル達成率を表示">▼</button>
 </header>
@@ -1776,7 +1785,7 @@ function scrollToVenue(id) {
 //  SIDEBAR
 // =====================================================
 const regionOrder = ['北海道・東北','関東','甲信越・北陸','東海','近畿','中国・四国','九州・沖縄'];
-const collapsedRegions = new Set();
+const collapsedRegions = new Set(regionOrder); // 最初は全て折りたたみ
 
 function getFilteredVenues() {
   const q = document.getElementById('search').value.toLowerCase();
