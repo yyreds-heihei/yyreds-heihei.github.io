@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全国ライブ会場マップ</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ライブ会場">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script>
+  // 古いService Workerを全て削除してキャッシュをクリア
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(reg => reg.unregister());
+    });
+    caches.keys().then(keys => {
+      keys.forEach(key => caches.delete(key));
+    });
+  }
+</script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f13; color: #e8e8f0; height: 100vh; display: flex; flex-direction: column; }
+
+  header {
+    display: flex; flex-direction: column;
+    background: #1a1a24; border-bottom: 1px solid #2a2a3a; flex-shrink: 0;
+  }
+  .header-row1 {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px; gap: 12px;
+  }
+  .header-row2 {
+    padding: 0 20px 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  header h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.05em; color: #c084fc; white-space: nowrap; }
+  .stats { display: flex; gap: 14px; align-items: center; }
+  .stat { text-align: center; }
+  .stat-num { font-size: 1.3rem; font-weight: 800; color: #a78bfa; line-height: 1; }
+  .stat-label { font-size: 0.62rem; color: #888; margin-top: 2px; }
+  .progress-bar { width: 130px; height: 5px; background: #2a2a3a; border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #7c3aed, #c084fc); border-radius: 3px; transition: width 0.4s ease; }
+
+  /* header buttons */
+  .btn-header {
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: 7px; font-size: 0.78rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap; border: 1px solid;
+  }
+  .btn-records { background: #1e1a2e; border-color: #7c3aed; color: #c084fc; }
+  .btn-records:hover { background: #4c1d95; color: #fff; }
+  .btn-ranking { background: #1e2a1a; border-color: #4ade80; color: #4ade80; }
+  .btn-ranking:hover { background: #1a4a1a; color: #fff; }
+
+  /* Genre achievement bars */
+  .genre-bar-item {
+    display: flex; align-items: center; gap: 6px; font-size: 0.68rem;
+    background: #111120; border: 1px solid #2a2a3a; border-radius: 6px;
+    padding: 4px 8px; cursor: default;
+  }
+  .genre-bar-label { color: #888; white-space: nowrap; }
+  .genre-bar-track { width: 50px; height: 4px; background: #2a2a3a; border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+  .genre-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  .genre-bar-count { color: #666; white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 32px; text-align: right; }
+
+  /* ---- Ranking Panel ---- */
+  .ranking-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 8000;
+    display: flex; align-items: stretch; justify-content: flex-start;
+  }
+  .ranking-overlay.hidden { display: none; }
+  .ranking-panel {
+    width: 480px; max-width: 100vw; background: #13131e;
+    border-right: 1px solid #2a2a3a; display: flex; flex-direction: column;
+    animation: slideInLeft 0.2s ease;
+  }
+  @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  .ranking-panel-header {
+    padding: 16px 20px; background: #1a1a24; border-bottom: 1px solid #2a2a3a;
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .ranking-panel-title { font-size: 1rem; font-weight: 700; color: #4ade80; }
+  .ranking-panel-close { background: none; border: none; color: #666; font-size: 1.2rem; cursor: pointer; padding: 4px 8px; }
+  .ranking-panel-close:hover { color: #f87171; }
+  .ranking-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
+  .ranking-body::-webkit-scrollbar { width: 5px; }
+  .ranking-body::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
+  .ranking-empty { text-align: center; color: #444; font-size: 0.85rem; padding: 60px 20px; }
+
+  .ranking-card {
+    display: flex; align-items: center; gap: 12px;
+    background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 10px;
+    padding: 11px 14px; margin-bottom: 7px; cursor: pointer; transition: border-color 0.15s;
+  }
+  .ranking-card:hover { border-color: #4c1d95; }
+  .ranking-num {
+    font-size: 1.1rem; font-weight: 800; min-width: 28px; text-align: center;
+    line-height: 1;
+  }
+  .rank-1 { color: #fbbf24; }
+  .rank-2 { color: #94a3b8; }
+  .rank-3 { color: #b45309; }
+  .rank-other { color: #444; }
+  .ranking-info { flex: 1; min-width: 0; }
+  .ranking-venue { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ranking-sub { font-size: 0.7rem; color: #555; margin-top: 2px; }
+  .ranking-artists { font-size: 0.7rem; color: #a78bfa; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ranking-count {
+    text-align: center; flex-shrink: 0;
+  }
+  .ranking-count-num { font-size: 1.4rem; font-weight: 800; color: #4ade80; line-height: 1; }
+  .ranking-count-label { font-size: 0.6rem; color: #555; }
+
+  /* ---- Records Panel ---- */
+  .records-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 8000;
+    display: flex; align-items: stretch; justify-content: flex-end;
+  }
+  .records-overlay.hidden { display: none; }
+  .records-panel {
+    width: 560px; max-width: 100vw; background: #13131e;
+    border-left: 1px solid #2a2a3a; display: flex; flex-direction: column;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  .records-panel-header {
+    padding: 16px 20px; background: #1a1a24; border-bottom: 1px solid #2a2a3a;
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .records-panel-title { font-size: 1rem; font-weight: 700; color: #c084fc; }
+  .records-panel-close {
+    background: none; border: none; color: #666; font-size: 1.2rem; cursor: pointer; padding: 4px 8px;
+  }
+  .records-panel-close:hover { color: #f87171; }
+  .records-toolbar {
+    padding: 10px 16px; background: #1a1a24; border-bottom: 1px solid #2a2a3a;
+    display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap;
+  }
+  .records-search {
+    flex: 1; min-width: 160px; padding: 6px 10px; background: #0f0f18;
+    border: 1px solid #2a2a3a; border-radius: 6px; color: #e8e8f0; font-size: 0.82rem; outline: none;
+  }
+  .records-search:focus { border-color: #7c3aed; }
+  .records-sort {
+    padding: 6px 10px; background: #0f0f18; border: 1px solid #2a2a3a;
+    border-radius: 6px; color: #e8e8f0; font-size: 0.78rem; outline: none; cursor: pointer;
+  }
+  .records-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
+  .records-body::-webkit-scrollbar { width: 5px; }
+  .records-body::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
+  .records-empty { text-align: center; color: #444; font-size: 0.85rem; padding: 60px 20px; line-height: 2; }
+
+  /* Card per visit record */
+  .record-card {
+    display: flex; gap: 12px; background: #1a1a24;
+    border: 1px solid #2a2a3a; border-radius: 10px; padding: 12px; margin-bottom: 8px;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .record-card:hover { border-color: #4c1d95; }
+  .record-card-photo {
+    width: 72px; height: 72px; border-radius: 8px; object-fit: cover;
+    border: 1px solid #2a2a3a; flex-shrink: 0; cursor: zoom-in;
+  }
+  .record-card-photo-empty {
+    width: 72px; height: 72px; border-radius: 8px; flex-shrink: 0;
+    background: #0f0f18; border: 1px dashed #2a2a3a;
+    display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+  }
+  .record-card-info { flex: 1; min-width: 0; }
+  .record-card-date { font-size: 0.78rem; color: #a78bfa; font-weight: 700; margin-bottom: 3px; }
+  .record-card-artist { font-size: 0.92rem; font-weight: 600; color: #e8e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .record-card-artist-empty { color: #444; font-style: italic; font-size: 0.82rem; }
+  .record-card-venue { font-size: 0.75rem; color: #666; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .record-card-tag {
+    font-size: 0.6rem; padding: 2px 7px; border-radius: 10px; font-weight: 600;
+    align-self: flex-start; margin-top: 2px; flex-shrink: 0;
+  }
+  .records-month-header {
+    font-size: 0.7rem; font-weight: 700; color: #555; letter-spacing: 0.1em;
+    padding: 8px 2px 4px; margin-top: 4px;
+  }
+
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  #map { flex: 1; z-index: 0; }
+
+  .sidebar {
+    width: 320px; background: #13131e; border-left: 1px solid #2a2a3a;
+    display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
+  }
+  .sidebar-header {
+    padding: 12px 16px; background: #1a1a24; border-bottom: 1px solid #2a2a3a; flex-shrink: 0;
+  }
+  .search-box {
+    width: 100%; padding: 8px 12px; background: #0f0f18; border: 1px solid #2a2a3a;
+    border-radius: 8px; color: #e8e8f0; font-size: 0.85rem; outline: none;
+  }
+  .search-box:focus { border-color: #7c3aed; }
+  .filter-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 4px 10px; border-radius: 20px; border: 1px solid #2a2a3a;
+    background: #1a1a24; color: #aaa; font-size: 0.72rem; cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn.active { background: #4c1d95; border-color: #7c3aed; color: #e8e8f0; }
+  .filter-btn:hover { border-color: #7c3aed; }
+
+  .venue-list { overflow-y: auto; flex: 1; padding: 8px; }
+  .venue-list::-webkit-scrollbar { width: 5px; }
+  .venue-list::-webkit-scrollbar-track { background: transparent; }
+  .venue-list::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
+
+  .region-group { margin-bottom: 4px; }
+  .region-title {
+    padding: 6px 10px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+    color: #7c3aed; text-transform: uppercase; cursor: pointer; display: flex;
+    align-items: center; justify-content: space-between; user-select: none;
+  }
+  .region-title:hover { color: #a78bfa; }
+  .region-title .chevron { transition: transform 0.2s; font-size: 0.6rem; }
+  .region-title.collapsed .chevron { transform: rotate(-90deg); }
+
+  .venue-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    border-radius: 8px; cursor: pointer; transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+  .venue-item:hover { background: #1e1e2e; }
+  .venue-item.active { background: #1e1e2e; border-color: #4c1d95; }
+  .venue-item.hidden { display: none; }
+
+  .venue-check {
+    width: 20px; height: 20px; border-radius: 50%; border: 2px solid #3a3a5a;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: all 0.2s; cursor: pointer;
+  }
+  .venue-check.visited { background: #7c3aed; border-color: #7c3aed; }
+  .venue-check.visited::after { content: '✓'; color: white; font-size: 0.65rem; font-weight: 700; }
+
+  .venue-info { flex: 1; min-width: 0; }
+  .venue-name { font-size: 0.82rem; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .venue-sub { font-size: 0.68rem; color: #666; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .venue-tag {
+    font-size: 0.6rem; padding: 2px 7px; border-radius: 10px; flex-shrink: 0; font-weight: 600;
+  }
+  .tag-dome { background: #1e3a5f; color: #60a5fa; }
+  .tag-arena { background: #1a3a1a; color: #4ade80; }
+  .tag-hall { background: #3a1a2a; color: #f472b6; }
+  .tag-zepp { background: #1a2a3a; color: #38bdf8; }
+  .tag-civic { background: #2a2a10; color: #facc15; }
+  .tag-livehouse { background: #2a1a10; color: #fb923c; }
+  .tag-outdoor { background: #0f2a10; color: #86efac; }
+  .tag-concert { background: #1a1a3a; color: #818cf8; }
+
+  /* Leaflet customization */
+  .custom-marker {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; border: 2px solid rgba(255,255,255,0.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    transition: transform 0.15s;
+  }
+  .marker-dome { background: #1e3a5f; border-color: #60a5fa; }
+  .marker-arena { background: #1a3a1a; border-color: #4ade80; }
+  .marker-hall { background: #3a1a2a; border-color: #f472b6; }
+  .marker-zepp { background: #1a2a3a; border-color: #38bdf8; }
+  .marker-civic { background: #2a2a1a; border-color: #facc15; }
+  .marker-livehouse { background: #2a1a1a; border-color: #fb923c; }
+  .marker-outdoor { background: #0f2a1a; border-color: #86efac; }
+  .marker-concert { background: #1a1a3a; border-color: #818cf8; }
+  .custom-marker.visited { border-color: #a78bfa !important; filter: brightness(1.3); }
+  .custom-marker.pulse { animation: pulse 0.4s ease; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+
+  .leaflet-popup-content-wrapper {
+    background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  }
+  .leaflet-popup-tip { background: #1a1a24; }
+  .leaflet-popup-content { color: #e8e8f0; margin: 12px 16px; min-width: 160px; }
+  .popup-name { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+  .popup-detail { font-size: 0.75rem; color: #888; margin-bottom: 10px; }
+  .popup-btn {
+    width: 100%; padding: 7px; background: #4c1d95; border: none; border-radius: 6px;
+    color: white; font-size: 0.8rem; cursor: pointer; transition: background 0.15s;
+  }
+  .popup-btn:hover { background: #7c3aed; }
+  .popup-btn.visited-btn { background: #1a3a2a; color: #4ade80; }
+  .popup-btn.visited-btn:hover { background: #2a4a2a; }
+  .popup-visits { font-size: 0.72rem; color: #a78bfa; margin-bottom: 8px; line-height: 1.6; }
+
+  /* ---- Visit modal ---- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal {
+    background: #1a1a2e; border: 1px solid #3a3a5a; border-radius: 16px;
+    width: 100%; max-width: 480px; max-height: 90vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 12px 60px rgba(0,0,0,0.9);
+  }
+  .modal-header {
+    padding: 18px 20px 12px; border-bottom: 1px solid #2a2a3a; flex-shrink: 0;
+  }
+  .modal-title { font-size: 1rem; font-weight: 700; color: #e8e8f0; }
+  .modal-sub { font-size: 0.72rem; color: #666; margin-top: 3px; }
+
+  /* Past visits list */
+  .modal-body { flex: 1; overflow-y: auto; padding: 12px 20px; }
+  .modal-body::-webkit-scrollbar { width: 4px; }
+  .modal-body::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
+
+  .visit-records { margin-bottom: 14px; }
+  .visit-record {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: #13131e; border: 1px solid #2a2a3a; border-radius: 10px;
+    padding: 10px; margin-bottom: 8px; position: relative;
+  }
+  .visit-thumb {
+    width: 52px; height: 52px; border-radius: 6px; object-fit: cover;
+    flex-shrink: 0; background: #0f0f18; cursor: pointer;
+    border: 1px solid #2a2a3a;
+  }
+  .visit-thumb-empty {
+    width: 52px; height: 52px; border-radius: 6px; flex-shrink: 0;
+    background: #0f0f18; border: 1px dashed #2a2a3a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; color: #333;
+  }
+  .visit-info { flex: 1; min-width: 0; }
+  .visit-date { font-size: 0.78rem; font-weight: 700; color: #a78bfa; }
+  .visit-artist { font-size: 0.82rem; color: #e8e8f0; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .visit-artist-empty { color: #444; font-style: italic; }
+  .visit-delete {
+    position: absolute; top: 6px; right: 8px;
+    background: none; border: none; color: #444; cursor: pointer; font-size: 0.85rem; padding: 2px;
+  }
+  .visit-delete:hover { color: #f87171; }
+  .no-visits { font-size: 0.75rem; color: #444; text-align: center; padding: 8px 0 4px; }
+
+  /* Add new visit form */
+  .add-visit-form {
+    background: #111120; border: 1px solid #2a2a3a; border-radius: 10px; padding: 14px;
+  }
+  .add-visit-title { font-size: 0.72rem; font-weight: 700; color: #7c3aed; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .form-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .form-input {
+    flex: 1; padding: 8px 10px; background: #0f0f18; border: 1px solid #2a2a3a;
+    border-radius: 8px; color: #e8e8f0; font-size: 0.85rem; outline: none;
+  }
+  .form-input:focus { border-color: #7c3aed; }
+  .form-input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+  .form-input[type="date"] { width: 150px; flex: none; }
+
+  /* Photo upload */
+  .photo-upload-area {
+    border: 1.5px dashed #2a2a3a; border-radius: 8px; padding: 10px;
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    transition: border-color 0.15s; margin-bottom: 10px;
+  }
+  .photo-upload-area:hover { border-color: #7c3aed; }
+  .photo-upload-area input[type="file"] { display: none; }
+  .photo-preview-wrap { position: relative; flex-shrink: 0; }
+  .photo-preview {
+    width: 56px; height: 56px; border-radius: 6px; object-fit: cover;
+    border: 1px solid #3a3a5a; display: none;
+  }
+  .photo-preview.has-image { display: block; }
+  .photo-placeholder {
+    width: 56px; height: 56px; border-radius: 6px; background: #0f0f18;
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+  }
+  .photo-placeholder.hidden { display: none; }
+  .photo-clear {
+    position: absolute; top: -4px; right: -4px;
+    width: 16px; height: 16px; border-radius: 50%; background: #f87171;
+    border: none; color: white; font-size: 0.55rem; cursor: pointer;
+    display: none; align-items: center; justify-content: center; line-height: 1;
+  }
+  .photo-clear.visible { display: flex; }
+  .photo-label { font-size: 0.78rem; color: #888; line-height: 1.5; }
+  .photo-label strong { display: block; color: #bbb; font-size: 0.82rem; }
+
+  .modal-footer {
+    padding: 12px 20px 16px; border-top: 1px solid #2a2a3a; flex-shrink: 0;
+    display: flex; gap: 8px;
+  }
+  .btn-primary {
+    flex: 1; padding: 10px; background: #7c3aed; border: none; border-radius: 8px;
+    color: white; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+  }
+  .btn-primary:hover { background: #9333ea; }
+  .btn-secondary {
+    padding: 10px 16px; background: #1a1a2a; border: 1px solid #2a2a3a;
+    border-radius: 8px; color: #aaa; font-size: 0.85rem; cursor: pointer;
+  }
+  .btn-secondary:hover { border-color: #7c3aed; color: #e8e8f0; }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.93); z-index: 10000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  }
+  .lightbox.hidden { display: none; }
+  .lightbox-img-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+  .lightbox-img-wrap img { max-width: 88vw; max-height: 80vh; border-radius: 8px; object-fit: contain; display: block; }
+  .lightbox-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.15);
+    color: #fff; font-size: 1.4rem; width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s; user-select: none;
+  }
+  .lightbox-nav:hover { background: rgba(124,58,237,0.7); }
+  .lightbox-nav.prev { left: -54px; }
+  .lightbox-nav.next { right: -54px; }
+  .lightbox-nav.hidden { display: none; }
+  .lightbox-counter { font-size: 0.78rem; color: #888; letter-spacing: 0.05em; }
+  .lightbox-strip { display: flex; gap: 6px; }
+  .lightbox-strip-thumb {
+    width: 48px; height: 48px; border-radius: 5px; object-fit: cover; cursor: pointer;
+    border: 2px solid transparent; opacity: 0.55; transition: all 0.15s;
+  }
+  .lightbox-strip-thumb.active { border-color: #a78bfa; opacity: 1; }
+  .lightbox-strip-thumb:hover { opacity: 0.9; }
+  .lightbox-close {
+    position: fixed; top: 16px; right: 20px; background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 1rem;
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; cursor: pointer; z-index: 10001;
+  }
+  .lightbox-close:hover { background: rgba(248,113,113,0.6); }
+
+  /* Multi-photo upload grid inside modal */
+  .photo-grid {
+    display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; min-height: 20px;
+  }
+  .photo-slot {
+    width: 64px; height: 64px; border-radius: 7px; position: relative; flex-shrink: 0;
+  }
+  .photo-slot img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 7px;
+    border: 1px solid #3a3a5a; cursor: zoom-in; display: block;
+  }
+  .photo-slot-remove {
+    position: absolute; top: -5px; right: -5px; width: 17px; height: 17px;
+    border-radius: 50%; background: #f87171; border: none; color: #fff;
+    font-size: 0.55rem; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; z-index: 1;
+  }
+  .photo-add-btn {
+    width: 64px; height: 64px; border-radius: 7px; border: 1.5px dashed #3a3a5a;
+    background: #0f0f18; color: #555; font-size: 1.5rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: border-color 0.15s;
+  }
+  .photo-add-btn:hover { border-color: #7c3aed; color: #a78bfa; }
+  .photo-add-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .photo-count-hint { font-size: 0.68rem; color: #555; margin-bottom: 8px; }
+  .form-memo {
+    width: 100%; padding: 8px 10px; background: #0f0f18; border: 1px solid #2a2a3a;
+    border-radius: 8px; color: #e8e8f0; font-size: 0.85rem; outline: none;
+    resize: vertical; min-height: 64px; line-height: 1.5; font-family: inherit;
+    margin-bottom: 10px;
+  }
+  .form-memo:focus { border-color: #7c3aed; }
+  .visit-memo {
+    font-size: 0.75rem; color: #b0b0c0; margin-top: 5px; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-all;
+    background: #0d0d18; border-left: 2px solid #3a2a5a;
+    padding: 6px 8px; border-radius: 0 6px 6px 0;
+  }
+  /* Setlist */
+  .setlist-section { margin-top: 8px; }
+  .setlist-label { font-size: 0.7rem; font-weight: 700; color: #7c3aed; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .setlist-view { margin-top: 4px; }
+  .setlist-song-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 3px 0; border-bottom: 1px solid #1a1a2a; font-size: 0.78rem;
+  }
+  .setlist-song-row:last-child { border-bottom: none; }
+  .setlist-num { color: #555; min-width: 22px; font-size: 0.7rem; text-align: right; flex-shrink: 0; }
+  .setlist-song-name { color: #d0d0e8; }
+  /* edit mode */
+  .setlist-edit-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .setlist-edit-num { color: #555; min-width: 22px; font-size: 0.7rem; text-align: right; flex-shrink: 0; }
+  .setlist-input {
+    flex: 1; padding: 5px 8px; background: #0f0f18; border: 1px solid #2a2a3a;
+    border-radius: 6px; color: #e8e8f0; font-size: 0.82rem; outline: none;
+  }
+  .setlist-input:focus { border-color: #7c3aed; }
+  .setlist-remove {
+    background: none; border: none; color: #3a3a5a; cursor: pointer; font-size: 0.8rem; padding: 2px 4px; flex-shrink: 0;
+  }
+  .setlist-remove:hover { color: #f87171; }
+  .setlist-add-btn {
+    display: flex; align-items: center; gap: 5px; padding: 5px 10px;
+    background: #1a1a2e; border: 1px dashed #3a3a5a; border-radius: 6px;
+    color: #666; font-size: 0.75rem; cursor: pointer; width: 100%; margin-top: 2px;
+    transition: all 0.15s;
+  }
+  .setlist-add-btn:hover { border-color: #7c3aed; color: #a78bfa; }
+  .setlist-add-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  /* record panel display */
+  .record-setlist { margin-top: 8px; }
+  .record-setlist-title { font-size: 0.68rem; color: #7c3aed; font-weight: 700; margin-bottom: 4px; }
+  .record-setlist-list { columns: 2; gap: 8px; }
+  .record-setlist-item { font-size: 0.72rem; color: #b0b0d0; break-inside: avoid; padding: 1px 0; }
+  .record-setlist-item span { color: #555; margin-right: 4px; }
+
+  .record-card-memo {
+    font-size: 0.78rem; color: #a0a0c0; margin-top: 6px; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-all;
+    background: #0d0d18; border-left: 2px solid #3a2a5a;
+    padding: 6px 8px; border-radius: 0 6px 6px 0;
+  }
+
+  /* Photo gallery in records / visit records */
+  .photo-gallery { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .photo-gallery-img {
+    width: 60px; height: 60px; object-fit: cover; border-radius: 6px;
+    border: 1px solid #2a2a3a; cursor: zoom-in; transition: opacity 0.15s;
+  }
+  .photo-gallery-img:hover { opacity: 0.8; }
+  /* Records panel larger gallery */
+  .record-gallery { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .record-gallery-img {
+    width: 80px; height: 80px; object-fit: cover; border-radius: 7px;
+    border: 1px solid #2a2a3a; cursor: zoom-in; transition: opacity 0.15s; flex-shrink: 0;
+  }
+  .record-gallery-img:hover { opacity: 0.8; }
+
+  /* Sidebar visit display */
+  .venue-visits { margin-top: 4px; }
+  .venue-visit-row {
+    display: flex; align-items: center; gap: 5px; margin-top: 2px;
+  }
+  .venue-visit-thumb {
+    width: 16px; height: 16px; border-radius: 3px; object-fit: cover; flex-shrink: 0;
+    border: 1px solid #3a3a5a; cursor: pointer;
+  }
+  .venue-visit-text { font-size: 0.65rem; color: #a78bfa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ===== スマホ対応 ===== */
+  @media (max-width: 640px) {
+    /* ヘッダー */
+    .header-row1 { padding: 8px 10px; gap: 6px; }
+    header h1 { font-size: 0.82rem; }
+    .stats { gap: 5px; }
+    .btn-header { padding: 5px 7px; font-size: 0.68rem; }
+    .stat-num { font-size: 1rem; }
+    .progress-bar { width: 70px; }
+    .header-row2 { padding: 0 8px 6px; gap: 4px; }
+    .genre-bar-item { padding: 2px 5px; font-size: 0.6rem; }
+    .genre-bar-track { width: 28px; }
+
+    /* マップを全画面に */
+    .main { position: relative; }
+    #map { width: 100%; height: 100%; }
+
+    /* サイドバーはボトムシート */
+    .sidebar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      width: 100%; height: 52px; /* 閉じた状態 */
+      border-left: none; border-top: 2px solid #4c1d95;
+      border-radius: 16px 16px 0 0;
+      transition: height 0.3s ease;
+      z-index: 500; overflow: hidden;
+      background: #13131e;
+    }
+    .sidebar.sp-open { height: 60vh; }
+
+    /* ハンドルバー */
+    .sidebar-handle {
+      display: flex; align-items: center; justify-content: center;
+      height: 52px; cursor: pointer; gap: 8px; flex-shrink: 0;
+    }
+    .sidebar-handle-bar {
+      width: 36px; height: 4px; background: #4c1d95; border-radius: 2px;
+    }
+    .sidebar-handle-label {
+      font-size: 0.78rem; color: #a78bfa; font-weight: 600;
+    }
+
+    /* サイドバーの中身はopen時のみスクロール */
+    .sidebar-header { flex-shrink: 0; }
+    .venue-list { overflow-y: auto; }
+
+    /* モーダル */
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal { max-height: 95vh; border-radius: 16px 16px 0 0; }
+    .form-row { flex-direction: column; }
+    .form-input[type="date"] { width: 100%; }
+
+    /* ランキング・足あとパネル */
+    .ranking-panel, .records-panel { width: 100vw; }
+
+    /* ライトボックス */
+    .lightbox-nav.prev { left: 4px; }
+    .lightbox-nav.next { right: 4px; }
+  }
+  /* ===== ジャンルバー折りたたみ ===== */
+  .header-row2-wrap {
+    overflow: hidden;
+    max-height: 100px;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    opacity: 1;
+  }
+  .header-row2-wrap.collapsed {
+    max-height: 0;
+    opacity: 0;
+  }
+  .genre-toggle-btn {
+    display: block; width: 100%; height: 18px;
+    background: #111120; border: none; border-top: 1px solid #2a2a3a;
+    color: #7c3aed; font-size: 0.6rem; cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+    line-height: 1; letter-spacing: 0.05em;
+  }
+  .genre-toggle-btn:hover { color: #c084fc; background: #1a1a2e; }
+
+  /* ===== サイドバー検索折りたたみ ===== */
+  .sidebar-search-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 8px; cursor: pointer; user-select: none;
+    font-size: 0.75rem; font-weight: 700; color: #a78bfa;
+    background: #111120; border-bottom: 1px solid #2a2a3a;
+    border-radius: 6px 6px 0 0;
+  }
+  .sidebar-search-toggle:hover { color: #c084fc; background: #1a1a2e; }
+  .sidebar-search-arrow { font-size: 0.55rem; transition: transform 0.25s; }
+  .sidebar-search-body {
+    overflow: hidden; max-height: 200px; opacity: 1;
+    transition: max-height 0.3s ease, opacity 0.25s ease;
+  }
+  .sidebar-search-body.collapsed { max-height: 0; opacity: 0; }
+
+  /* ===== スプラッシュ ===== */
+  #splash {
+    position: fixed; inset: 0; z-index: 99999;
+    background: #0f0f13;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 24px;
+    transition: opacity 0.6s ease;
+  }
+  #splash.fade-out { opacity: 0; pointer-events: none; }
+  #splash.hidden { display: none; }
+  .splash-icon {
+    font-size: 72px; line-height: 1;
+    animation: splashZoom 2s ease forwards;
+  }
+  @keyframes splashZoom {
+    0%   { transform: scale(0.3); opacity: 0; }
+    40%  { transform: scale(1.15); opacity: 1; }
+    70%  { transform: scale(0.95); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .splash-title {
+    font-size: 1.3rem; font-weight: 800; color: #c084fc;
+    letter-spacing: 0.08em;
+    opacity: 0;
+    animation: splashFadeIn 0.6s ease 0.8s forwards;
+  }
+  .splash-sub {
+    font-size: 0.8rem; color: #555;
+    opacity: 0;
+    animation: splashFadeIn 0.6s ease 1.2s forwards;
+  }
+  @keyframes splashFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .splash-bar-wrap {
+    width: 160px; height: 3px; background: #2a2a3a; border-radius: 2px; overflow: hidden;
+    opacity: 0;
+    animation: splashFadeIn 0.4s ease 1.4s forwards;
+  }
+  .splash-bar {
+    height: 100%; width: 0; background: linear-gradient(90deg, #7c3aed, #c084fc);
+    border-radius: 2px;
+    animation: splashBarFill 1.2s ease 1.4s forwards;
+  }
+  @keyframes splashBarFill {
+    from { width: 0; }
+    to   { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- スプラッシュ画面 -->
+<div id="splash">
+  <div class="splash-icon">🎵</div>
+  <div class="splash-title">全国ライブ会場マップ</div>
+  <div class="splash-sub">あなたの足あとを記録しよう</div>
+  <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
+</div>
+
+<header>
+  <div class="header-row1">
+    <h1>🎵 全国ライブ会場マップ</h1>
+    <div class="stats">
+      <button class="btn-header btn-ranking" id="btn-open-ranking">🏆 ランキング</button>
+      <button class="btn-header btn-records" id="btn-open-records">私の足あと👣</button>
+      <div class="stat">
+        <div class="stat-num" id="visited-count">0</div>
+        <div class="stat-label">訪問済み</div>
+      </div>
+      <div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+        <div style="font-size:0.62rem;color:#666;text-align:right;margin-top:2px"><span id="total-count">0</span>会場中</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="pct-count">0%</div>
+        <div class="stat-label">達成率</div>
+      </div>
+    </div>
+  </div>
+  <div class="header-row2-wrap collapsed" id="genre-bars-wrap">
+    <div class="header-row2" id="genre-bars"></div>
+  </div>
+  <button class="genre-toggle-btn" id="genre-toggle-btn" title="ジャンル達成率を表示">▼</button>
+</header>
+
+
+<!-- Ranking panel -->
+<div class="ranking-overlay hidden" id="ranking-overlay">
+  <div class="ranking-panel">
+    <div class="ranking-panel-header">
+      <div class="ranking-panel-title">🏆 訪問頻度ランキング</div>
+      <button class="ranking-panel-close" id="ranking-panel-close">✕</button>
+    </div>
+    <div class="ranking-body" id="ranking-body"></div>
+  </div>
+</div>
+
+<!-- Records panel -->
+<div class="records-overlay hidden" id="records-overlay">
+  <div class="records-panel">
+    <div class="records-panel-header">
+      <div class="records-panel-title">私の足あと👣</div>
+      <button class="records-panel-close" id="records-panel-close">✕</button>
+    </div>
+    <div class="records-toolbar">
+      <input class="records-search" id="records-search" type="text" placeholder="🔍 アーティスト・会場名で検索...">
+      <select class="records-sort" id="records-sort">
+        <option value="date-desc">日付 新しい順</option>
+        <option value="date-asc">日付 古い順</option>
+        <option value="venue">会場名順</option>
+      </select>
+    </div>
+    <div class="records-body" id="records-body"></div>
+  </div>
+</div>
+
+<!-- Visit record modal -->
+<div class="modal-overlay hidden" id="visit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-venue-name"></div>
+      <div class="modal-sub">訪問記録（複数追加できます）</div>
+    </div>
+    <div class="modal-body">
+      <!-- Existing visit records -->
+      <div class="visit-records" id="modal-visit-records"></div>
+      <!-- Add form -->
+      <div class="add-visit-form">
+        <div class="add-visit-title">＋ 新しい訪問を追加</div>
+        <div class="form-row">
+          <input class="form-input" type="date" id="form-date">
+          <input class="form-input" type="text" id="form-artist" placeholder="アーティスト名（任意）" style="flex:1">
+        </div>
+        <textarea class="form-memo" id="form-memo" placeholder="思い出・感想など（任意）"></textarea>
+        <!-- Setlist -->
+        <div class="setlist-section">
+          <div class="setlist-label">🎵 セットリスト（最大30曲）</div>
+          <div id="form-setlist-rows"></div>
+          <button type="button" class="setlist-add-btn" id="form-setlist-add">＋ 曲を追加</button>
+        </div>
+        <div class="photo-count-hint" id="photo-count-hint">📷 チケット写真（最大5枚）</div>
+        <div class="photo-grid" id="form-photo-grid"></div>
+        <input type="file" id="photo-file-input" accept="image/*" multiple style="display:none">
+        <!-- 既存レコードへの写真追加用（共通） -->
+        <input type="file" id="record-photo-input" accept="image/*" multiple style="display:none">
+        <button class="btn-primary" id="form-add-btn" style="width:100%">この訪問を追加</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="modal-save">保存して閉じる</button>
+      <button class="btn-secondary" id="modal-cancel">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox hidden" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close">✕</button>
+  <div class="lightbox-img-wrap">
+    <button class="lightbox-nav prev hidden" id="lb-prev">‹</button>
+    <img id="lightbox-img" src="" alt="">
+    <button class="lightbox-nav next hidden" id="lb-next">›</button>
+  </div>
+  <div class="lightbox-counter" id="lb-counter"></div>
+  <div class="lightbox-strip" id="lb-strip"></div>
+</div>
+
+<div class="main">
+  <div id="map"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-handle" id="sidebar-handle">
+      <div class="sidebar-handle-bar"></div>
+      <div class="sidebar-handle-label">📋 会場リスト</div>
+      <div class="sidebar-handle-bar"></div>
+    </div>
+    <div class="sidebar-header" id="sidebar-header">
+      <div class="sidebar-search-toggle" id="sidebar-search-toggle">
+        <span>🔍 検索・絞り込み</span>
+        <span class="sidebar-search-arrow" id="sidebar-search-arrow" style="transform:rotate(180deg)">▲</span>
+      </div>
+      <div class="sidebar-search-body collapsed" id="sidebar-search-body">
+        <input class="search-box" id="search" type="text" placeholder="🔍 会場名・地域で検索...">
+        <div class="filter-row">
+          <button class="filter-btn active" data-filter="all">すべて</button>
+          <button class="filter-btn" data-filter="dome">ドーム</button>
+          <button class="filter-btn" data-filter="arena">アリーナ</button>
+          <button class="filter-btn" data-filter="hall">ホール</button>
+          <button class="filter-btn" data-filter="zepp">Zepp</button>
+          <button class="filter-btn" data-filter="civic">市民会館</button>
+          <button class="filter-btn" data-filter="livehouse">ライブハウス</button>
+          <button class="filter-btn" data-filter="outdoor">野外</button>
+          <button class="filter-btn" data-filter="concert">コンサートホール</button>
+          <button class="filter-btn" data-filter="visited">訪問済み</button>
+          <button class="filter-btn" data-filter="unvisited">未訪問</button>
+        </div>
+      </div>
+    </div>
+    <div class="venue-list" id="venue-list"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const VENUES = [
+  // 北海道
+  { id:'sapporo_dome', name:'大和ハウスプレミストドーム（旧・札幌ドーム）', sub:'北海道 札幌市', lat:43.0151, lng:141.4114, type:'dome', region:'北海道・東北' },
+  { id:'hokkaido_arena', name:'北海きたえーる', sub:'北海道 札幌市', lat:43.0566, lng:141.3508, type:'arena', region:'北海道・東北' },
+  { id:'zepp_sapporo', name:'Zepp Sapporo', sub:'北海道 札幌市', lat:43.0565, lng:141.3485, type:'zepp', region:'北海道・東北' },
+  { id:'sendai_sunplaza', name:'仙台サンプラザホール', sub:'宮城県 仙台市', lat:38.2682, lng:140.8720, type:'hall', region:'北海道・東北' },
+  { id:'sendai_sekisui', name:'セキスイハイムスーパーアリーナ', sub:'宮城県 宮城郡', lat:38.3128, lng:140.9208, type:'arena', region:'北海道・東北' },
+
+  // 関東
+  { id:'tokyo_dome', name:'東京ドーム', sub:'東京都 文京区', lat:35.7056, lng:139.7517, type:'dome', region:'関東' },
+  { id:'budokan', name:'日本武道館', sub:'東京都 千代田区', lat:35.6934, lng:139.7497, type:'hall', region:'関東' },
+  { id:'saitama_super', name:'さいたまスーパーアリーナ', sub:'埼玉県 さいたま市', lat:35.8950, lng:139.6302, type:'arena', region:'関東' },
+  { id:'yokohama_arena', name:'横浜アリーナ', sub:'神奈川県 横浜市', lat:35.5093, lng:139.6165, type:'arena', region:'関東' },
+  { id:'makuhari', name:'幕張メッセ 幕張イベントホール', sub:'千葉県 千葉市', lat:35.6474, lng:140.0313, type:'hall', region:'関東' },
+  { id:'nhk_hall', name:'NHKホール', sub:'東京都 渋谷区', lat:35.6654, lng:139.6995, type:'hall', region:'関東' },
+  { id:'budokan_tokyo_garden', name:'東京ガーデンシアター', sub:'東京都 江東区', lat:35.6330, lng:139.7970, type:'hall', region:'関東' },
+  { id:'ariake_arena', name:'有明アリーナ', sub:'東京都 江東区', lat:35.6288, lng:139.7884, type:'arena', region:'関東' },
+  { id:'pia_arena', name:'Pアリーナ MM', sub:'神奈川県 横浜市', lat:35.4565, lng:139.6320, type:'arena', region:'関東' },
+  { id:'zepp_divercity', name:'Zepp DiverCity TOKYO', sub:'東京都 江東区', lat:35.6245, lng:139.7749, type:'zepp', region:'関東' },
+  { id:'zepp_haneda', name:'Zepp Haneda', sub:'東京都 大田区', lat:35.5453, lng:139.7779, type:'zepp', region:'関東' },
+  { id:'tokyo_kokusai', name:'東京国際フォーラム ホールA', sub:'東京都 千代田区', lat:35.6766, lng:139.7633, type:'hall', region:'関東' },
+  { id:'pacifico', name:'パシフィコ横浜 国立大ホール', sub:'神奈川県 横浜市', lat:35.4570, lng:139.6360, type:'hall', region:'関東' },
+  { id:'bunkamura', name:'Bunkamura オーチャードホール', sub:'東京都 渋谷区', lat:35.6595, lng:139.6971, type:'hall', region:'関東' },
+  { id:'zepp_namba', name:'Zepp Osaka Bayside', sub:'大阪府 大阪市', lat:34.6647, lng:135.4088, type:'zepp', region:'近畿' },
+
+  // 甲信越・北陸
+  { id:'niigata_toki', name:'朱鷺メッセ 新潟コンベンションセンター', sub:'新潟県 新潟市', lat:37.9221, lng:139.0542, type:'hall', region:'甲信越・北陸' },
+  { id:'metlife_dome', name:'ベルーナドーム', sub:'埼玉県 所沢市', lat:35.7683, lng:139.4222, type:'dome', region:'関東' },
+
+  // 東海
+  { id:'nagoya_dome', name:'バンテリンドーム ナゴヤ', sub:'愛知県 名古屋市', lat:35.1876, lng:136.9472, type:'dome', region:'東海' },
+  { id:'nippon_gaishi', name:'日本ガイシホール', sub:'愛知県 名古屋市', lat:35.1198, lng:136.9380, type:'arena', region:'東海' },
+  { id:'dolphins', name:'ドルフィンズアリーナ', sub:'愛知県 名古屋市', lat:35.1700, lng:136.9050, type:'arena', region:'東海' },
+  { id:'zepp_nagoya', name:'Zepp Nagoya', sub:'愛知県 名古屋市', lat:35.1700, lng:136.8998, type:'zepp', region:'東海' },
+  { id:'century_hall', name:'名古屋国際会議場 センチュリーホール', sub:'愛知県 名古屋市', lat:35.1454, lng:136.9232, type:'hall', region:'東海' },
+  { id:'aichi_sky', name:'Aichi Sky Expo', sub:'愛知県 常滑市', lat:34.8714, lng:136.8081, type:'hall', region:'東海' },
+
+  // 近畿
+  { id:'kyocera_dome', name:'京セラドーム大阪', sub:'大阪府 大阪市', lat:34.6736, lng:135.4716, type:'dome', region:'近畿' },
+  { id:'osaka_jo_hall', name:'大阪城ホール', sub:'大阪府 大阪市', lat:34.6876, lng:135.5258, type:'hall', region:'近畿' },
+  { id:'maishima', name:'大阪メトロ舞洲アリーナ', sub:'大阪府 大阪市', lat:34.6637, lng:135.4168, type:'arena', region:'近畿' },
+  { id:'kobe_world', name:'神戸ワールド記念ホール', sub:'兵庫県 神戸市', lat:34.6498, lng:135.2007, type:'hall', region:'近畿' },
+  { id:'intex_osaka', name:'インテックス大阪', sub:'大阪府 大阪市', lat:34.6495, lng:135.4217, type:'hall', region:'近畿' },
+  { id:'zepp_osaka', name:'Zepp Osaka Bayside', sub:'大阪府 大阪市', lat:34.6647, lng:135.4088, type:'zepp', region:'近畿' },
+  { id:'rohm_kyoto', name:'ロームシアター京都', sub:'京都府 京都市', lat:35.0116, lng:135.7741, type:'hall', region:'近畿' },
+  { id:'grand_cube', name:'グランキューブ大阪', sub:'大阪府 大阪市', lat:34.6903, lng:135.4849, type:'hall', region:'近畿' },
+
+  // 中国・四国
+  { id:'hiroshima_green', name:'広島グリーンアリーナ', sub:'広島県 広島市', lat:34.4025, lng:132.4706, type:'arena', region:'中国・四国' },
+  { id:'okayama_master', name:'岡山マスカットスタジアム', sub:'岡山県 岡山市', lat:34.6683, lng:133.9155, type:'dome', region:'中国・四国' },
+  { id:'takamatsu_symbol', name:'高松シンボルタワー サンポートホール高松', sub:'香川県 高松市', lat:34.3560, lng:134.0465, type:'hall', region:'中国・四国' },
+
+  // ---- 市民会館・県民文化センター等 ----
+  // 北海道・東北
+  { id:'sapporo_shimin', name:'札幌市民ホール', sub:'北海道 札幌市', lat:43.0622, lng:141.3540, type:'civic', region:'北海道・東北' },
+  { id:'asahikawa_civic', name:'旭川市民文化会館', sub:'北海道 旭川市', lat:43.7705, lng:142.3648, type:'civic', region:'北海道・東北' },
+  { id:'hakodate_civic', name:'函館市民会館', sub:'北海道 函館市', lat:41.7686, lng:140.7281, type:'civic', region:'北海道・東北' },
+  { id:'aomori_civic', name:'リンクステーションホール青森', sub:'青森県 青森市', lat:40.8244, lng:140.7401, type:'civic', region:'北海道・東北' },
+  { id:'hachinohe_civic', name:'八戸市公会堂', sub:'青森県 八戸市', lat:40.5123, lng:141.4882, type:'civic', region:'北海道・東北' },
+  { id:'iwate_kenmin', name:'岩手県民会館', sub:'岩手県 盛岡市', lat:39.7036, lng:141.1527, type:'civic', region:'北海道・東北' },
+  { id:'miyagi_kenmin', name:'東京エレクトロンホール宮城', sub:'宮城県 仙台市', lat:38.2669, lng:140.8721, type:'civic', region:'北海道・東北' },
+  { id:'akita_kenmin', name:'秋田県民会館', sub:'秋田県 秋田市', lat:39.7197, lng:140.1031, type:'civic', region:'北海道・東北' },
+  { id:'yamagata_terrsa', name:'山形テルサ', sub:'山形県 山形市', lat:38.2436, lng:140.3635, type:'civic', region:'北海道・東北' },
+  { id:'fukushima_culture', name:'福島県文化センター', sub:'福島県 福島市', lat:37.7542, lng:140.4676, type:'civic', region:'北海道・東北' },
+  { id:'iwaki_alios', name:'いわき芸術文化交流館アリオス', sub:'福島県 いわき市', lat:37.0508, lng:140.8881, type:'civic', region:'北海道・東北' },
+
+  // 関東
+  { id:'tokyo_geijutsu', name:'東京芸術劇場 大ホール', sub:'東京都 豊島区', lat:35.7303, lng:139.7114, type:'civic', region:'関東' },
+  { id:'kanagawa_kenmin', name:'神奈川県民ホール', sub:'神奈川県 横浜市', lat:35.4433, lng:139.6441, type:'civic', region:'関東' },
+  { id:'yokosuka_arts', name:'よこすか芸術劇場', sub:'神奈川県 横須賀市', lat:35.2840, lng:139.6680, type:'civic', region:'関東' },
+  { id:'muza_kawasaki', name:'ミューザ川崎シンフォニーホール', sub:'神奈川県 川崎市', lat:35.5311, lng:139.6977, type:'civic', region:'関東' },
+  { id:'chiba_kenmin', name:'千葉県文化会館', sub:'千葉県 千葉市', lat:35.6061, lng:140.1233, type:'civic', region:'関東' },
+  { id:'saitama_kaikan', name:'埼玉会館', sub:'埼玉県 さいたま市', lat:35.9059, lng:139.6228, type:'civic', region:'関東' },
+  { id:'takasaki_arts', name:'高崎芸術劇場', sub:'群馬県 高崎市', lat:36.3228, lng:139.0106, type:'civic', region:'関東' },
+  { id:'tochigi_sogo', name:'栃木県総合文化センター', sub:'栃木県 宇都宮市', lat:36.5659, lng:139.8832, type:'civic', region:'関東' },
+  { id:'mito_civic', name:'水戸市民会館', sub:'茨城県 水戸市', lat:36.3661, lng:140.4712, type:'civic', region:'関東' },
+
+  // 甲信越・北陸
+  { id:'nagano_kenmin', name:'長野県県民文化会館', sub:'長野県 長野市', lat:36.6485, lng:138.1888, type:'civic', region:'甲信越・北陸' },
+  { id:'matsumoto_civic', name:'まつもと市民芸術館', sub:'長野県 松本市', lat:36.2365, lng:137.9700, type:'civic', region:'甲信越・北陸' },
+  { id:'toyama_overdhall', name:'富山市芸術文化ホール（オーバード・ホール）', sub:'富山県 富山市', lat:36.6963, lng:137.2136, type:'civic', region:'甲信越・北陸' },
+  { id:'ishikawa_ongakudo', name:'石川県立音楽堂', sub:'石川県 金沢市', lat:36.5778, lng:136.6503, type:'civic', region:'甲信越・北陸' },
+  { id:'fukui_harmony', name:'ハーモニーホールふくい', sub:'福井県 福井市', lat:36.0651, lng:136.2190, type:'civic', region:'甲信越・北陸' },
+
+  // 東海
+  { id:'act_city_hamamatsu', name:'アクトシティ浜松 大ホール', sub:'静岡県 浜松市', lat:34.7083, lng:137.7264, type:'civic', region:'東海' },
+  { id:'shizuoka_kenmin', name:'静岡市民文化会館', sub:'静岡県 静岡市', lat:34.9751, lng:138.3830, type:'civic', region:'東海' },
+  { id:'mie_bunka', name:'三重県文化会館 大ホール', sub:'三重県 津市', lat:34.7303, lng:136.5085, type:'civic', region:'東海' },
+  { id:'gifu_civic', name:'岐阜市文化センター', sub:'岐阜県 岐阜市', lat:35.4232, lng:136.7607, type:'civic', region:'東海' },
+
+  // 近畿
+  { id:'festival_hall', name:'フェスティバルホール', sub:'大阪府 大阪市', lat:34.6939, lng:135.4988, type:'civic', region:'近畿' },
+  { id:'hyogo_arts', name:'兵庫県立芸術文化センター KOBELCO大ホール', sub:'兵庫県 西宮市', lat:34.7127, lng:135.3574, type:'civic', region:'近畿' },
+  { id:'biwako_hall', name:'滋賀県立芸術劇場びわ湖ホール', sub:'滋賀県 大津市', lat:35.0108, lng:135.8682, type:'civic', region:'近畿' },
+  { id:'nara_100', name:'奈良100年会館', sub:'奈良県 奈良市', lat:34.6870, lng:135.8337, type:'civic', region:'近畿' },
+  { id:'wakayama_civic', name:'和歌山市民会館', sub:'和歌山県 和歌山市', lat:34.2260, lng:135.1685, type:'civic', region:'近畿' },
+  { id:'osaka_izumi_hall', name:'いずみホール', sub:'大阪府 大阪市', lat:34.6680, lng:135.5227, type:'civic', region:'近畿' },
+
+  // 中国・四国
+  { id:'okayama_symphony', name:'岡山シンフォニーホール', sub:'岡山県 岡山市', lat:34.6557, lng:133.9233, type:'civic', region:'中国・四国' },
+  { id:'hiroshima_hbg', name:'広島文化学園HBGホール', sub:'広島県 広島市', lat:34.3958, lng:132.4553, type:'civic', region:'中国・四国' },
+  { id:'yamaguchi_kenmin', name:'山口県民ホール', sub:'山口県 山口市', lat:34.1860, lng:131.4744, type:'civic', region:'中国・四国' },
+  { id:'tottori_kenmin', name:'鳥取県民文化会館', sub:'鳥取県 鳥取市', lat:35.5011, lng:134.2352, type:'civic', region:'中国・四国' },
+  { id:'shimane_kenmin', name:'島根県民会館', sub:'島根県 松江市', lat:35.4728, lng:133.0506, type:'civic', region:'中国・四国' },
+  { id:'matsuyama_civic', name:'松山市民会館', sub:'愛媛県 松山市', lat:33.8416, lng:132.7658, type:'civic', region:'中国・四国' },
+  { id:'tokushima_culture', name:'徳島市立文化センター', sub:'徳島県 徳島市', lat:34.0653, lng:134.5593, type:'civic', region:'中国・四国' },
+  { id:'kochi_kenmin', name:'高知県民文化ホール', sub:'高知県 高知市', lat:33.5599, lng:133.5311, type:'civic', region:'中国・四国' },
+
+  // 九州・沖縄
+  { id:'acros_fukuoka', name:'アクロス福岡 シンフォニーホール', sub:'福岡県 福岡市', lat:33.5886, lng:130.4010, type:'civic', region:'九州・沖縄' },
+  { id:'fukuoka_shimin', name:'福岡市民会館', sub:'福岡県 福岡市', lat:33.5902, lng:130.4021, type:'civic', region:'九州・沖縄' },
+  { id:'nagasaki_brick', name:'長崎ブリックホール', sub:'長崎県 長崎市', lat:32.7503, lng:129.8777, type:'civic', region:'九州・沖縄' },
+  { id:'kumamoto_kenritu', name:'熊本県立劇場', sub:'熊本県 熊本市', lat:32.7889, lng:130.7381, type:'civic', region:'九州・沖縄' },
+  { id:'oita_iichikogrande', name:'iichiko グランシアタ', sub:'大分県 大分市', lat:33.2382, lng:131.6109, type:'civic', region:'九州・沖縄' },
+  { id:'miyazaki_civic', name:'宮崎市民文化ホール', sub:'宮崎県 宮崎市', lat:31.9098, lng:131.4232, type:'civic', region:'九州・沖縄' },
+  { id:'kagoshima_civic', name:'鹿児島市民文化ホール', sub:'鹿児島県 鹿児島市', lat:31.5960, lng:130.5571, type:'civic', region:'九州・沖縄' },
+  { id:'naha_civic', name:'那覇文化芸術劇場なはーと', sub:'沖縄県 那覇市', lat:26.2123, lng:127.6792, type:'civic', region:'九州・沖縄' },
+  { id:'saga_kenmin', name:'佐賀市文化会館', sub:'佐賀県 佐賀市', lat:33.2635, lng:130.3009, type:'civic', region:'九州・沖縄' },
+  { id:'miyazaki_kenmin', name:'宮崎県立芸術劇場', sub:'宮崎県 宮崎市', lat:31.9148, lng:131.4235, type:'civic', region:'九州・沖縄' },
+
+  // ---- 九州・沖縄 大型 ----
+  { id:'paypay_dome', name:'みずほPayPayドーム福岡', sub:'福岡県 福岡市', lat:33.5957, lng:130.3642, type:'dome', region:'九州・沖縄' },
+  { id:'marine_messe', name:'マリンメッセ福岡', sub:'福岡県 福岡市', lat:33.5908, lng:130.3866, type:'hall', region:'九州・沖縄' },
+  { id:'zepp_fukuoka', name:'Zepp Fukuoka', sub:'福岡県 福岡市', lat:33.5906, lng:130.3875, type:'zepp', region:'九州・沖縄' },
+  { id:'okinawa_arena', name:'沖縄アリーナ', sub:'沖縄県 沖縄市', lat:26.3359, lng:127.8016, type:'arena', region:'九州・沖縄' },
+  { id:'kumamoto_civic', name:'熊本城ホール', sub:'熊本県 熊本市', lat:32.8033, lng:130.7083, type:'hall', region:'九州・沖縄' },
+
+  // ======== コンサートホール ========
+  // 関東
+  { id:'suntory_hall', name:'サントリーホール', sub:'東京都 港区', lat:35.6665, lng:139.7337, type:'concert', region:'関東' },
+  { id:'tokyo_opera_city', name:'東京オペラシティ コンサートホール', sub:'東京都 新宿区', lat:35.6841, lng:139.6972, type:'concert', region:'関東' },
+  { id:'sumida_triphony', name:'すみだトリフォニーホール', sub:'東京都 墨田区', lat:35.7099, lng:139.8019, type:'concert', region:'関東' },
+  { id:'kioi_hall', name:'紀尾井ホール', sub:'東京都 千代田区', lat:35.6815, lng:139.7330, type:'concert', region:'関東' },
+  { id:'hitomi_hall', name:'昭和女子大学 人見記念講堂', sub:'東京都 世田谷区', lat:35.6493, lng:139.6825, type:'concert', region:'関東' },
+  { id:'fuchu_arts', name:'府中の森芸術劇場 どりーむホール', sub:'東京都 府中市', lat:35.6647, lng:139.4784, type:'concert', region:'関東' },
+  { id:'katsushika_symphony', name:'かつしかシンフォニーヒルズ', sub:'東京都 葛飾区', lat:35.7422, lng:139.8485, type:'concert', region:'関東' },
+  { id:'omiya_sonic', name:'大宮ソニックシティ', sub:'埼玉県 さいたま市', lat:35.9072, lng:139.6235, type:'concert', region:'関東' },
+  { id:'kawaguchi_lilia', name:'川口総合文化センター リリア', sub:'埼玉県 川口市', lat:35.8065, lng:139.7224, type:'concert', region:'関東' },
+  { id:'ichikawa_bunka', name:'市川市文化会館', sub:'千葉県 市川市', lat:35.7200, lng:139.9253, type:'concert', region:'関東' },
+  { id:'kanagawa_kenmin_large', name:'神奈川県立音楽堂', sub:'神奈川県 横浜市', lat:35.4560, lng:139.6315, type:'concert', region:'関東' },
+  // 甲信越・北陸
+  { id:'nagaoka_theater', name:'長岡市立劇場', sub:'新潟県 長岡市', lat:37.4453, lng:138.8507, type:'concert', region:'甲信越・北陸' },
+  { id:'kanazawa_arts_village', name:'金沢市民芸術村', sub:'石川県 金沢市', lat:36.5571, lng:136.6268, type:'concert', region:'甲信越・北陸' },
+  { id:'toyama_civic_hall', name:'富山市民プラザ', sub:'富山県 富山市', lat:36.6950, lng:137.2113, type:'concert', region:'甲信越・北陸' },
+  // 東海
+  { id:'aichi_geijutsu', name:'愛知県芸術劇場 大ホール', sub:'愛知県 名古屋市', lat:35.1712, lng:136.9072, type:'concert', region:'東海' },
+  { id:'nagoya_kokaido', name:'名古屋市公会堂', sub:'愛知県 名古屋市', lat:35.1524, lng:136.9278, type:'concert', region:'東海' },
+  { id:'shirakawa_hall', name:'三井住友海上しらかわホール', sub:'愛知県 名古屋市', lat:35.1714, lng:136.9082, type:'concert', region:'東海' },
+  // 北海道・東北
+  { id:'sendai_shimin', name:'仙台市民会館', sub:'宮城県 仙台市', lat:38.2620, lng:140.8759, type:'concert', region:'北海道・東北' },
+  { id:'morioka_bunka', name:'盛岡市民文化ホール', sub:'岩手県 盛岡市', lat:39.7034, lng:141.1396, type:'concert', region:'北海道・東北' },
+  { id:'akita_bunka', name:'秋田県立文化会館', sub:'秋田県 秋田市', lat:39.7200, lng:140.1007, type:'concert', region:'北海道・東北' },
+  { id:'koriyama_civic', name:'郡山市民文化センター', sub:'福島県 郡山市', lat:37.3971, lng:140.3884, type:'concert', region:'北海道・東北' },
+  // 近畿
+  { id:'fenice_sakai', name:'フェニーチェ堺（堺市民芸術文化ホール）', sub:'大阪府 堺市', lat:34.5652, lng:135.4830, type:'concert', region:'近畿' },
+  { id:'symphony_hall_osaka', name:'ザ・シンフォニーホール', sub:'大阪府 大阪市', lat:34.6990, lng:135.4904, type:'concert', region:'近畿' },
+  { id:'toyonaka_arts', name:'豊中市立文化芸術センター', sub:'大阪府 豊中市', lat:34.7844, lng:135.4687, type:'concert', region:'近畿' },
+  { id:'hirakata_arts', name:'枚方市総合文化芸術センター', sub:'大阪府 枚方市', lat:34.8121, lng:135.6532, type:'concert', region:'近畿' },
+  { id:'suita_merthia', name:'吹田市文化会館 メイシアター', sub:'大阪府 吹田市', lat:34.7614, lng:135.5170, type:'concert', region:'近畿' },
+  { id:'amagasaki_arts', name:'尼崎市総合文化センター', sub:'兵庫県 尼崎市', lat:34.7264, lng:135.4053, type:'concert', region:'近畿' },
+  { id:'kobe_bunka', name:'神戸文化ホール', sub:'兵庫県 神戸市', lat:34.6904, lng:135.1907, type:'concert', region:'近畿' },
+  { id:'kyoto_concert', name:'京都コンサートホール', sub:'京都府 京都市', lat:35.0428, lng:135.7619, type:'concert', region:'近畿' },
+  { id:'kyoto_prefectural_arts', name:'京都府立文化芸術会館', sub:'京都府 京都市', lat:35.0208, lng:135.7617, type:'concert', region:'近畿' },
+  { id:'nara_bunka', name:'奈良県文化会館', sub:'奈良県 奈良市', lat:34.6830, lng:135.8340, type:'concert', region:'近畿' },
+  { id:'wakayama_kenmin', name:'和歌山県民文化会館', sub:'和歌山県 和歌山市', lat:34.2263, lng:135.1672, type:'concert', region:'近畿' },
+  // 中国・四国
+  { id:'okayama_shimin', name:'岡山市民会館', sub:'岡山県 岡山市', lat:34.6621, lng:133.9264, type:'concert', region:'中国・四国' },
+  { id:'hiroshima_kokaido', name:'広島市文化交流会館', sub:'広島県 広島市', lat:34.3966, lng:132.4588, type:'concert', region:'中国・四国' },
+  { id:'tokushima_bunka', name:'徳島県立文化の森 21世紀館', sub:'徳島県 徳島市', lat:34.0401, lng:134.5520, type:'concert', region:'中国・四国' },
+  { id:'kochi_prefectural', name:'高知県立県民文化ホール オレンジホール', sub:'高知県 高知市', lat:33.5591, lng:133.5340, type:'concert', region:'中国・四国' },
+  // 九州・沖縄
+  { id:'kitakyushu_arts', name:'北九州市立芸術劇場 大ホール', sub:'福岡県 北九州市', lat:33.8695, lng:130.8742, type:'concert', region:'九州・沖縄' },
+  { id:'nagasaki_shimin', name:'長崎市民会館', sub:'長崎県 長崎市', lat:32.7504, lng:129.8740, type:'concert', region:'九州・沖縄' },
+  { id:'miyazaki_arts', name:'宮崎市民プラザ', sub:'宮崎県 宮崎市', lat:31.9105, lng:131.4212, type:'concert', region:'九州・沖縄' },
+  { id:'kagoshima_shimin2', name:'鹿児島市民文化ホール 第2', sub:'鹿児島県 鹿児島市', lat:31.5998, lng:130.5553, type:'concert', region:'九州・沖縄' },
+
+  // ======== 中規模ホール（1000〜5000人） ========
+  // 関東
+  { id:'k_arena_yokohama', name:'Kアリーナ横浜', sub:'神奈川県 横浜市', lat:35.4729, lng:139.6336, type:'arena', region:'関東' },
+  { id:'lala_arena', name:'LaLa arena TOKYO-BAY（ららアリーナ東京ベイ）', sub:'千葉県 浦安市', lat:35.6195, lng:139.8958, type:'arena', region:'関東' },
+  { id:'line_cube_shibuya', name:'LINE CUBE SHIBUYA', sub:'東京都 渋谷区', lat:35.6630, lng:139.6970, type:'hall', region:'関東' },
+  { id:'toyosu_pit', name:'豊洲PIT', sub:'東京都 江東区', lat:35.6467, lng:139.7952, type:'hall', region:'関東' },
+  { id:'hibiya_yaon', name:'日比谷野外大音楽堂', sub:'東京都 千代田区', lat:35.6730, lng:139.7531, type:'outdoor', region:'関東' },
+  { id:'shinagawa_stellar', name:'ステラボール（品川プリンスホテル）', sub:'東京都 品川区', lat:35.6284, lng:139.7391, type:'hall', region:'関東' },
+  { id:'zepp_shinjuku', name:'Zepp Shinjuku', sub:'東京都 新宿区', lat:35.6933, lng:139.7008, type:'zepp', region:'関東' },
+  { id:'nakano_sunplaza', name:'中野サンプラザ（跡地）', sub:'東京都 中野区', lat:35.7076, lng:139.6644, type:'hall', region:'関東' },
+  { id:'yokohama_blitz', name:'KT Zepp Yokohama', sub:'神奈川県 横ohama市', lat:35.4562, lng:139.6358, type:'zepp', region:'関東' },
+  { id:'pacifico_anex', name:'パシフィコ横浜 アネックスホール', sub:'神奈川県 横浜市', lat:35.4575, lng:139.6350, type:'hall', region:'関東' },
+  // 近畿
+  { id:'namba_hatch', name:'なんばHatch', sub:'大阪府 大阪市', lat:34.6556, lng:135.4963, type:'hall', region:'近畿' },
+  { id:'zepp_namba', name:'Zepp Namba', sub:'大阪府 大阪市', lat:34.6632, lng:135.5003, type:'zepp', region:'近畿' },
+  { id:'bigcat_osaka', name:'なんばBIGCAT', sub:'大阪府 大阪市', lat:34.6643, lng:135.5015, type:'livehouse', region:'近畿' },
+  { id:'sankei_hall_breeze', name:'サンケイホールブリーゼ', sub:'大阪府 大阪市', lat:34.6945, lng:135.4960, type:'hall', region:'近畿' },
+  { id:'umeda_kokkaido', name:'梅田芸術劇場 メインホール', sub:'大阪府 大阪市', lat:34.7030, lng:135.4974, type:'hall', region:'近畿' },
+  { id:'kobe_kokusai', name:'神戸国際会館こくさいホール', sub:'兵庫県 神戸市', lat:34.6928, lng:135.1951, type:'hall', region:'近畿' },
+  // 東海
+  { id:'zepp_nagoya2', name:'Zepp Nagoya（新）', sub:'愛知県 名古屋市', lat:35.1698, lng:136.9007, type:'zepp', region:'東海' },
+  { id:'nagoya_diamond', name:'ダイアモンドホール', sub:'愛知県 名古屋市', lat:35.1658, lng:136.9028, type:'hall', region:'東海' },
+
+  // ======== ライブハウス（〜1000人） ========
+  // 東京
+  { id:'liquidroom', name:'LIQUIDROOM', sub:'東京都 渋谷区（恵比寿）', lat:35.6457, lng:139.7131, type:'livehouse', region:'関東' },
+  { id:'shibuya_o_east', name:'Shibuya O-EAST', sub:'東京都 渋谷区', lat:35.6590, lng:139.6983, type:'livehouse', region:'関東' },
+  { id:'shibuya_o_west', name:'Shibuya O-WEST', sub:'東京都 渋谷区', lat:35.6589, lng:139.6964, type:'livehouse', region:'関東' },
+  { id:'shibuya_quattro', name:'渋谷CLUB QUATTRO', sub:'東京都 渋谷区', lat:35.6612, lng:139.6994, type:'livehouse', region:'関東' },
+  { id:'club_citta', name:"CLUB CITTA' 川崎", sub:'神奈川県 川崎市', lat:35.5303, lng:139.7028, type:'livehouse', region:'関東' },
+  { id:'shinjuku_blaze', name:'BLAZE', sub:'東京都 新宿区', lat:35.6932, lng:139.7025, type:'livehouse', region:'関東' },
+  { id:'daikanyama_unit', name:'UNIT', sub:'東京都 渋谷区（代官山）', lat:35.6485, lng:139.7028, type:'livehouse', region:'関東' },
+  { id:'shimokitazawa_garden', name:'下北沢GARDEN', sub:'東京都 世田谷区', lat:35.6613, lng:139.6679, type:'livehouse', region:'関東' },
+  { id:'ebisu_the_garden_hall', name:'EX THEATER ROPPONGI', sub:'東京都 港区', lat:35.6641, lng:139.7319, type:'livehouse', region:'関東' },
+  // 大阪
+  { id:'osaka_muse', name:'OSAKA MUSE', sub:'大阪府 大阪市', lat:34.7026, lng:135.5076, type:'livehouse', region:'近畿' },
+  { id:'shinsaibashi_bigstep', name:'心斎橋Music Club JANUS', sub:'大阪府 大阪市', lat:34.6723, lng:135.5012, type:'livehouse', region:'近畿' },
+  { id:'banana_hall', name:'バナナホール', sub:'大阪府 大阪市', lat:34.7052, lng:135.4978, type:'livehouse', region:'近畿' },
+  // 名古屋
+  { id:'bottom_line', name:'BOTTOM LINE', sub:'愛知県 名古屋市', lat:35.1702, lng:136.9012, type:'livehouse', region:'東海' },
+  { id:'club_quattro_nagoya', name:'名古屋CLUB QUATTRO', sub:'愛知県 名古屋市', lat:35.1701, lng:136.9054, type:'livehouse', region:'東海' },
+  // 福岡
+  { id:'drum_logos', name:'DRUM LOGOS', sub:'福岡県 福岡市', lat:33.5882, lng:130.4029, type:'livehouse', region:'九州・沖縄' },
+  { id:'fukuoka_rize', name:'BEAT STATION', sub:'福岡県 福岡市', lat:33.5899, lng:130.4010, type:'livehouse', region:'九州・沖縄' },
+  // 札幌
+  { id:'penny_lane24', name:'Penny Lane 24', sub:'北海道 札幌市', lat:43.0569, lng:141.3490, type:'livehouse', region:'北海道・東北' },
+  // 仙台
+  { id:'sendai_rensa', name:'仙台 Rensa', sub:'宮城県 仙台市', lat:38.2628, lng:140.8693, type:'livehouse', region:'北海道・東北' },
+  // 広島
+  { id:'hiroshima_club_quattro', name:'広島CLUB QUATTRO', sub:'広島県 広島市', lat:34.3988, lng:132.4596, type:'livehouse', region:'中国・四国' },
+
+  // ======== 野外・フェス会場 ========
+  { id:'hitachinaka', name:'国営ひたち海浜公園', sub:'茨城県 ひたちなか市', lat:36.3971, lng:140.6104, type:'outdoor', region:'関東' },
+  { id:'fujikyuko_conifer', name:'富士急ハイランド コニファーフォレスト', sub:'山梨県 富士吉田市', lat:35.4903, lng:138.7822, type:'outdoor', region:'甲信越・北陸' },
+  { id:'naeba', name:'苗場スキー場', sub:'新潟県 湯沢町', lat:36.8520, lng:138.6893, type:'outdoor', region:'甲信越・北陸' },
+  { id:'makuhari_outdoor', name:'ZOZOマリンスタジアム', sub:'千葉県 千葉市', lat:35.6478, lng:140.0317, type:'outdoor', region:'関東' },
+  { id:'ajinomoto_stadium', name:'味の素スタジアム', sub:'東京都 調布市', lat:35.6645, lng:139.5277, type:'outdoor', region:'関東' },
+  { id:'nissan_stadium', name:'日産スタジアム', sub:'神奈川県 横浜市', lat:35.5103, lng:139.6063, type:'outdoor', region:'関東' },
+  { id:'saitama_stadium', name:'埼玉スタジアム2002', sub:'埼玉県 さいたま市', lat:35.8945, lng:139.6616, type:'outdoor', region:'関東' },
+  { id:'nagoya_port_messe', name:'ポートメッセなごや', sub:'愛知県 名古屋市', lat:35.0840, lng:136.9101, type:'outdoor', region:'東海' },
+  { id:'banpaku_osaka', name:'万博記念公園（東の広場）', sub:'大阪府 吹田市', lat:34.8054, lng:135.5323, type:'outdoor', region:'近畿' },
+  // ---- 追加スタジアム ----
+  { id:'kokuritsu_kyogijo', name:'国立競技場', sub:'東京都 新宿区', lat:35.6772, lng:139.7139, type:'outdoor', region:'関東' },
+  { id:'koshien', name:'阪神甲子園球場', sub:'兵庫県 西宮市', lat:34.7198, lng:135.3607, type:'outdoor', region:'近畿' },
+  { id:'yanmar_nagai', name:'ヤンマースタジアム長居', sub:'大阪府 大阪市', lat:34.6099, lng:135.5195, type:'outdoor', region:'近畿' },
+  { id:'toyota_stadium', name:'豊田スタジアム', sub:'愛知県 豊田市', lat:35.0878, lng:137.1555, type:'outdoor', region:'東海' },
+  { id:'mazda_zoom_zoom', name:'Mazda Zoom-Zoom スタジアム広島', sub:'広島県 広島市', lat:34.3914, lng:132.4841, type:'outdoor', region:'中国・四国' },
+  { id:'summersonic_chiba', name:'幕張メッセ 国際展示場', sub:'千葉県 千葉市', lat:35.6468, lng:140.0340, type:'hall', region:'関東' },
+];
+
+// Deduplicate by id (zepp_osaka was duplicated)
+const seen = new Set();
+const VENUES_CLEAN = VENUES.filter(v => { if(seen.has(v.id)) return false; seen.add(v.id); return true; });
+
+const TYPE_ICON  = { dome:'🏟️', arena:'🎪', hall:'🎭', zepp:'🎵', civic:'🏛️', livehouse:'🎸', outdoor:'🌿', concert:'🎼' };
+const TYPE_COLOR = { dome:'marker-dome', arena:'marker-arena', hall:'marker-hall', zepp:'marker-zepp', civic:'marker-civic', livehouse:'marker-livehouse', outdoor:'marker-outdoor', concert:'marker-concert' };
+const TYPE_LABEL = { dome:'ドーム', arena:'アリーナ', hall:'ホール', zepp:'Zepp', civic:'市民会館', livehouse:'ライブハウス', outdoor:'野外', concert:'コンサートホール' };
+
+// =====================================================
+//  DATA  visited[id] = [ {uid, date, artist, photo}, ... ]
+// =====================================================
+let rawVisited = JSON.parse(localStorage.getItem('venue_visited') || '{}');
+let visited = {};
+// Migrate: old boolean → [], old number-array/photo-field → new photos[] format
+for (const [k, v] of Object.entries(rawVisited)) {
+  if (Array.isArray(v)) {
+    visited[k] = v.map(item => {
+      if (typeof item === 'number') return { uid: uid(), date: String(item), artist: '', photos: [] };
+      if (typeof item === 'object' && item !== null) {
+        // migrate old single photo → photos array
+        if ('photo' in item && !('photos' in item)) {
+          return { ...item, photos: item.photo ? [item.photo] : [], photo: undefined };
+        }
+        if (!('photos' in item)) return { ...item, photos: [] };
+        return item;
+      }
+      return null;
+    }).filter(Boolean);
+  } else if (v === true) {
+    visited[k] = [];
+  }
+}
+
+function uid() { return Math.random().toString(36).slice(2, 10); }
+function isVisited(id) { return id in visited; }
+function getRecords(id) { return visited[id] || []; }
+
+function visitSummary(id) {
+  const recs = getRecords(id);
+  if (!recs.length) return '訪問済み';
+  const sorted = [...recs].sort((a,b) => (a.date||'') < (b.date||'') ? 1 : -1);
+  const first = sorted[0];
+  const label = (first.date ? first.date.replace(/-/g, '/') : '') + (first.artist ? ' ' + first.artist : '');
+  return recs.length > 1 ? label + ` 他${recs.length - 1}件` : label;
+}
+
+function saveVisited() {
+  localStorage.setItem('venue_visited', JSON.stringify(visited));
+  updateStats();
+  if (!document.getElementById('records-overlay').classList.contains('hidden')) renderRecordsPanel();
+  if (!document.getElementById('ranking-overlay').classList.contains('hidden')) renderRankingPanel();
+}
+
+// genre color map (matches CSS tag colors)
+const GENRE_COLOR = {
+  dome:'#60a5fa', arena:'#4ade80', hall:'#f472b6', zepp:'#38bdf8',
+  civic:'#facc15', livehouse:'#fb923c', outdoor:'#86efac', concert:'#818cf8'
+};
+
+function updateStats() {
+  const total = VENUES_CLEAN.length;
+  const count = Object.keys(visited).length;
+  const pct = total ? Math.round(count / total * 100) : 0;
+  document.getElementById('visited-count').textContent = count;
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('pct-count').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+  renderGenreBars();
+}
+
+function renderGenreBars() {
+  const container = document.getElementById('genre-bars');
+  if (!container) return;
+  container.innerHTML = '';
+  const types = ['dome','arena','hall','zepp','civic','livehouse','outdoor','concert'];
+  types.forEach(type => {
+    const all = VENUES_CLEAN.filter(v => v.type === type);
+    if (!all.length) return;
+    const done = all.filter(v => isVisited(v.id)).length;
+    const pct = Math.round(done / all.length * 100);
+    const color = GENRE_COLOR[type] || '#888';
+    const label = TYPE_LABEL[type] || type;
+    const el = document.createElement('div');
+    el.className = 'genre-bar-item';
+    el.title = `${label}: ${done}/${all.length} (${pct}%)`;
+    el.innerHTML = `
+      <span class="genre-bar-label">${TYPE_ICON[type]} ${label}</span>
+      <div class="genre-bar-track"><div class="genre-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <span class="genre-bar-count" style="color:${color}">${done}<span style="color:#444">/${all.length}</span></span>
+    `;
+    container.appendChild(el);
+  });
+}
+
+// =====================================================
+//  IMAGE COMPRESSION
+// =====================================================
+function compressImage(file, maxPx = 800, quality = 0.75) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// =====================================================
+//  VISIT MODAL
+// =====================================================
+const MAX_PHOTOS = 5;
+let modalVenueId = null;
+let modalPendingRecords = [];
+let modalNewPhotos = [];        // photos for the "new visit" form
+let recordPhotoTargetUid = null; // uid of record being photo-edited
+let editingRecordUid = null;     // uid of record currently open in inline-edit mode
+const MAX_SETLIST = 30;
+let formSetlist = [];            // song strings for the current "new visit" form
+
+function openVisitModal(id) {
+  modalVenueId = id;
+  modalPendingRecords = JSON.parse(JSON.stringify(getRecords(id)));
+  modalNewPhotos = [];
+  editingRecordUid = null;
+
+  const venue = VENUES_CLEAN.find(v => v.id === id);
+  document.getElementById('modal-venue-name').textContent = venue.name;
+
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('form-date').value = today;
+  document.getElementById('form-artist').value = '';
+  document.getElementById('form-memo').value = '';
+  document.getElementById('photo-file-input').value = '';
+  formSetlist = [];
+  renderFormSetlist();
+
+  renderModalRecords();
+  renderFormPhotoGrid();
+  document.getElementById('visit-modal').classList.remove('hidden');
+  document.getElementById('form-artist').focus();
+}
+
+function renderModalRecords() {
+  const container = document.getElementById('modal-visit-records');
+  container.innerHTML = '';
+  if (!modalPendingRecords.length) {
+    container.innerHTML = '<div class="no-visits">まだ記録がありません</div>';
+    return;
+  }
+  const sorted = [...modalPendingRecords].sort((a,b) => (a.date||'') < (b.date||'') ? 1 : -1);
+  sorted.forEach(rec => renderRecordCard(rec, container));
+}
+
+function renderRecordCard(rec, container) {
+  const photos = rec.photos || [];
+  const isEditing = editingRecordUid === rec.uid;
+
+  const div = document.createElement('div');
+  div.className = 'visit-record';
+  div.style.cssText = 'flex-direction:column;gap:8px;' + (isEditing ? 'border-color:#7c3aed;background:#1a1030;' : '');
+
+  if (isEditing) {
+    // ---- EDIT MODE ----
+    // temp photos state (copy of rec.photos so we can cancel)
+    const tempPhotos = [...photos];
+
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:0.72rem;font-weight:700;color:#a78bfa;letter-spacing:0.06em;margin-bottom:2px';
+    header.textContent = '✏️ 記録を編集';
+    div.appendChild(header);
+
+    // date + artist row
+    const row1 = document.createElement('div');
+    row1.className = 'form-row';
+    row1.style.marginBottom = '8px';
+    const dateInput = document.createElement('input');
+    dateInput.type = 'date'; dateInput.className = 'form-input';
+    dateInput.value = rec.date || ''; dateInput.style.width = '150px'; dateInput.style.flex = 'none';
+    const artistInput = document.createElement('input');
+    artistInput.type = 'text'; artistInput.className = 'form-input';
+    artistInput.placeholder = 'アーティスト名（任意）'; artistInput.value = rec.artist || '';
+    artistInput.style.flex = '1';
+    row1.appendChild(dateInput); row1.appendChild(artistInput);
+    div.appendChild(row1);
+
+    // memo textarea
+    const memoTA = document.createElement('textarea');
+    memoTA.className = 'form-memo'; memoTA.placeholder = '思い出・感想など（任意）';
+    memoTA.value = rec.memo || '';
+    div.appendChild(memoTA);
+
+    // setlist edit
+    const tempSetlist = [...(rec.setlist || [])];
+    const setlistSection = document.createElement('div');
+    setlistSection.className = 'setlist-section';
+    const setlistLabel = document.createElement('div');
+    setlistLabel.className = 'setlist-label';
+    const setlistRows = document.createElement('div');
+    const setlistAddBtn = document.createElement('button');
+    setlistAddBtn.type = 'button'; setlistAddBtn.className = 'setlist-add-btn';
+
+    function renderEditSetlist() {
+      setlistRows.innerHTML = '';
+      tempSetlist.forEach((song, idx) => {
+        const row = document.createElement('div');
+        row.className = 'setlist-edit-row';
+        row.innerHTML = `
+          <span class="setlist-edit-num">${idx + 1}.</span>
+          <input class="setlist-input" type="text" placeholder="曲名" value="${escHtml(song)}" maxlength="100">
+          <button class="setlist-remove" type="button">✕</button>
+        `;
+        row.querySelector('input').addEventListener('input', e => { tempSetlist[idx] = e.target.value; });
+        row.querySelector('.setlist-remove').addEventListener('click', () => { tempSetlist.splice(idx, 1); renderEditSetlist(); });
+        setlistRows.appendChild(row);
+      });
+      setlistLabel.textContent = `🎵 セットリスト（${tempSetlist.length}/${MAX_SETLIST}曲）`;
+      setlistAddBtn.disabled = tempSetlist.length >= MAX_SETLIST;
+      setlistAddBtn.textContent = tempSetlist.length >= MAX_SETLIST ? `🎵 ${MAX_SETLIST}曲（上限）` : `＋ 曲を追加`;
+    }
+    setlistAddBtn.addEventListener('click', () => { if (tempSetlist.length < MAX_SETLIST) { tempSetlist.push(''); renderEditSetlist(); } });
+    renderEditSetlist();
+    setlistSection.appendChild(setlistLabel);
+    setlistSection.appendChild(setlistRows);
+    setlistSection.appendChild(setlistAddBtn);
+    div.appendChild(setlistSection);
+
+    // photo grid (editable)
+    const photoHint = document.createElement('div');
+    photoHint.className = 'photo-count-hint';
+    div.appendChild(photoHint);
+
+    const photoGrid = document.createElement('div');
+    photoGrid.className = 'photo-grid'; photoGrid.style.marginBottom = '0';
+    div.appendChild(photoGrid);
+
+    function renderEditPhotoGrid() {
+      photoGrid.innerHTML = '';
+      photoHint.textContent = `📷 ${tempPhotos.length}/${MAX_PHOTOS}枚`;
+      tempPhotos.forEach((src, idx) => {
+        const slot = document.createElement('div');
+        slot.className = 'photo-slot';
+        slot.innerHTML = `<img src="${src}" title="${idx+1}枚目"><button class="photo-slot-remove" type="button">✕</button>`;
+        slot.querySelector('img').addEventListener('click', () => openLightbox(tempPhotos, idx));
+        slot.querySelector('.photo-slot-remove').addEventListener('click', e => {
+          e.stopPropagation(); tempPhotos.splice(idx, 1); renderEditPhotoGrid();
+        });
+        photoGrid.appendChild(slot);
+      });
+      if (tempPhotos.length < MAX_PHOTOS) {
+        const addBtn = document.createElement('button');
+        addBtn.className = 'photo-add-btn'; addBtn.type = 'button';
+        addBtn.innerHTML = `<span style="font-size:0.7rem;line-height:1.2;text-align:center">📷<br>追加</span>`;
+        addBtn.addEventListener('click', () => {
+          recordPhotoTargetUid = rec.uid + '_edit';
+          document.getElementById('record-photo-input').value = '';
+          document.getElementById('record-photo-input').click();
+          // temporarily store callback
+          recordPhotoTargetUid = rec.uid + '_edit';
+          window._editPhotoPush = (src) => { tempPhotos.push(src); renderEditPhotoGrid(); };
+        });
+        photoGrid.appendChild(addBtn);
+      }
+    }
+    renderEditPhotoGrid();
+
+    // action buttons
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;gap:8px;margin-top:4px';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn-primary'; saveBtn.style.flex = '1';
+    saveBtn.textContent = '✓ 変更を保存';
+    saveBtn.addEventListener('click', () => {
+      const r = modalPendingRecords.find(r => r.uid === rec.uid);
+      if (r) {
+        r.date    = dateInput.value;
+        r.artist  = artistInput.value.trim();
+        r.memo    = memoTA.value.trim();
+        r.setlist = tempSetlist.map(s => s.trim()).filter(Boolean);
+        r.photos  = [...tempPhotos];
+      }
+      editingRecordUid = null;
+      renderModalRecords();
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn-secondary';
+    cancelBtn.textContent = 'キャンセル';
+    cancelBtn.addEventListener('click', () => { editingRecordUid = null; renderModalRecords(); });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.style.cssText = 'padding:8px 12px;background:transparent;border:1px solid #3a1a1a;border-radius:8px;color:#f87171;font-size:0.82rem;cursor:pointer';
+    deleteBtn.textContent = '🗑 削除';
+    deleteBtn.addEventListener('click', () => {
+      if (!confirm('この訪問記録を削除しますか？')) return;
+      modalPendingRecords = modalPendingRecords.filter(r => r.uid !== rec.uid);
+      editingRecordUid = null;
+      renderModalRecords();
+    });
+
+    actions.appendChild(saveBtn);
+    actions.appendChild(cancelBtn);
+    actions.appendChild(deleteBtn);
+    div.appendChild(actions);
+
+  } else {
+    // ---- VIEW MODE ----
+    const dateLabel = rec.date ? rec.date.replace(/-/g,'/') : '日付未設定';
+    const artistLabel = rec.artist
+      ? `<div class="visit-artist">${escHtml(rec.artist)}</div>`
+      : `<div class="visit-artist visit-artist-empty">アーティスト未入力</div>`;
+    const memoHtml = rec.memo
+      ? `<div class="visit-memo">💭 ${escHtml(rec.memo)}</div>`
+      : '';
+    const setlist = rec.setlist || [];
+    const setlistHtml = setlist.length ? `
+      <div class="setlist-section" style="margin-top:6px">
+        <div class="setlist-label">🎵 セットリスト（${setlist.length}曲）</div>
+        <div class="setlist-view">
+          ${setlist.map((s,i) => `<div class="setlist-song-row"><span class="setlist-num">${i+1}.</span><span class="setlist-song-name">${escHtml(s)}</span></div>`).join('')}
+        </div>
+      </div>` : '';
+
+    const topRow = document.createElement('div');
+    topRow.style.cssText = 'display:flex;align-items:flex-start;gap:8px;width:100%';
+    topRow.innerHTML = `
+      <div style="flex:1;min-width:0">
+        <div class="visit-date">📅 ${dateLabel}</div>
+        ${artistLabel}
+        ${memoHtml}
+        ${setlistHtml}
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn-edit-record" title="編集" style="padding:4px 10px;background:#1e1a30;border:1px solid #4a3a7a;border-radius:6px;color:#a78bfa;font-size:0.72rem;cursor:pointer">✏️ 編集</button>
+        <button class="visit-delete" title="削除">✕</button>
+      </div>
+    `;
+    topRow.querySelector('.btn-edit-record').addEventListener('click', () => {
+      editingRecordUid = rec.uid;
+      renderModalRecords();
+    });
+    topRow.querySelector('.visit-delete').addEventListener('click', () => {
+      if (!confirm('この訪問記録を削除しますか？')) return;
+      modalPendingRecords = modalPendingRecords.filter(r => r.uid !== rec.uid);
+      renderModalRecords();
+    });
+    div.appendChild(topRow);
+
+    // photo grid (view only)
+    if (photos.length) {
+      const gridWrap = document.createElement('div');
+      const grid = document.createElement('div');
+      grid.className = 'photo-grid'; grid.style.marginBottom = '0';
+      photos.forEach((src, idx) => {
+        const slot = document.createElement('div');
+        slot.className = 'photo-slot';
+        slot.innerHTML = `<img src="${src}" title="${idx+1}枚目">`;
+        slot.querySelector('img').addEventListener('click', () => openLightbox(photos, idx));
+        grid.appendChild(slot);
+      });
+      const hint = document.createElement('div');
+      hint.style.cssText = 'font-size:0.62rem;color:#555;margin-top:4px';
+      hint.textContent = `📷 ${photos.length}枚`;
+      gridWrap.appendChild(grid); gridWrap.appendChild(hint);
+      div.appendChild(gridWrap);
+    }
+  }
+
+  container.appendChild(div);
+}
+
+// Handle photo additions to existing records (shared input)
+document.getElementById('record-photo-input').addEventListener('change', async e => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  // edit-mode photo addition via callback
+  if (recordPhotoTargetUid && recordPhotoTargetUid.endsWith('_edit') && window._editPhotoPush) {
+    const baseUid = recordPhotoTargetUid.replace('_edit', '');
+    const rec = modalPendingRecords.find(r => r.uid === baseUid);
+    const currentCount = rec ? (rec.photos||[]).length : 0;
+    // Note: tempPhotos is managed by renderEditPhotoGrid closure
+    const toProcess = files.slice(0, MAX_PHOTOS - currentCount);
+    for (const file of toProcess) {
+      window._editPhotoPush(await compressImage(file));
+    }
+    e.target.value = '';
+    recordPhotoTargetUid = null;
+    window._editPhotoPush = null;
+    return;
+  }
+
+  // normal (non-edit) record photo addition
+  if (!recordPhotoTargetUid) return;
+  const rec = modalPendingRecords.find(r => r.uid === recordPhotoTargetUid);
+  if (!rec) return;
+  if (!rec.photos) rec.photos = [];
+  const toProcess = files.slice(0, MAX_PHOTOS - rec.photos.length);
+  for (const file of toProcess) rec.photos.push(await compressImage(file));
+  e.target.value = '';
+  recordPhotoTargetUid = null;
+  renderModalRecords();
+});
+
+// ---- Setlist form ----
+function renderFormSetlist() {
+  const container = document.getElementById('form-setlist-rows');
+  if (!container) return;
+  container.innerHTML = '';
+  formSetlist.forEach((song, idx) => {
+    const row = document.createElement('div');
+    row.className = 'setlist-edit-row';
+    row.innerHTML = `
+      <span class="setlist-edit-num">${idx + 1}.</span>
+      <input class="setlist-input" type="text" placeholder="曲名" value="${escHtml(song)}" maxlength="100">
+      <button class="setlist-remove" type="button" title="削除">✕</button>
+    `;
+    row.querySelector('input').addEventListener('input', e => { formSetlist[idx] = e.target.value; });
+    row.querySelector('.setlist-remove').addEventListener('click', () => {
+      formSetlist.splice(idx, 1); renderFormSetlist();
+    });
+    container.appendChild(row);
+  });
+  const addBtn = document.getElementById('form-setlist-add');
+  if (addBtn) {
+    addBtn.disabled = formSetlist.length >= MAX_SETLIST;
+    addBtn.textContent = formSetlist.length >= MAX_SETLIST
+      ? `🎵 ${MAX_SETLIST}曲（上限）`
+      : `＋ 曲を追加（${formSetlist.length}/${MAX_SETLIST}）`;
+  }
+}
+document.getElementById('form-setlist-add')?.addEventListener('click', () => {
+  if (formSetlist.length < MAX_SETLIST) { formSetlist.push(''); renderFormSetlist(); }
+});
+
+// Render the photo grid inside the "add new visit" form
+function renderFormPhotoGrid() {
+  const grid = document.getElementById('form-photo-grid');
+  grid.innerHTML = '';
+  const hint = document.getElementById('photo-count-hint');
+  hint.textContent = `📷 チケット写真（${modalNewPhotos.length}/${MAX_PHOTOS}枚）`;
+
+  modalNewPhotos.forEach((src, idx) => {
+    const slot = document.createElement('div');
+    slot.className = 'photo-slot';
+    slot.innerHTML = `<img src="${src}"><button class="photo-slot-remove" data-idx="${idx}">✕</button>`;
+    slot.querySelector('img').addEventListener('click', () => openLightbox(modalNewPhotos, idx));
+    slot.querySelector('.photo-slot-remove').addEventListener('click', e => {
+      e.stopPropagation();
+      modalNewPhotos.splice(idx, 1);
+      renderFormPhotoGrid();
+    });
+    grid.appendChild(slot);
+  });
+
+  if (modalNewPhotos.length < MAX_PHOTOS) {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'photo-add-btn';
+    addBtn.type = 'button';
+    addBtn.textContent = '+';
+    addBtn.title = '写真を追加';
+    addBtn.addEventListener('click', () => document.getElementById('photo-file-input').click());
+    grid.appendChild(addBtn);
+  }
+}
+
+// Multi-file photo input
+document.getElementById('photo-file-input').addEventListener('change', async e => {
+  const files = Array.from(e.target.files);
+  const remaining = MAX_PHOTOS - modalNewPhotos.length;
+  const toProcess = files.slice(0, remaining);
+  for (const file of toProcess) {
+    const compressed = await compressImage(file);
+    modalNewPhotos.push(compressed);
+  }
+  document.getElementById('photo-file-input').value = '';
+  renderFormPhotoGrid();
+});
+
+document.getElementById('form-add-btn').addEventListener('click', () => {
+  const date = document.getElementById('form-date').value;
+  const artist = document.getElementById('form-artist').value.trim();
+  const memo = document.getElementById('form-memo').value.trim();
+  const setlist = formSetlist.map(s => s.trim()).filter(Boolean);
+  if (!date && !artist && !memo && !modalNewPhotos.length && !setlist.length) return;
+  modalPendingRecords.push({ uid: uid(), date, artist, memo, setlist, photos: [...modalNewPhotos] });
+  modalNewPhotos = [];
+  formSetlist = [];
+  document.getElementById('form-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('form-artist').value = '';
+  document.getElementById('form-memo').value = '';
+  renderModalRecords();
+  renderFormPhotoGrid();
+  renderFormSetlist();
+  document.getElementById('form-artist').focus();
+});
+
+document.getElementById('modal-save').addEventListener('click', () => {
+  if (modalPendingRecords.length > 0) {
+    visited[modalVenueId] = modalPendingRecords;
+  } else {
+    delete visited[modalVenueId];
+  }
+  saveVisited();
+  refreshMarker(modalVenueId);
+  renderSidebar();
+  if (markers[modalVenueId].isPopupOpen())
+    markers[modalVenueId].setPopupContent(makePopup(VENUES_CLEAN.find(v=>v.id===modalVenueId)));
+  pulseMarker(modalVenueId);
+  document.getElementById('visit-modal').classList.add('hidden');
+});
+
+document.getElementById('modal-cancel').addEventListener('click', () => {
+  document.getElementById('visit-modal').classList.add('hidden');
+});
+document.getElementById('visit-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('visit-modal'))
+    document.getElementById('visit-modal').classList.add('hidden');
+});
+
+// =====================================================
+//  LIGHTBOX (multi-photo with navigation)
+// =====================================================
+let lbPhotos = [];
+let lbIndex = 0;
+
+function openLightbox(photos, startIdx = 0) {
+  lbPhotos = Array.isArray(photos) ? photos : [photos];
+  lbIndex = startIdx;
+  renderLightbox();
+  document.getElementById('lightbox').classList.remove('hidden');
+}
+
+function renderLightbox() {
+  const img = document.getElementById('lightbox-img');
+  const counter = document.getElementById('lb-counter');
+  const prev = document.getElementById('lb-prev');
+  const next = document.getElementById('lb-next');
+  const strip = document.getElementById('lb-strip');
+
+  img.src = lbPhotos[lbIndex];
+  counter.textContent = lbPhotos.length > 1 ? `${lbIndex + 1} / ${lbPhotos.length}` : '';
+
+  prev.classList.toggle('hidden', lbPhotos.length <= 1 || lbIndex === 0);
+  next.classList.toggle('hidden', lbPhotos.length <= 1 || lbIndex === lbPhotos.length - 1);
+
+  strip.innerHTML = '';
+  if (lbPhotos.length > 1) {
+    lbPhotos.forEach((src, i) => {
+      const t = document.createElement('img');
+      t.className = 'lightbox-strip-thumb' + (i === lbIndex ? ' active' : '');
+      t.src = src;
+      t.addEventListener('click', e => { e.stopPropagation(); lbIndex = i; renderLightbox(); });
+      strip.appendChild(t);
+    });
+  }
+}
+
+document.getElementById('lb-prev').addEventListener('click', e => { e.stopPropagation(); lbIndex--; renderLightbox(); });
+document.getElementById('lb-next').addEventListener('click', e => { e.stopPropagation(); lbIndex++; renderLightbox(); });
+document.getElementById('lightbox-close').addEventListener('click', e => { e.stopPropagation(); document.getElementById('lightbox').classList.add('hidden'); });
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === document.getElementById('lightbox') || e.target === document.getElementById('lightbox-img'))
+    document.getElementById('lightbox').classList.add('hidden');
+});
+document.addEventListener('keydown', e => {
+  if (document.getElementById('lightbox').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft' && lbIndex > 0) { lbIndex--; renderLightbox(); }
+  if (e.key === 'ArrowRight' && lbIndex < lbPhotos.length - 1) { lbIndex++; renderLightbox(); }
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.add('hidden');
+});
+
+function pulseMarker(id) {
+  const mkrEl = document.getElementById('mkr-' + id);
+  if (mkrEl) { mkrEl.classList.add('pulse'); setTimeout(() => mkrEl.classList.remove('pulse'), 400); }
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// =====================================================
+//  MAP
+// =====================================================
+let markers = {};
+let activeFilter = 'all';
+let activeVenueId = null;
+
+const map = L.map('map', { center: [36.5, 136.5], zoom: 5, zoomControl: true });
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19
+}).addTo(map);
+
+function makeIcon(venue) {
+  const iv = isVisited(venue.id);
+  return L.divIcon({
+    className: '',
+    html: `<div class="custom-marker ${TYPE_COLOR[venue.type]} ${iv ? 'visited' : ''}" id="mkr-${venue.id}">${TYPE_ICON[venue.type]}</div>`,
+    iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -16]
+  });
+}
+
+function makePopup(venue) {
+  const iv = isVisited(venue.id);
+  const recs = getRecords(venue.id);
+  const recsSorted = [...recs].sort((a,b) => (a.date||'') < (b.date||'') ? 1 : -1);
+  let visitsHtml = '';
+  if (recsSorted.length) {
+    visitsHtml = '<div class="popup-visits">' +
+      recsSorted.slice(0,3).map(r => {
+        const d = r.date ? r.date.replace(/-/g,'/') : '';
+        const a = r.artist ? ` ${escHtml(r.artist)}` : '';
+        const photos = r.photos || [];
+        const photoCount = photos.length ? ` 📷${photos.length}` : '';
+        return `📅 ${d}${a}${photoCount}`;
+      }).join('<br>') +
+      (recsSorted.length > 3 ? `<br><span style="color:#555">他${recsSorted.length-3}件</span>` : '') +
+      '</div>';
+  }
+  const gmapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue.name)}&center=${venue.lat},${venue.lng}`;
+  return `
+    <div class="popup-name">${TYPE_ICON[venue.type]} ${venue.name}</div>
+    <div class="popup-detail">${venue.sub}</div>
+    ${visitsHtml}
+    ${iv ? `<button class="popup-btn" style="margin-bottom:6px;background:#1e2a3a;color:#60a5fa;width:100%" onclick="openModalFromPopup('${venue.id}')">✏️ 記録を編集</button>` : ''}
+    <button class="popup-btn ${iv ? 'visited-btn' : ''}" style="width:100%" onclick="toggleVisitedFromPopup('${venue.id}')">
+      ${iv ? '✓ 訪問済み（クリックで解除）' : '＋ 訪問済みにする'}
+    </button>
+    <a href="${gmapUrl}" target="_blank" rel="noopener" class="popup-btn" style="display:block;text-align:center;margin-top:6px;background:#1a2a1a;color:#34d399;text-decoration:none;width:100%">
+      🗺️ Google マップで見る
+    </a>`;
+}
+
+VENUES_CLEAN.forEach(venue => {
+  const marker = L.marker([venue.lat, venue.lng], { icon: makeIcon(venue) })
+    .bindPopup(makePopup(venue), { maxWidth: 240 })
+    .addTo(map);
+  marker.on('click', () => { highlightSidebarItem(venue.id); scrollToVenue(venue.id); });
+  markers[venue.id] = marker;
+});
+
+window.toggleVisitedFromPopup = function(id) {
+  if (isVisited(id)) {
+    delete visited[id];
+    saveVisited(); refreshMarker(id); renderSidebar();
+    markers[id].setPopupContent(makePopup(VENUES_CLEAN.find(v=>v.id===id)));
+  } else {
+    markers[id].closePopup();
+    openVisitModal(id);
+  }
+};
+window.openModalFromPopup = function(id) {
+  markers[id].closePopup();
+  openVisitModal(id);
+};
+
+function refreshMarker(id) {
+  const venue = VENUES_CLEAN.find(v => v.id === id);
+  if (venue) markers[id].setIcon(makeIcon(venue));
+}
+function highlightSidebarItem(id) {
+  document.querySelectorAll('.venue-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('item-' + id);
+  if (el) el.classList.add('active');
+  activeVenueId = id;
+}
+function scrollToVenue(id) {
+  const el = document.getElementById('item-' + id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// =====================================================
+//  SIDEBAR
+// =====================================================
+const regionOrder = ['北海道・東北','関東','甲信越・北陸','東海','近畿','中国・四国','九州・沖縄'];
+const collapsedRegions = new Set();
+
+function getFilteredVenues() {
+  const q = document.getElementById('search').value.toLowerCase();
+  return VENUES_CLEAN.filter(v => {
+    if (q && !v.name.toLowerCase().includes(q) && !v.sub.toLowerCase().includes(q) && !v.region.toLowerCase().includes(q)) return false;
+    if (activeFilter === 'visited') return isVisited(v.id);
+    if (activeFilter === 'unvisited') return !isVisited(v.id);
+    if (activeFilter !== 'all') return v.type === activeFilter;
+    return true;
+  });
+}
+
+function renderSidebar() {
+  const list = document.getElementById('venue-list');
+  const filtered = getFilteredVenues();
+  const filteredIds = new Set(filtered.map(v => v.id));
+  list.innerHTML = '';
+
+  regionOrder.forEach(region => {
+    const venues = filtered.filter(v => v.region === region);
+    if (!venues.length) return;
+
+    const group = document.createElement('div');
+    group.className = 'region-group';
+
+    const isCollapsed = collapsedRegions.has(region);
+    const vCount = VENUES_CLEAN.filter(v => v.region === region).length;
+    const vVisited = VENUES_CLEAN.filter(v => v.region === region && isVisited(v.id)).length;
+    const title = document.createElement('div');
+    title.className = 'region-title' + (isCollapsed ? ' collapsed' : '');
+    title.innerHTML = `<span>${region} <span style="color:#555;font-weight:400">${vVisited}/${vCount}</span></span><span class="chevron">▼</span>`;
+    title.onclick = () => {
+      collapsedRegions.has(region) ? collapsedRegions.delete(region) : collapsedRegions.add(region);
+      renderSidebar();
+    };
+    group.appendChild(title);
+
+    if (!isCollapsed) {
+      venues.forEach(venue => {
+        const iv = isVisited(venue.id);
+        const recs = getRecords(venue.id);
+        const item = document.createElement('div');
+        item.className = 'venue-item' + (activeVenueId === venue.id ? ' active' : '');
+        item.id = 'item-' + venue.id;
+
+        // build visit rows HTML
+        let visitsHtml = '';
+        if (iv && recs.length) {
+          const sorted = [...recs].sort((a,b) => (a.date||'') < (b.date||'') ? 1 : -1);
+          visitsHtml = '<div class="venue-visits">' + sorted.slice(0,2).map(r => {
+            const d = r.date ? r.date.replace(/-/g,'/') : '';
+            const a = r.artist ? ' ' + escHtml(r.artist) : '';
+            const photos = r.photos || [];
+            const firstPhoto = photos[0];
+            const thumb = firstPhoto
+              ? `<img class="venue-visit-thumb" src="${firstPhoto}" title="クリックで拡大" data-uid="${r.uid}">`
+              : '';
+            const photoCount = photos.length > 1 ? `<span style="font-size:0.6rem;color:#555"> 📷${photos.length}</span>` : '';
+            return `<div class="venue-visit-row">${thumb}<span class="venue-visit-text">📅 ${d}${a}${photoCount}</span></div>`;
+          }).join('') +
+          (recs.length > 2 ? `<div style="font-size:0.62rem;color:#555;margin-top:1px">他${recs.length-2}件</div>` : '') +
+          '</div>';
+        } else if (iv) {
+          visitsHtml = '<div class="venue-visits"><div class="venue-visit-row"><span class="venue-visit-text" style="color:#666">訪問済み（記録なし）</span></div></div>';
+        }
+
+        item.innerHTML = `
+          <div class="venue-check ${iv ? 'visited' : ''}" data-id="${venue.id}"></div>
+          <div class="venue-info">
+            <div class="venue-name">${venue.name}</div>
+            <div class="venue-sub">${venue.sub}</div>
+            ${visitsHtml}
+          </div>
+          <span class="venue-tag tag-${venue.type}">${TYPE_LABEL[venue.type]||''}</span>
+        `;
+
+        // thumbnail lightbox — open full photos[] array for the record
+        item.querySelectorAll('.venue-visit-thumb').forEach(img => {
+          img.addEventListener('click', e => {
+            e.stopPropagation();
+            const recUid = img.dataset.uid;
+            const rec = recs.find(r => r.uid === recUid);
+            if (rec) openLightbox(rec.photos || [], 0);
+          });
+        });
+
+        item.querySelector('.venue-check').addEventListener('click', e => {
+          e.stopPropagation();
+          if (isVisited(venue.id)) {
+            if (!confirm(`「${venue.name}」の訪問記録をすべて削除しますか？`)) return;
+            delete visited[venue.id];
+            saveVisited(); refreshMarker(venue.id); renderSidebar();
+            if (markers[venue.id].isPopupOpen()) markers[venue.id].setPopupContent(makePopup(venue));
+          } else {
+            openVisitModal(venue.id);
+          }
+        });
+
+        item.addEventListener('click', () => {
+          map.setView([venue.lat, venue.lng], 12, { animate: true });
+          markers[venue.id].openPopup();
+          highlightSidebarItem(venue.id);
+        });
+        group.appendChild(item);
+      });
+    }
+    list.appendChild(group);
+  });
+
+  VENUES_CLEAN.forEach(v => {
+    const el = markers[v.id].getElement();
+    if (el) el.style.opacity = filteredIds.has(v.id) ? '1' : '0.15';
+  });
+}
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    renderSidebar();
+  });
+});
+document.getElementById('search').addEventListener('input', renderSidebar);
+
+// =====================================================
+//  RANKING PANEL
+// =====================================================
+function openRankingPanel() {
+  renderRankingPanel();
+  document.getElementById('ranking-overlay').classList.remove('hidden');
+}
+function closeRankingPanel() {
+  document.getElementById('ranking-overlay').classList.add('hidden');
+}
+
+document.getElementById('btn-open-ranking').addEventListener('click', openRankingPanel);
+document.getElementById('ranking-panel-close').addEventListener('click', closeRankingPanel);
+document.getElementById('ranking-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('ranking-overlay')) closeRankingPanel();
+});
+
+function renderRankingPanel() {
+  const body = document.getElementById('ranking-body');
+
+  // Build ranking: venues that have been visited, sorted by number of records desc
+  const ranked = VENUES_CLEAN
+    .filter(v => isVisited(v.id))
+    .map(v => {
+      const recs = getRecords(v.id);
+      const sorted = [...recs].sort((a,b) => (b.date||'') > (a.date||'') ? 1 : -1);
+      const artists = [...new Set(recs.map(r => r.artist).filter(Boolean))];
+      const latestDate = sorted[0]?.date || '';
+      return { venue: v, count: recs.length || 0, artists, latestDate };
+    })
+    .sort((a, b) => b.count !== a.count ? b.count - a.count : (b.latestDate > a.latestDate ? 1 : -1));
+
+  if (!ranked.length) {
+    body.innerHTML = '<div class="ranking-empty">まだ訪問記録がありません。</div>';
+    return;
+  }
+
+  body.innerHTML = '';
+
+  // Add a small summary header
+  const total = ranked.reduce((s, r) => s + (r.count || 1), 0);
+  const summary = document.createElement('div');
+  summary.style.cssText = 'font-size:0.72rem;color:#555;margin-bottom:12px;padding:0 2px';
+  summary.textContent = `${ranked.length}会場 / 合計 ${total}回 訪問`;
+  body.appendChild(summary);
+
+  ranked.forEach(({ venue, count, artists, latestDate }, i) => {
+    const rank = i + 1;
+    const numClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    const artistStr = artists.length ? artists.slice(0,3).join('・') + (artists.length > 3 ? ` 他${artists.length-3}組` : '') : '';
+    const dateStr = latestDate ? `最終: ${latestDate.replace(/-/g,'/')}` : '';
+
+    const card = document.createElement('div');
+    card.className = 'ranking-card';
+    card.innerHTML = `
+      <div class="ranking-num ${numClass}">${medal}</div>
+      <div class="ranking-info">
+        <div class="ranking-venue">${TYPE_ICON[venue.type]} ${venue.name}</div>
+        <div class="ranking-sub">${venue.sub}　<span class="venue-tag tag-${venue.type}" style="font-size:0.58rem;padding:1px 6px">${TYPE_LABEL[venue.type]||''}</span></div>
+        ${artistStr ? `<div class="ranking-artists">🎤 ${escHtml(artistStr)}</div>` : ''}
+        ${dateStr ? `<div style="font-size:0.65rem;color:#555;margin-top:2px">📅 ${dateStr}</div>` : ''}
+      </div>
+      <div class="ranking-count">
+        <div class="ranking-count-num">${count || '−'}</div>
+        <div class="ranking-count-label">${count ? '回' : '記録なし'}</div>
+      </div>
+    `;
+    card.addEventListener('click', () => {
+      closeRankingPanel();
+      map.setView([venue.lat, venue.lng], 13, { animate: true });
+      setTimeout(() => markers[venue.id].openPopup(), 400);
+      highlightSidebarItem(venue.id);
+      scrollToVenue(venue.id);
+    });
+    body.appendChild(card);
+  });
+}
+
+// =====================================================
+//  RECORDS PANEL
+// =====================================================
+function openRecordsPanel() {
+  renderRecordsPanel();
+  document.getElementById('records-overlay').classList.remove('hidden');
+  document.getElementById('records-search').focus();
+}
+function closeRecordsPanel() {
+  document.getElementById('records-overlay').classList.add('hidden');
+}
+
+document.getElementById('btn-open-records').addEventListener('click', openRecordsPanel);
+document.getElementById('records-panel-close').addEventListener('click', closeRecordsPanel);
+document.getElementById('records-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('records-overlay')) closeRecordsPanel();
+});
+document.getElementById('records-search').addEventListener('input', renderRecordsPanel);
+document.getElementById('records-sort').addEventListener('change', renderRecordsPanel);
+
+function renderRecordsPanel() {
+  const body = document.getElementById('records-body');
+  const q = document.getElementById('records-search').value.toLowerCase();
+  const sort = document.getElementById('records-sort').value;
+
+  // Collect all records with venue info
+  let allEntries = [];
+  for (const [venueId, recs] of Object.entries(visited)) {
+    if (!Array.isArray(recs)) continue;
+    const venue = VENUES_CLEAN.find(v => v.id === venueId);
+    if (!venue) continue;
+    recs.forEach(rec => {
+      allEntries.push({ rec, venue });
+    });
+    // If no records but visited (empty array) → one placeholder entry
+    if (recs.length === 0) {
+      allEntries.push({ rec: { uid: venueId + '_empty', date: '', artist: '', photos: [] }, venue });
+    }
+  }
+
+  // Filter
+  if (q) {
+    allEntries = allEntries.filter(({ rec, venue }) =>
+      venue.name.toLowerCase().includes(q) ||
+      (rec.artist || '').toLowerCase().includes(q) ||
+      (rec.memo || '').toLowerCase().includes(q) ||
+      venue.sub.toLowerCase().includes(q)
+    );
+  }
+
+  if (!allEntries.length) {
+    body.innerHTML = visited && Object.keys(visited).length === 0
+      ? `<div class="records-empty">まだ訪問記録がありません。<br>会場のチェックボタンから登録しましょう！</div>`
+      : `<div class="records-empty">「${q}」に一致する記録がありません。</div>`;
+    return;
+  }
+
+  // Sort
+  if (sort === 'date-desc') {
+    allEntries.sort((a, b) => (b.rec.date || '0000') > (a.rec.date || '0000') ? 1 : -1);
+  } else if (sort === 'date-asc') {
+    allEntries.sort((a, b) => (a.rec.date || '9999') > (b.rec.date || '9999') ? 1 : -1);
+  } else if (sort === 'venue') {
+    allEntries.sort((a, b) => a.venue.name.localeCompare(b.venue.name, 'ja'));
+  }
+
+  body.innerHTML = '';
+  let lastMonth = null;
+
+  allEntries.forEach(({ rec, venue }) => {
+    // Month separator (date-sorted modes only)
+    if (sort !== 'venue' && rec.date) {
+      const month = rec.date.slice(0, 7); // YYYY-MM
+      if (month !== lastMonth) {
+        const sep = document.createElement('div');
+        sep.className = 'records-month-header';
+        sep.textContent = month.replace('-', '年') + '月';
+        body.appendChild(sep);
+        lastMonth = month;
+      }
+    }
+
+    const photos = rec.photos || [];
+    const card = document.createElement('div');
+    card.className = 'record-card';
+    card.style.flexDirection = 'column';
+
+    const dateLabel = rec.date ? rec.date.replace(/-/g,'/') : '日付未設定';
+    const artistHtml = rec.artist
+      ? `<div class="record-card-artist">${escHtml(rec.artist)}</div>`
+      : `<div class="record-card-artist record-card-artist-empty">アーティスト未入力</div>`;
+    const memoHtml = rec.memo
+      ? `<div class="record-card-memo">💭 ${escHtml(rec.memo)}</div>`
+      : '';
+
+    card.innerHTML = `
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="flex:1;min-width:0">
+          <div class="record-card-date">📅 ${dateLabel}</div>
+          ${artistHtml}
+          <div class="record-card-venue">${TYPE_ICON[venue.type]} ${venue.name}　<span style="color:#555">${venue.sub}</span></div>
+          ${memoHtml}
+        </div>
+        <span class="record-card-tag tag-${venue.type}" style="flex-shrink:0">${TYPE_LABEL[venue.type]||''}</span>
+      </div>
+      ${photos.length ? `<div class="record-gallery" id="gallery-${rec.uid}"></div>` : '<div style="font-size:0.7rem;color:#333;margin-top:6px">📷 写真なし</div>'}
+    `;
+
+    // Build photo gallery
+    if (photos.length) {
+      const gallery = card.querySelector(`#gallery-${rec.uid}`);
+      photos.forEach((src, idx) => {
+        const img = document.createElement('img');
+        img.className = 'record-gallery-img';
+        img.src = src;
+        img.title = `${idx+1}/${photos.length}枚目`;
+        img.addEventListener('click', e => { e.stopPropagation(); openLightbox(photos, idx); });
+        gallery.appendChild(img);
+      });
+    }
+
+    // Card click → jump to venue on map
+    card.addEventListener('click', () => {
+      closeRecordsPanel();
+      map.setView([venue.lat, venue.lng], 13, { animate: true });
+      setTimeout(() => markers[venue.id].openPopup(), 400);
+      highlightSidebarItem(venue.id);
+      scrollToVenue(venue.id);
+    });
+
+    body.appendChild(card);
+  });
+
+  // Total count
+  const countEl = document.createElement('div');
+  countEl.style.cssText = 'text-align:center;font-size:0.7rem;color:#444;padding:12px 0;';
+  countEl.textContent = `${allEntries.length}件の記録`;
+  body.appendChild(countEl);
+}
+
+updateStats();
+renderSidebar();
+
+// ジャンル達成バー 折りたたみ
+(function() {
+  const btn = document.getElementById('genre-toggle-btn');
+  const wrap = document.getElementById('genre-bars-wrap');
+  if (!btn || !wrap) return;
+  btn.addEventListener('click', () => {
+    const collapsed = wrap.classList.toggle('collapsed');
+    btn.textContent = collapsed ? '▼' : '▲';
+  });
+})();
+
+// サイドバー 検索・フィルター 折りたたみ
+(function() {
+  const toggle = document.getElementById('sidebar-search-toggle');
+  const body = document.getElementById('sidebar-search-body');
+  const arrow = document.getElementById('sidebar-search-arrow');
+  if (!toggle || !body) return;
+  toggle.addEventListener('click', () => {
+    const isNowCollapsed = body.classList.toggle('collapsed');
+    arrow.style.transform = isNowCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+  });
+})();
+
+// スプラッシュ画面を2.8秒後にフェードアウト
+(function() {
+  const splash = document.getElementById('splash');
+  if (!splash) return;
+  setTimeout(() => {
+    splash.classList.add('fade-out');
+    setTimeout(() => splash.classList.add('hidden'), 650);
+  }, 2800);
+})();
+
+// スマホ用サイドバー開閉
+const sidebarHandle = document.getElementById('sidebar-handle');
+const sidebar = document.getElementById('sidebar');
+if (sidebarHandle) {
+  sidebarHandle.addEventListener('click', () => {
+    sidebar.classList.toggle('sp-open');
+  });
+}
+</script>
+</body>
+</html>
