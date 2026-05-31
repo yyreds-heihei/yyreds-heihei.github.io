@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-020';
+const APP_VERSION = '20260531-021';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -716,6 +716,7 @@ const VENUES_CLEAN = [
   {id:88, name:'長崎ブリックホール', lat:32.7523, lng:129.8823, pref:'長崎県', type:'hall', cap:1500},
   {id:89, name:'佐賀市文化会館', lat:33.2726, lng:130.2902, pref:'佐賀県', type:'civic', cap:1500},
   {id:90, name:'沖縄市民会館', lat:26.3316, lng:127.7866, pref:'沖縄県', type:'civic', cap:1800},
+  {id:91, name:'神戸国際会館こくさいホール', lat:34.6921, lng:135.1958, pref:'兵庫県', type:'hall', cap:2000, seat:'https://www.kih.co.jp/kokusaihall/'},
 
   // ライブハウス
   {id:100, name:'渋谷CLUB QUATTRO', lat:35.6607, lng:139.6987, pref:'東京都', type:'live', cap:800},
