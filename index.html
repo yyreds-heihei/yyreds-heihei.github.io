@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-017';
+const APP_VERSION = '20260531-019';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -234,22 +234,26 @@ if (stored !== APP_VERSION) {
   .backup-btn-import:hover,.backup-btn-import:active{background:#2a4a2a}
   .backup-close{width:100%;padding:12px;border-radius:10px;border:1px solid #2a2a3a;background:transparent;color:#666;font-size:0.88rem;cursor:pointer;margin-top:6px}
   .backup-note{font-size:0.73rem;color:#555;margin-top:16px;line-height:1.8;border-top:1px solid #2a2a3a;padding-top:14px}
-  .backup-step{margin-bottom:14px}
+  .backup-step{margin-bottom:16px}
   .backup-step-label{font-size:0.72rem;font-weight:700;color:#a78bfa;margin-bottom:6px;letter-spacing:0.03em}
+  .backup-step-desc{font-size:0.75rem;color:#888;margin-top:8px;line-height:1.7}
+  .backup-step-desc b{color:#c084fc}
+  .backup-step-sub{font-size:0.68rem;color:#555;display:block;margin-top:2px;letter-spacing:0.01em}
 
   /* SPLASH SCREEN */
-  .splash{position:fixed;inset:0;z-index:99999;overflow:hidden;transition:opacity 0.6s ease}
+  .splash{position:fixed;inset:0;z-index:99999;overflow:hidden;transition:opacity 0.5s ease}
   .splash.fade-out{opacity:0;pointer-events:none}
   .splash-bg{
     position:absolute;inset:0;
     background-image:url('Otaアイコン.png');
     background-size:cover;background-position:center;
-    animation:splashZoom 1.2s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    animation:splashZoom 2.0s cubic-bezier(0.22,0.61,0.36,1) forwards;
     transform-origin:center center;
   }
   @keyframes splashZoom{
-    0%{transform:scale(1)}
-    100%{transform:scale(1.15)}
+    0%  {transform:scale(1)}
+    70% {transform:scale(1.08)}
+    100%{transform:scale(1.6)}
   }
 
   /* HOME PANEL */
@@ -523,25 +527,27 @@ if (stored !== APP_VERSION) {
 <!-- Backup Modal -->
 <div class="backup-overlay hidden" id="backup-overlay">
   <div class="backup-modal">
-    <div class="backup-title">📱 データ引き継ぎ・バックアップ</div>
-    <div class="backup-desc">足あと記録・推し写真・背景画像・名前をすべて保存できます。<br>機種変更前に必ずエクスポートしましょう。</div>
+    <div class="backup-title">📱 機種変更・データ引き継ぎ</div>
+    <div class="backup-desc">足あと記録・推し写真・背景・名前をまるごと引き継げます。</div>
 
     <div class="backup-step">
-      <div class="backup-step-label">① 旧スマホで行う操作</div>
-      <button class="backup-btn backup-btn-export" id="backup-export">📤 エクスポート（全データを保存）</button>
+      <div class="backup-step-label">① 旧スマホでやること</div>
+      <button class="backup-btn backup-btn-export" id="backup-export">📤 エクスポート（ファイルを保存）</button>
+      <div class="backup-step-desc">保存されたファイルを<br><b>LINEで「自分」に送信</b>しておきましょう<br><span class="backup-step-sub">LINE → 自分のトーク → 📎 → ファイル → .jsonを選択</span></div>
     </div>
 
     <div class="backup-step">
-      <div class="backup-step-label">② 新スマホで行う操作</div>
+      <div class="backup-step-label">② 新スマホでやること</div>
+      <div class="backup-step-desc" style="margin-bottom:8px"><b>LINEの「自分」のトーク</b>からファイルを保存後↓</div>
       <button class="backup-btn backup-btn-import" id="backup-import-btn">📥 インポート（データを復元）</button>
       <input type="file" id="backup-import-input" accept=".json" style="display:none">
     </div>
 
     <button class="backup-close" id="backup-close">閉じる</button>
     <div class="backup-note">
-      💾 保存されるデータ：足あと記録・推し写真・背景画像・推しの名前<br>
-      📂 保存先：iCloud Drive・Google Drive・LINEで自分に送るなど<br>
-      🔁 インポートは既存データとマージされます（重複なし）
+      💾 引き継ぎ対象：足あと記録・推し写真・背景画像・推しの名前<br>
+      🔁 インポートは既存データとマージされます（重複なし）<br>
+      📂 LINE以外：Google Drive・メールで自分に送るなども可
     </div>
   </div>
 </div>
@@ -803,10 +809,11 @@ loadVisited();
 // SPLASH
 (function(){
   const splash = document.getElementById('splash');
+  // スプラッシュアニメーション（2.0s）終了直前にフェードアウト開始
   setTimeout(()=>{
     splash.classList.add('fade-out');
-    setTimeout(()=>{ splash.style.display='none'; }, 600);
-  }, 2200);
+    setTimeout(()=>{ splash.style.display='none'; }, 500);
+  }, 1900);
 })();
 
 // ===== HOME =====
@@ -1786,13 +1793,18 @@ document.getElementById('ranking-overlay').addEventListener('click', e=>{
 
 if(isMobile()){
   setHeaderH();
-  // 起動時：全パネル非表示にしてスプラッシュ後にホームを表示
+  // 起動時：サイドバーを隠し、ホーム画面をすぐ準備
   document.getElementById('sidebar').classList.add('sp-hidden');
-  document.getElementById('home-overlay').classList.add('hidden');
-  setTimeout(()=>{
-    renderHome();
-    document.getElementById('home-overlay').classList.remove('hidden');
-  }, 2400); // スプラッシュ後に表示
+  // Leafletズームコントロールを起動時から非表示（マップタブ以外では不要）
+  const _initZoom = ()=>{
+    const zc = document.querySelector('.leaflet-control-container');
+    if(zc) zc.style.display = 'none';
+  };
+  _initZoom();
+  setTimeout(_initZoom, 100); // Leaflet初期化後も確実に隠す
+  // ホーム画面をスプラッシュ中に準備しておく（フェード後すぐ見えるように）
+  renderHome();
+  document.getElementById('home-overlay').classList.remove('hidden');
 }
 window.addEventListener('resize', ()=>{ if(isMobile()) setHeaderH(); });
 
