@@ -211,6 +211,37 @@
     100%{transform:scale(1.15)}
   }
 
+  /* HOME PANEL */
+  .home-overlay{position:fixed;inset:0;z-index:5000;display:flex;flex-direction:column;background:linear-gradient(160deg,#0d0d1a 0%,#1a0a2e 50%,#0d1a1a 100%)}
+  .home-overlay.hidden{display:none}
+  .home-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:24px}
+  /* 推し写真エリア */
+  .oshi-scene{display:flex;align-items:center;gap:0;width:100%;max-width:380px;justify-content:center}
+  .oshi-photo-wrap{flex-shrink:0;position:relative}
+  .oshi-photo{width:160px;height:200px;border-radius:20px;object-fit:cover;border:3px solid #7c3aed;box-shadow:0 0 30px rgba(124,58,237,0.5)}
+  .oshi-photo-empty{width:160px;height:200px;border-radius:20px;border:2px dashed #3a2a5a;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .oshi-photo-empty span{font-size:2.5rem}
+  .oshi-photo-empty small{font-size:0.7rem;color:#555;text-align:center;line-height:1.5}
+  .oshi-photo-change{position:absolute;bottom:-10px;right:-10px;width:34px;height:34px;border-radius:50%;background:#4c1d95;border:2px solid #7c3aed;color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.5);-webkit-tap-highlight-color:transparent}
+  /* 吹き出し */
+  .speech-bubble{position:relative;background:#fff;border-radius:18px;padding:14px 16px;max-width:180px;box-shadow:0 4px 20px rgba(0,0,0,0.3);margin-left:16px;flex-shrink:0}
+  .speech-bubble::before{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);border:6px solid transparent;border-right-color:#fff}
+  .speech-bubble-text{font-size:0.85rem;color:#1a1a2e;font-weight:600;line-height:1.6;text-align:left}
+  .speech-bubble-name{font-size:0.65rem;color:#888;margin-top:6px;text-align:right}
+  /* 推し名前 */
+  .oshi-name-area{text-align:center}
+  .oshi-name{font-size:1.1rem;font-weight:800;color:#c084fc;margin-bottom:4px}
+  .oshi-name-edit{font-size:0.7rem;color:#555;cursor:pointer;-webkit-tap-highlight-color:transparent;text-decoration:underline}
+  /* ホーム底部 */
+  .home-footer{padding:16px 20px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0));border-top:1px solid #1a1a2e;display:flex;gap:10px}
+  .home-footer-btn{flex:1;padding:12px;border-radius:12px;border:1px solid #2a2a3a;background:#1a1a2e;color:#888;font-size:0.8rem;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+  .home-footer-btn:active{background:#2a2a4a;color:#a78bfa}
+  /* 名前入力モーダル */
+  .oshi-name-modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10010;display:flex;align-items:flex-end;justify-content:center}
+  .oshi-name-modal.hidden{display:none}
+  .oshi-name-modal-inner{background:#1a1a2e;border-radius:18px 18px 0 0;width:100%;padding:24px 20px 36px;border-top:1px solid #3a2a5a}
+  .oshi-name-modal-title{font-size:0.9rem;font-weight:700;color:#c084fc;margin-bottom:16px}
+
   /* Weather selector */
   .weather-row{display:flex;gap:8px;margin-bottom:14px}
   .weather-btn{flex:1;padding:10px 4px;border-radius:10px;border:2px solid #2a2a3a;background:#0f0f13;color:#555;font-size:1.2rem;cursor:pointer;text-align:center;transition:all 0.15s;-webkit-tap-highlight-color:transparent;line-height:1.3}
@@ -341,7 +372,11 @@
 
 <!-- Bottom Nav (mobile) -->
 <nav class="bottom-nav" id="bottom-nav">
-  <button class="nav-tab active" data-tab="records">
+  <button class="nav-tab active" data-tab="home">
+    <span class="nav-tab-icon">🏠</span>
+    <span class="nav-tab-label">ホーム</span>
+  </button>
+  <button class="nav-tab" data-tab="records">
     <span class="nav-tab-icon">👣</span>
     <span class="nav-tab-label">足あと</span>
   </button>
@@ -358,6 +393,36 @@
     <span class="nav-tab-label">ランキング</span>
   </button>
 </nav>
+
+<!-- Home Panel -->
+<div class="home-overlay" id="home-overlay">
+  <div class="home-content">
+    <div class="oshi-scene" id="oshi-scene">
+      <!-- JS で描画 -->
+    </div>
+    <div class="oshi-name-area" id="oshi-name-area">
+      <!-- JS で描画 -->
+    </div>
+  </div>
+  <div class="home-footer">
+    <button class="home-footer-btn" onclick="switchTab('records')">👣 足あとを見る</button>
+    <button class="home-footer-btn" onclick="switchTab('list')">📋 会場リスト</button>
+    <button class="home-footer-btn" onclick="switchTab('map')">🗺️ マップ</button>
+  </div>
+</div>
+
+<!-- 推し名前入力モーダル -->
+<div class="oshi-name-modal hidden" id="oshi-name-modal">
+  <div class="oshi-name-modal-inner">
+    <div class="oshi-name-modal-title">✏️ 推しの名前を入力</div>
+    <input class="form-input" type="text" id="oshi-name-input" placeholder="例：〇〇ちゃん" maxlength="20" style="margin-bottom:14px;font-size:16px">
+    <div style="display:flex;gap:10px">
+      <button class="btn-secondary" onclick="document.getElementById('oshi-name-modal').classList.add('hidden')">キャンセル</button>
+      <button class="btn-primary" id="oshi-name-save">保存</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="oshi-photo-input" accept="image/*" style="display:none">
 
 <!-- Backup Modal -->
 <div class="backup-overlay hidden" id="backup-overlay">
@@ -628,6 +693,137 @@ loadVisited();
     setTimeout(()=>{ splash.style.display='none'; }, 600);
   }, 2200);
 })();
+
+// ===== HOME =====
+const MESSAGES = {
+  morning: [ // 5〜11時
+    'おはよう！\n今日も一日\nファイトだよ💪',
+    'おはよう☀️\n目覚めはどう？\nいい夢見た？',
+    '朝ごはん\nちゃんと食べてね🍳',
+    '今日も会いに来てくれて\nありがとう💜',
+    'おはよう！\n今日もかわいいね✨',
+  ],
+  afternoon: [ // 11〜17時
+    'お昼は\n何食べた？🍱\n教えて！',
+    '午後も\n元気でいてね☀️',
+    '頑張ってる？\n無理しないでね💜',
+    'お疲れじゃない？\nちゃんと休んで💤',
+    'もうひと踏ん張り！\n一緒に頑張ろう💪',
+  ],
+  evening: [ // 17〜21時
+    '今日も\nお疲れさま！✨\nよく頑張ったね',
+    '夕飯は\n美味しかった？🍜',
+    '今日どんな一日\nだった？\n教えて💜',
+    '次また\n会えるの楽しみ！🎵',
+    'お疲れさま😊\n今日も来てくれて\nうれしいよ',
+  ],
+  night: [ // 21〜5時
+    'もう寝ないと\nダメだよ？🌙',
+    '夜更かしは\nほどほどにね💤',
+    'ゆっくり休んでね\nおやすみ🌙💜',
+    '今日も一日\n本当にお疲れさま✨',
+    '夢の中でも\n会えるよ😴💜',
+  ]
+};
+
+function getOshiMessage(){
+  const h = new Date().getHours();
+  let timeKey;
+  if(h>=5 && h<11) timeKey='morning';
+  else if(h>=11 && h<17) timeKey='afternoon';
+  else if(h>=17 && h<21) timeKey='evening';
+  else timeKey='night';
+  const arr = MESSAGES[timeKey];
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function loadOshiData(){
+  try{
+    return JSON.parse(localStorage.getItem('oshi_data')||'{}');
+  }catch{ return {}; }
+}
+function saveOshiData(data){
+  localStorage.setItem('oshi_data', JSON.stringify(data));
+}
+
+function renderHome(){
+  const data = loadOshiData();
+  const scene = document.getElementById('oshi-scene');
+  const nameArea = document.getElementById('oshi-name-area');
+
+  // 吹き出しメッセージ
+  const msg = getOshiMessage().replace(/\n/g,'<br>');
+  const name = data.name || '推し';
+
+  if(data.photo){
+    scene.innerHTML = `
+      <div class="oshi-photo-wrap">
+        <img class="oshi-photo" src="${data.photo}" alt="推し">
+        <button class="oshi-photo-change" id="oshi-photo-change-btn">📷</button>
+      </div>
+      <div class="speech-bubble">
+        <div class="speech-bubble-text">${msg}</div>
+        <div class="speech-bubble-name">— ${name}</div>
+      </div>`;
+    document.getElementById('oshi-photo-change-btn').addEventListener('click', ()=>{
+      document.getElementById('oshi-photo-input').click();
+    });
+  } else {
+    scene.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:20px;width:100%">
+        <label class="oshi-photo-empty" id="oshi-photo-empty-btn">
+          <span>📷</span>
+          <small>推しの写真を<br>タップして登録</small>
+        </label>
+        <div class="speech-bubble" style="margin-left:0;max-width:260px">
+          <div class="speech-bubble-text" style="text-align:center">写真を登録すると<br>ここにメッセージが<br>届くよ💜</div>
+        </div>
+      </div>`;
+    document.getElementById('oshi-photo-empty-btn').addEventListener('click', ()=>{
+      document.getElementById('oshi-photo-input').click();
+    });
+  }
+
+  nameArea.innerHTML = data.photo ? `
+    <div class="oshi-name">${name}</div>
+    <div class="oshi-name-edit" id="oshi-name-edit-btn">✏️ 名前を変更</div>
+  ` : '';
+  if(document.getElementById('oshi-name-edit-btn')){
+    document.getElementById('oshi-name-edit-btn').addEventListener('click', openOshiNameModal);
+  }
+}
+
+function openOshiNameModal(){
+  const data = loadOshiData();
+  document.getElementById('oshi-name-input').value = data.name || '';
+  document.getElementById('oshi-name-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('oshi-name-input').focus(), 100);
+}
+
+document.getElementById('oshi-name-save').addEventListener('click', ()=>{
+  const name = document.getElementById('oshi-name-input').value.trim();
+  if(!name) return;
+  const data = loadOshiData();
+  data.name = name;
+  saveOshiData(data);
+  document.getElementById('oshi-name-modal').classList.add('hidden');
+  renderHome();
+});
+
+document.getElementById('oshi-photo-input').addEventListener('change', e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    const data = loadOshiData();
+    data.photo = ev.target.result;
+    saveOshiData(data);
+    // 写真登録後に名前を聞く
+    if(!data.name) openOshiNameModal();
+    else renderHome();
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+});
 
 // Map
 const map = L.map('map', {zoomControl:true, tap:true}).setView([36.5, 136.5], 5);
@@ -1015,7 +1211,7 @@ function setHeaderH(){
   document.documentElement.style.setProperty('--header-h', h+'px');
 }
 
-let activeTab = 'records';
+let activeTab = 'home';
 let tabSwitching = false; // タブ切替中フラグ（誤クローズ防止）
 
 function switchTab(tab){
@@ -1031,8 +1227,12 @@ function switchTab(tab){
   sidebar.classList.add('sp-hidden');
   document.getElementById('records-overlay').classList.add('hidden');
   document.getElementById('ranking-overlay').classList.add('hidden');
+  document.getElementById('home-overlay').classList.add('hidden');
 
-  if(tab==='list'){
+  if(tab==='home'){
+    renderHome();
+    document.getElementById('home-overlay').classList.remove('hidden');
+  } else if(tab==='list'){
     sidebar.classList.remove('sp-hidden');
   } else if(tab==='map'){
     setTimeout(()=>map.invalidateSize(), 300);
@@ -1107,11 +1307,12 @@ document.getElementById('ranking-overlay').addEventListener('click', e=>{
 
 if(isMobile()){
   setHeaderH();
-  // 起動時は足あとタブをデフォルト表示
+  // 起動時：全パネル非表示にしてスプラッシュ後にホームを表示
   document.getElementById('sidebar').classList.add('sp-hidden');
+  document.getElementById('home-overlay').classList.add('hidden');
   setTimeout(()=>{
-    renderRecordsPanel();
-    document.getElementById('records-overlay').classList.remove('hidden');
+    renderHome();
+    document.getElementById('home-overlay').classList.remove('hidden');
   }, 2400); // スプラッシュ後に表示
 }
 window.addEventListener('resize', ()=>{ if(isMobile()) setHeaderH(); });
