@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-014';
+const APP_VERSION = '20260531-015';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -144,6 +144,9 @@ if (stored !== APP_VERSION) {
   .visit-date{font-size:0.8rem;font-weight:600;color:#a78bfa}
   .visit-del{background:none;border:none;color:#555;cursor:pointer;font-size:0.9rem;padding:2px 6px;border-radius:6px;transition:color 0.15s}
   .visit-del:hover{color:#f87171}
+  .visit-edit{background:none;border:1px solid #3a2a5a;color:#a78bfa;cursor:pointer;font-size:0.72rem;font-weight:600;padding:3px 10px;border-radius:12px;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
+  .visit-edit:hover,.visit-edit:active{background:#4c1d95;color:#fff;border-color:#7c3aed}
+  .visit-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
   .visit-memo{font-size:0.78rem;color:#aaa;line-height:1.6;white-space:pre-wrap}
   .visit-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .visit-photo{width:60px;height:60px;border-radius:8px;object-fit:cover;cursor:pointer}
@@ -570,7 +573,7 @@ if (stored !== APP_VERSION) {
         </div>
         <div class="form-group">
           <label class="form-label">アーティスト</label>
-          <input class="form-input" type="text" id="form-artist" placeholder="例：〇〇ツアー">
+          <input class="form-input" type="text" id="form-artist" placeholder="">
         </div>
       </div>
       <div class="form-group" style="margin-bottom:14px">
@@ -584,7 +587,7 @@ if (stored !== APP_VERSION) {
       </div>
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">メモ</label>
-        <textarea class="form-memo" id="form-memo" placeholder="感想・セットリストなど..."></textarea>
+        <textarea class="form-memo" id="form-memo" placeholder=""></textarea>
       </div>
       <div style="margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -1323,6 +1326,8 @@ function closeModal(){
   document.getElementById('modal-overlay').classList.add('hidden');
   modalVenueId = null;
   pendingPhotos = [];
+  editingVisitIdx = null;
+  document.getElementById('modal-save').textContent = '✓ 記録';
 }
 
 const MAX_PHOTOS = 5;
@@ -1372,6 +1377,42 @@ function renderPhotoRow(){
   }
 }
 
+let editingVisitIdx = null; // 編集中の記録インデックス（nullなら新規）
+
+function startEditVisit(idx){
+  const r = (visited[modalVenueId]||[])[idx];
+  if(!r) return;
+  editingVisitIdx = idx;
+  // フォームに既存データを流し込む
+  document.getElementById('form-date').value = r.date || '';
+  document.getElementById('form-artist').value = r.artist || '';
+  document.getElementById('form-memo').value = r.memo || '';
+  selectedWeather = r.weather || '';
+  document.querySelectorAll('.weather-btn').forEach(b=>b.classList.toggle('selected', b.dataset.weather===selectedWeather));
+  pendingSetlist = [...(r.setlist||[])];
+  renderSetlistRows();
+  pendingPhotos = [...(r.photos||[])];
+  renderPhotoRow();
+  // ボタン表示を「更新」に
+  document.getElementById('modal-save').textContent = '✓ 更新';
+  // フォームまでスクロール
+  document.getElementById('form-date').closest('.form-section')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function cancelEditVisit(){
+  editingVisitIdx = null;
+  document.getElementById('form-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('form-artist').value = '';
+  document.getElementById('form-memo').value = '';
+  selectedWeather = '';
+  document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
+  pendingSetlist = [];
+  renderSetlistRows();
+  pendingPhotos = [];
+  renderPhotoRow();
+  document.getElementById('modal-save').textContent = '✓ 記録';
+}
+
 function renderVisitList(id){
   const container = document.getElementById('visit-list');
   const recs = visited[id]||[];
@@ -1380,7 +1421,10 @@ function renderVisitList(id){
     <div class="visit-item">
       <div class="visit-header">
         <div class="visit-date">📅 ${r.date||'日付未記録'}${r.artist?' · '+r.artist:''}${r.weather?' '+WEATHER_ICON[r.weather]:''}</div>
-        <button class="visit-del" data-idx="${i}">🗑</button>
+        <div class="visit-actions">
+          <button class="visit-edit" data-idx="${i}">✏️ 編集</button>
+          <button class="visit-del" data-idx="${i}">🗑</button>
+        </div>
       </div>
       ${r.memo ? `<div class="visit-memo">${r.memo}</div>` : ''}
       ${(r.setlist||[]).filter(s=>s).length ? `
@@ -1392,9 +1436,14 @@ function renderVisitList(id){
     </div>
   `).join('');
 
+  container.querySelectorAll('.visit-edit').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ startEditVisit(+btn.dataset.idx); });
+  });
+
   container.querySelectorAll('.visit-del').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const idx = +btn.dataset.idx;
+      if(editingVisitIdx === idx) cancelEditVisit();
       visited[modalVenueId].splice(idx, 1);
       if(!visited[modalVenueId].length) delete visited[modalVenueId];
       saveVisited();
@@ -1417,7 +1466,9 @@ function renderVisitList(id){
 document.getElementById('modal-save').addEventListener('click', ()=>{
   if(!modalVenueId) return;
   const rec = {
-    uid: Date.now()+'_'+Math.random().toString(36).slice(2),
+    uid: editingVisitIdx !== null
+      ? ((visited[modalVenueId]||[])[editingVisitIdx]?.uid || Date.now()+'_'+Math.random().toString(36).slice(2))
+      : Date.now()+'_'+Math.random().toString(36).slice(2),
     date: document.getElementById('form-date').value,
     artist: document.getElementById('form-artist').value.trim(),
     weather: selectedWeather,
@@ -1426,7 +1477,14 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
     photos: [...pendingPhotos]
   };
   if(!visited[modalVenueId]) visited[modalVenueId]=[];
-  visited[modalVenueId].push(rec);
+  if(editingVisitIdx !== null){
+    // 既存レコードを上書き
+    visited[modalVenueId][editingVisitIdx] = rec;
+    editingVisitIdx = null;
+    document.getElementById('modal-save').textContent = '✓ 記録';
+  } else {
+    visited[modalVenueId].push(rec);
+  }
   saveVisited();
   refreshMarker(modalVenueId);
   renderSidebar();
