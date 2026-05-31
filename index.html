@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-005';
+const APP_VERSION = '20260531-007';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -263,8 +263,26 @@ if (stored !== APP_VERSION) {
   .home-footer{padding:16px 20px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0));border-top:1px solid #1a1a2e;display:flex;gap:10px}
   .home-footer-btn{flex:1;padding:12px;border-radius:12px;border:1px solid #2a2a3a;background:#1a1a2e;color:#888;font-size:0.8rem;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
   .home-footer-btn:active{background:#2a2a4a;color:#a78bfa}
+  /* SETLIST */
+  .setlist-add-btn{background:#1a1a3a;border:1px solid #3a2a5a;color:#a78bfa;font-size:0.75rem;font-weight:700;padding:5px 12px;border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+  .setlist-add-btn:active{background:#4c1d95}
+  .setlist-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .setlist-num{font-size:0.7rem;color:#555;font-weight:700;width:22px;text-align:right;flex-shrink:0}
+  .setlist-input{flex:1;background:#0f0f13;border:1px solid #2a2a3a;border-radius:8px;color:#e2e2e8;padding:8px 10px;font-size:16px;font-family:inherit;outline:none}
+  .setlist-input:focus{border-color:#7c3aed}
+  .setlist-del{background:none;border:none;color:#444;font-size:1rem;cursor:pointer;padding:4px 6px;border-radius:6px;flex-shrink:0;-webkit-tap-highlight-color:transparent;transition:color 0.15s}
+  .setlist-del:active{color:#f87171}
+  .visit-setlist{margin-top:8px;border-top:1px solid #1a1a2e;padding-top:8px}
+  .visit-setlist-title{font-size:0.68rem;color:#666;font-weight:700;margin-bottom:6px}
+  .visit-setlist-list{list-style:none;display:flex;flex-direction:column;gap:3px}
+  .visit-setlist-item{font-size:0.75rem;color:#bbb;display:flex;gap:6px;line-height:1.5}
+  .visit-setlist-item span{color:#555;font-weight:700;flex-shrink:0;width:20px;text-align:right}
+
   /* 背景変更ボタン */
-  .home-bg-btn{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(4px)}
+  .home-bg-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:10;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .home-bg-btn{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.25);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:all 0.15s}
+  .home-bg-btn:active{background:rgba(124,58,237,0.6);border-color:#a78bfa}
+  .home-bg-label{font-size:0.55rem;color:rgba(255,255,255,0.7);font-weight:600;letter-spacing:0.02em;text-shadow:0 1px 4px rgba(0,0,0,0.8);white-space:nowrap}
 
   /* 名前入力モーダル */
   .oshi-name-modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10010;display:flex;align-items:flex-end;justify-content:center}
@@ -431,7 +449,10 @@ if (stored !== APP_VERSION) {
 <!-- Home Panel -->
 <div class="home-overlay" id="home-overlay">
   <!-- 背景変更ボタン -->
-  <button class="home-bg-btn" id="home-bg-btn" title="背景画像を変更">🖼️</button>
+  <div class="home-bg-wrap" id="home-bg-wrap">
+    <button class="home-bg-btn" id="home-bg-btn">🖼️</button>
+    <span class="home-bg-label">背景を登録する</span>
+  </div>
   <div class="home-content">
     <div class="oshi-scene" id="oshi-scene"></div>
     <div class="oshi-name-area" id="oshi-name-area"></div>
@@ -528,6 +549,13 @@ if (stored !== APP_VERSION) {
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">メモ</label>
         <textarea class="form-memo" id="form-memo" placeholder="感想・セットリストなど..."></textarea>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <label class="form-label">🎵 セットリスト <span id="setlist-count-label" style="color:#666;font-weight:400">（0/30曲）</span></label>
+          <button class="setlist-add-btn" id="setlist-add-btn" type="button">＋ 曲を追加</button>
+        </div>
+        <div id="setlist-rows"></div>
       </div>
       <div>
         <label class="form-label" style="display:block;margin-bottom:4px">写真 <span id="photo-count-label" style="color:#666;font-weight:400">（0/5枚）</span></label>
@@ -858,7 +886,7 @@ document.getElementById('oshi-name-save').addEventListener('click', ()=>{
 });
 
 // 背景画像
-document.getElementById('home-bg-btn').addEventListener('click', ()=>{
+document.getElementById('home-bg-wrap').addEventListener('click', ()=>{
   document.getElementById('home-bg-input').click();
 });
 document.getElementById('home-bg-input').addEventListener('change', e=>{
@@ -1029,8 +1057,54 @@ document.getElementById('search-box').addEventListener('input', e=>{
 let modalVenueId = null;
 let pendingPhotos = [];
 let selectedWeather = '';
+let pendingSetlist = []; // セットリスト（文字列の配列）
 let currentLightboxPhotos = [];
 let lightboxIdx = 0;
+
+const MAX_SETLIST = 30;
+
+function renderSetlistRows(){
+  const container = document.getElementById('setlist-rows');
+  const label = document.getElementById('setlist-count-label');
+  if(label) label.textContent = `（${pendingSetlist.length}/${MAX_SETLIST}曲）`;
+  container.innerHTML = '';
+  pendingSetlist.forEach((song, i)=>{
+    const row = document.createElement('div');
+    row.className = 'setlist-row';
+    row.innerHTML = `
+      <span class="setlist-num">${i+1}.</span>
+      <input class="setlist-input" type="text" value="${song.replace(/"/g,'&quot;')}" placeholder="曲名を入力" maxlength="50" data-idx="${i}">
+      <button class="setlist-del" data-idx="${i}" type="button">✕</button>`;
+    // 曲名変更
+    row.querySelector('.setlist-input').addEventListener('input', e=>{
+      pendingSetlist[+e.target.dataset.idx] = e.target.value;
+      document.getElementById('setlist-count-label').textContent = `（${pendingSetlist.length}/${MAX_SETLIST}曲）`;
+    });
+    // 削除
+    row.querySelector('.setlist-del').addEventListener('click', e=>{
+      pendingSetlist.splice(+e.currentTarget.dataset.idx, 1);
+      renderSetlistRows();
+    });
+    container.appendChild(row);
+  });
+  // 追加ボタンの有効/無効
+  const addBtn = document.getElementById('setlist-add-btn');
+  if(addBtn){
+    addBtn.disabled = pendingSetlist.length >= MAX_SETLIST;
+    addBtn.style.opacity = pendingSetlist.length >= MAX_SETLIST ? '0.4' : '1';
+  }
+}
+
+document.getElementById('setlist-add-btn').addEventListener('click', ()=>{
+  if(pendingSetlist.length >= MAX_SETLIST) return;
+  pendingSetlist.push('');
+  renderSetlistRows();
+  // 追加した入力欄にフォーカス
+  setTimeout(()=>{
+    const inputs = document.querySelectorAll('.setlist-input');
+    if(inputs.length) inputs[inputs.length-1].focus();
+  }, 50);
+});
 
 const WEATHER_ICON = {sunny:'☀️', cloudy:'☁️', rain:'🌧️', heavy:'⛈️'};
 const WEATHER_LABEL = {sunny:'晴れ', cloudy:'曇り', rain:'雨', heavy:'大雨'};
@@ -1047,6 +1121,9 @@ function openModal(id){
   document.getElementById('form-memo').value = '';
   // reset weather
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
+  // reset setlist
+  pendingSetlist = [];
+  renderSetlistRows();
   renderPhotoRow();
   renderVisitList(id);
   document.getElementById('modal-overlay').classList.remove('hidden');
@@ -1124,6 +1201,11 @@ function renderVisitList(id){
         <button class="visit-del" data-idx="${i}">🗑</button>
       </div>
       ${r.memo ? `<div class="visit-memo">${r.memo}</div>` : ''}
+      ${(r.setlist||[]).filter(s=>s).length ? `
+        <div class="visit-setlist">
+          <div class="visit-setlist-title">🎵 セットリスト（${r.setlist.filter(s=>s).length}曲）</div>
+          <ol class="visit-setlist-list">${r.setlist.filter(s=>s).map((s,j)=>`<li class="visit-setlist-item"><span>${j+1}.</span>${s}</li>`).join('')}</ol>
+        </div>` : ''}
       ${(r.photos||[]).length ? `<div class="visit-photos">${r.photos.map((p,j)=>`<img class="visit-photo" src="${p}" data-photos="${i}" data-idx="${j}">`).join('')}</div>` : ''}
     </div>
   `).join('');
@@ -1158,6 +1240,7 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
     artist: document.getElementById('form-artist').value.trim(),
     weather: selectedWeather,
     memo: document.getElementById('form-memo').value.trim(),
+    setlist: pendingSetlist.filter(s=>s.trim()),
     photos: [...pendingPhotos]
   };
   if(!visited[modalVenueId]) visited[modalVenueId]=[];
@@ -1169,7 +1252,9 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
   renderVisitList(modalVenueId);
   pendingPhotos = [];
   selectedWeather = '';
+  pendingSetlist = [];
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
+  renderSetlistRows();
   renderPhotoRow();
   document.getElementById('form-artist').value='';
   document.getElementById('form-memo').value='';
