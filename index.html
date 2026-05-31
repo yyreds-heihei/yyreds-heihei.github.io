@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-019';
+const APP_VERSION = '20260531-020';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -241,7 +241,7 @@ if (stored !== APP_VERSION) {
   .backup-step-sub{font-size:0.68rem;color:#555;display:block;margin-top:2px;letter-spacing:0.01em}
 
   /* SPLASH SCREEN */
-  .splash{position:fixed;inset:0;z-index:99999;overflow:hidden;transition:opacity 0.5s ease}
+  .splash{position:fixed;inset:0;z-index:99999;overflow:hidden;background:#000;transition:opacity 0.5s ease}
   .splash.fade-out{opacity:0;pointer-events:none}
   .splash-bg{
     position:absolute;inset:0;
@@ -1159,7 +1159,7 @@ function makePopupHtml(venue){
     <div class="popup-pref">📍 ${venue.pref}</div>
     ${cap ? `<div class="popup-cap">👥 ${cap}</div>` : ''}
     <div class="popup-visits">${visitText}</div>
-    <button class="popup-btn ${count>0?'visited-btn':''}" onclick="openModal(${venue.id})">${count>0?'📝 記録を見る・追加':'📝 訪問を記録する'}</button>
+    <button class="popup-btn ${count>0?'visited-btn':''}" onclick="openModal(${venue.id})">${count>0?'📝 記録を見る・追加':'📝 新規登録'}</button>
     <a class="popup-btn popup-btn-map" href="${mapsUrl}" target="_blank" rel="noopener">📍 Googleマップで開く</a>
     ${seatBtn}
   </div>`;
@@ -1519,9 +1519,13 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
   renderPhotoRow();
   document.getElementById('form-artist').value='';
   document.getElementById('form-memo').value='';
-  // 保存後に足あと画面へ移動
+  // 保存後に足あと画面へ移動（同タブでも必ず再描画）
   closeModal();
-  switchTab('records');
+  if(activeTab === 'records'){
+    renderRecordsPanel();
+  } else {
+    switchTab('records');
+  }
 });
 
 document.getElementById('modal-cancel').addEventListener('click', closeModal);
@@ -1793,18 +1797,24 @@ document.getElementById('ranking-overlay').addEventListener('click', e=>{
 
 if(isMobile()){
   setHeaderH();
-  // 起動時：サイドバーを隠し、ホーム画面をすぐ準備
   document.getElementById('sidebar').classList.add('sp-hidden');
-  // Leafletズームコントロールを起動時から非表示（マップタブ以外では不要）
-  const _initZoom = ()=>{
+
+  // スプラッシュ中はホーム・地図を完全に隠す
+  document.getElementById('home-overlay').classList.add('hidden');
+
+  // Leafletズームコントロールを起動時から非表示
+  const _hideZoom = ()=>{
     const zc = document.querySelector('.leaflet-control-container');
     if(zc) zc.style.display = 'none';
   };
-  _initZoom();
-  setTimeout(_initZoom, 100); // Leaflet初期化後も確実に隠す
-  // ホーム画面をスプラッシュ中に準備しておく（フェード後すぐ見えるように）
-  renderHome();
-  document.getElementById('home-overlay').classList.remove('hidden');
+  _hideZoom();
+  setTimeout(_hideZoom, 200); // Leaflet初期化後も確実に隠す
+
+  // スプラッシュフェードアウト開始と同時にホーム画面を準備・表示
+  setTimeout(()=>{
+    renderHome();
+    document.getElementById('home-overlay').classList.remove('hidden');
+  }, 1800); // splash fade-out 開始（1900ms）より少し早めに準備
 }
 window.addEventListener('resize', ()=>{ if(isMobile()) setHeaderH(); });
 
