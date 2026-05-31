@@ -1,4 +1,4 @@
-const CACHE_NAME = 'live-venue-map-v10';
+const CACHE_NAME = 'live-venue-map-v11';
 const STATIC_ASSETS = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet-src.js'
