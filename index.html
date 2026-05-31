@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-015';
+const APP_VERSION = '20260531-017';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -181,6 +181,9 @@ if (stored !== APP_VERSION) {
   .record-venue-meta{font-size:0.7rem;color:#888;margin-bottom:8px}
   .record-visits{display:flex;flex-wrap:wrap;gap:4px}
   .record-visit-chip{background:#f0ecff;border:1px solid #d4c8f8;border-radius:6px;padding:3px 8px;font-size:0.68rem;color:#6d28d9}
+  .record-visit-chip-tap{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s;user-select:none}
+  .record-visit-chip-tap:active{background:#7c3aed;color:#fff;border-color:#7c3aed}
+  .record-chip-hint{font-size:0.62rem;color:#bbb;margin-top:4px;letter-spacing:0.02em}
   .record-photos-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .record-photo{width:56px;height:56px;border-radius:8px;object-fit:cover;cursor:pointer}
 
@@ -231,6 +234,8 @@ if (stored !== APP_VERSION) {
   .backup-btn-import:hover,.backup-btn-import:active{background:#2a4a2a}
   .backup-close{width:100%;padding:12px;border-radius:10px;border:1px solid #2a2a3a;background:transparent;color:#666;font-size:0.88rem;cursor:pointer;margin-top:6px}
   .backup-note{font-size:0.73rem;color:#555;margin-top:16px;line-height:1.8;border-top:1px solid #2a2a3a;padding-top:14px}
+  .backup-step{margin-bottom:14px}
+  .backup-step-label{font-size:0.72rem;font-weight:700;color:#a78bfa;margin-bottom:6px;letter-spacing:0.03em}
 
   /* SPLASH SCREEN */
   .splash{position:fixed;inset:0;z-index:99999;overflow:hidden;transition:opacity 0.6s ease}
@@ -518,16 +523,25 @@ if (stored !== APP_VERSION) {
 <!-- Backup Modal -->
 <div class="backup-overlay hidden" id="backup-overlay">
   <div class="backup-modal">
-    <div class="backup-title">⚙️ データバックアップ</div>
-    <div class="backup-desc">訪問記録をファイルに保存・復元できます。機種変更の前にエクスポートしておきましょう。</div>
-    <button class="backup-btn backup-btn-export" id="backup-export">📤 エクスポート（バックアップを保存）</button>
-    <button class="backup-btn backup-btn-import" id="backup-import-btn">📥 インポート（データを復元）</button>
-    <input type="file" id="backup-import-input" accept=".json" style="display:none">
+    <div class="backup-title">📱 データ引き継ぎ・バックアップ</div>
+    <div class="backup-desc">足あと記録・推し写真・背景画像・名前をすべて保存できます。<br>機種変更前に必ずエクスポートしましょう。</div>
+
+    <div class="backup-step">
+      <div class="backup-step-label">① 旧スマホで行う操作</div>
+      <button class="backup-btn backup-btn-export" id="backup-export">📤 エクスポート（全データを保存）</button>
+    </div>
+
+    <div class="backup-step">
+      <div class="backup-step-label">② 新スマホで行う操作</div>
+      <button class="backup-btn backup-btn-import" id="backup-import-btn">📥 インポート（データを復元）</button>
+      <input type="file" id="backup-import-input" accept=".json" style="display:none">
+    </div>
+
     <button class="backup-close" id="backup-close">閉じる</button>
     <div class="backup-note">
-      📌 エクスポート：訪問記録をJSONファイルとしてダウンロードします。<br>
-      📌 インポート：以前エクスポートしたファイルを読み込み、データを統合します。<br>
-      📌 機種変更時はエクスポート→新しいスマホでインポートするだけでOK！
+      💾 保存されるデータ：足あと記録・推し写真・背景画像・推しの名前<br>
+      📂 保存先：iCloud Drive・Google Drive・LINEで自分に送るなど<br>
+      🔁 インポートは既存データとマージされます（重複なし）
     </div>
   </div>
 </div>
@@ -1591,10 +1605,25 @@ function renderRecordsPanel(){
     return `<div class="record-card">
       <div class="record-venue-name">${TYPE_ICON[v.type]} ${v.name}</div>
       <div class="record-venue-meta">${v.pref} · ${TYPE_LABEL[v.type]}</div>
-      <div class="record-visits">${recs.map(r=>`<span class="record-visit-chip">📅 ${r.date||'?'}${r.artist?' · '+r.artist:''}${r.weather?' '+WEATHER_ICON[r.weather]:''}</span>`).join('')}</div>
+      <div class="record-visits">${recs.map(r=>`
+        <span class="record-visit-chip record-visit-chip-tap" data-venue="${v.id}" data-uid="${r.uid||''}">
+          ✏️ ${r.date||'?'}${r.artist?' · '+r.artist:''}${r.weather?' '+WEATHER_ICON[r.weather]:''}
+        </span>`).join('')}</div>
+      <div class="record-chip-hint">↑ タップで編集</div>
       ${photos.length ? `<div class="record-photos-row">${photos.slice(0,6).map((p,i)=>`<img class="record-photo" src="${p}" data-venue="${v.id}" data-idx="${i}">`).join('')}</div>` : ''}
     </div>`;
   }).join('');
+
+  // チップタップ → 該当レコードを編集モードで開く
+  content.querySelectorAll('.record-visit-chip-tap').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const vid = +chip.dataset.venue;
+      const uid = chip.dataset.uid;
+      const idx = (visited[vid]||[]).findIndex(r=> uid ? r.uid===uid : false);
+      openModal(vid);
+      if(idx >= 0) setTimeout(()=>startEditVisit(idx), 50);
+    });
+  });
 
   content.querySelectorAll('.record-photo').forEach(img=>{
     img.addEventListener('click', ()=>{
@@ -1812,11 +1841,17 @@ document.getElementById('backup-overlay').addEventListener('click', e=>{
     document.getElementById('backup-overlay').classList.add('hidden');
 });
 document.getElementById('backup-export').addEventListener('click', ()=>{
-  const data = {version:1, exported:new Date().toISOString(), visited};
-  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const oshiData = loadOshiData();
+  const data = {
+    version: 2,
+    exported: new Date().toISOString(),
+    visited,
+    oshi: oshiData   // 推し写真・背景画像・名前をすべて含める
+  };
+  const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href=url; a.download=`live-venue-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.href=url; a.download=`ota-app-backup-${new Date().toISOString().slice(0,10)}.json`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
 });
@@ -1829,10 +1864,19 @@ document.getElementById('backup-import-input').addEventListener('change', e=>{
   reader.onload = ev=>{
     try{
       const data = JSON.parse(ev.target.result);
-      const importedVisited = data.version===1 ? data.visited : data;
-      const count = Object.keys(importedVisited).length;
-      if(!confirm(`${count}会場のデータをインポートします。\n現在のデータと統合（マージ）されます。\nよろしいですか？`)) return;
-      for(const [id, recs] of Object.entries(importedVisited)){
+
+      // version1（旧形式）・version2（新形式）・生JSON の3パターン対応
+      const importedVisited = (data.version===1||data.version===2) ? data.visited : data;
+      const importedOshi    = data.version===2 ? (data.oshi||{}) : null;
+
+      const venueCount  = Object.keys(importedVisited||{}).length;
+      const hasOshi     = importedOshi && (importedOshi.photo||importedOshi.bg||importedOshi.name);
+      const oshiLine    = hasOshi ? '\n・推し写真・背景・名前' : '';
+
+      if(!confirm(`以下のデータをインポートします。${oshiLine}\n・${venueCount}会場の足あと記録\n\n現在のデータとマージ（統合）されます。\nよろしいですか？`)) return;
+
+      // 足あと記録をマージ
+      for(const [id, recs] of Object.entries(importedVisited||{})){
         if(!visited[id]){ visited[id]=recs; }
         else if(Array.isArray(recs)&&recs.length){
           const existingUids = new Set((visited[id]||[]).map(r=>r.uid));
@@ -1841,12 +1885,24 @@ document.getElementById('backup-import-input').addEventListener('change', e=>{
         }
       }
       saveVisited();
+
+      // 推しデータを復元（既存データがない項目だけ上書き）
+      if(hasOshi){
+        const current = loadOshiData();
+        if(!current.photo && importedOshi.photo) current.photo = importedOshi.photo;
+        if(!current.bg    && importedOshi.bg)    current.bg    = importedOshi.bg;
+        if(!current.name  && importedOshi.name)  current.name  = importedOshi.name;
+        saveOshiData(current);
+        applyHomeBg();
+        renderHome();
+      }
+
       VENUES_CLEAN.forEach(v=>refreshMarker(v.id));
       renderSidebar();
       updateStats();
       document.getElementById('backup-overlay').classList.add('hidden');
-      alert(`インポート完了！ ${count}会場のデータを取り込みました。`);
-    }catch{
+      alert(`インポート完了！\n足あと${venueCount}会場${hasOshi?'・推しデータ':''}を復元しました。`);
+    }catch(err){
       alert('ファイルの読み込みに失敗しました。\n正しいバックアップファイルを選択してください。');
     }
     e.target.value='';
