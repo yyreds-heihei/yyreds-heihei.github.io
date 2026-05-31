@@ -197,17 +197,19 @@
   .backup-note{font-size:0.73rem;color:#555;margin-top:16px;line-height:1.8;border-top:1px solid #2a2a3a;padding-top:14px}
 
   /* SPLASH SCREEN */
-  .splash{position:fixed;inset:0;background:#0f0f13;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.5s ease}
+  .splash{position:fixed;inset:0;z-index:99999;overflow:hidden;transition:opacity 0.6s ease}
   .splash.fade-out{opacity:0;pointer-events:none}
-  .splash-icon{width:120px;height:120px;border-radius:28px;box-shadow:0 8px 40px rgba(124,58,237,0.6);animation:splashZoom 0.9s cubic-bezier(0.34,1.56,0.64,1) forwards}
-  @keyframes splashZoom{
-    0%{transform:scale(0.3);opacity:0}
-    60%{transform:scale(1.08);opacity:1}
-    100%{transform:scale(1);opacity:1}
+  .splash-bg{
+    position:absolute;inset:0;
+    background-image:url('Otaアイコン.png');
+    background-size:cover;background-position:center;
+    animation:splashZoom 1.2s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    transform-origin:center center;
   }
-  .splash-title{font-size:1.1rem;font-weight:800;color:#c084fc;opacity:0;animation:splashFadeIn 0.5s ease 0.6s forwards}
-  .splash-sub{font-size:0.75rem;color:#555;opacity:0;animation:splashFadeIn 0.5s ease 0.8s forwards}
-  @keyframes splashFadeIn{to{opacity:1}}
+  @keyframes splashZoom{
+    0%{transform:scale(1)}
+    100%{transform:scale(1.15)}
+  }
 
   /* Weather selector */
   .weather-row{display:flex;gap:8px;margin-bottom:14px}
@@ -284,9 +286,7 @@
 
 <!-- Splash Screen -->
 <div class="splash" id="splash">
-  <img class="splash-icon" src="icon-192.png" alt="ライブ会場">
-  <div class="splash-title">全国ライブ会場マップ</div>
-  <div class="splash-sub">あなたの足あとを記録しよう</div>
+  <div class="splash-bg"></div>
 </div>
 
 <div class="app">
@@ -341,17 +341,17 @@
 
 <!-- Bottom Nav (mobile) -->
 <nav class="bottom-nav" id="bottom-nav">
-  <button class="nav-tab active" data-tab="list">
+  <button class="nav-tab active" data-tab="records">
+    <span class="nav-tab-icon">👣</span>
+    <span class="nav-tab-label">足あと</span>
+  </button>
+  <button class="nav-tab" data-tab="list">
     <span class="nav-tab-icon">📋</span>
     <span class="nav-tab-label">リスト</span>
   </button>
   <button class="nav-tab" data-tab="map">
     <span class="nav-tab-icon">🗺️</span>
     <span class="nav-tab-label">マップ</span>
-  </button>
-  <button class="nav-tab" data-tab="records">
-    <span class="nav-tab-icon">👣</span>
-    <span class="nav-tab-label">足あと</span>
   </button>
   <button class="nav-tab" data-tab="ranking">
     <span class="nav-tab-icon">🏆</span>
@@ -470,7 +470,7 @@ const VENUES_CLEAN = [
   {id:12, name:'日本武道館', lat:35.6937, lng:139.7497, pref:'東京都', type:'arena', cap:14000},
   {id:13, name:'国立代々木競技場第一体育館', lat:35.6644, lng:139.6951, pref:'東京都', type:'arena', cap:13291},
   {id:14, name:'大阪城ホール', lat:34.6862, lng:135.5257, pref:'大阪府', type:'arena', cap:16000},
-  {id:15, name:'ぴあMFTアリーナ横浜', lat:35.4567, lng:139.6346, pref:'神奈川県', type:'arena', cap:10000},
+  {id:15, name:'横浜BUNTAI', lat:35.4440, lng:139.6380, pref:'神奈川県', type:'arena', cap:10000},
   {id:16, name:'マリンメッセ福岡Aホール', lat:33.5994, lng:130.4063, pref:'福岡県', type:'arena', cap:15000},
   {id:17, name:'インテックス大阪', lat:34.6503, lng:135.4131, pref:'大阪府', type:'arena', cap:14000},
   {id:18, name:'幕張メッセ国際展示場', lat:35.6478, lng:140.0302, pref:'千葉県', type:'arena', cap:15000},
@@ -484,7 +484,7 @@ const VENUES_CLEAN = [
   {id:26, name:'アイシン・エィ・ダブリュ文化ホール', lat:35.2147, lng:137.0753, pref:'愛知県', type:'arena', cap:1500},
   {id:27, name:'神戸ワールド記念ホール', lat:34.6532, lng:135.1742, pref:'兵庫県', type:'arena', cap:8000},
   {id:28, name:'東京ガーデンシアター', lat:35.6509, lng:139.7963, pref:'東京都', type:'arena', cap:8000},
-  {id:29, name:'ぴあアリーナMM', lat:35.4597, lng:139.6341, pref:'神奈川県', type:'arena', cap:10000},
+  {id:29, name:'ぴあアリーナMM', lat:35.4558, lng:139.6316, pref:'神奈川県', type:'arena', cap:10000},
 
   // ホール
   {id:40, name:'Zepp Tokyo（閉館）', lat:35.6276, lng:139.7742, pref:'東京都', type:'zepp', cap:2709},
@@ -535,10 +535,10 @@ const VENUES_CLEAN = [
   {id:100, name:'渋谷CLUB QUATTRO', lat:35.6607, lng:139.6987, pref:'東京都', type:'live', cap:800},
   {id:101, name:'渋谷O-EAST', lat:35.6600, lng:139.6996, pref:'東京都', type:'live', cap:1300},
   {id:102, name:'渋谷O-WEST', lat:35.6608, lng:139.6990, pref:'東京都', type:'live', cap:700},
-  {id:103, name:'渋谷LIQUIDROOM', lat:35.6502, lng:139.7092, pref:'東京都', type:'live', cap:900},
+  {id:103, name:'渋谷CLUB ASIA', lat:35.6596, lng:139.6985, pref:'東京都', type:'live', cap:700},
   {id:104, name:'新木場STUDIO COAST', lat:35.6424, lng:139.8184, pref:'東京都', type:'live', cap:2500},
   {id:105, name:'豊洲PIT', lat:35.6586, lng:139.7990, pref:'東京都', type:'live', cap:3000},
-  {id:106, name:'恵比寿リキッドルーム', lat:35.6472, lng:139.7127, pref:'東京都', type:'live', cap:900},
+  {id:106, name:'LIQUIDROOM（恵比寿）', lat:35.6466, lng:139.7124, pref:'東京都', type:'live', cap:900},
   {id:107, name:'下北沢GARDEN', lat:35.6614, lng:139.6682, pref:'東京都', type:'live', cap:600},
   {id:108, name:'心斎橋BIGCAT', lat:34.6698, lng:135.5004, pref:'大阪府', type:'live', cap:800},
   {id:109, name:'なんばHatch', lat:34.6609, lng:135.5026, pref:'大阪府', type:'live', cap:2500},
@@ -625,8 +625,8 @@ loadVisited();
   const splash = document.getElementById('splash');
   setTimeout(()=>{
     splash.classList.add('fade-out');
-    setTimeout(()=>{ splash.style.display='none'; }, 500);
-  }, 2000);
+    setTimeout(()=>{ splash.style.display='none'; }, 600);
+  }, 2200);
 })();
 
 // Map
@@ -977,10 +977,6 @@ document.getElementById('btn-open-records').addEventListener('click', ()=>{
   renderRecordsPanel();
   document.getElementById('records-overlay').classList.remove('hidden');
 });
-document.getElementById('records-panel-close').addEventListener('click', closeRecordsPanel);
-document.getElementById('records-overlay').addEventListener('click', e=>{
-  if(e.target===document.getElementById('records-overlay')) closeRecordsPanel();
-});
 
 // Ranking Panel
 function renderRankingPanel(){
@@ -1010,10 +1006,6 @@ document.getElementById('btn-open-ranking').addEventListener('click', ()=>{
   renderRankingPanel();
   document.getElementById('ranking-overlay').classList.remove('hidden');
 });
-document.getElementById('ranking-panel-close').addEventListener('click', closeRankingPanel);
-document.getElementById('ranking-overlay').addEventListener('click', e=>{
-  if(e.target===document.getElementById('ranking-overlay')) closeRankingPanel();
-});
 
 // ===== MOBILE =====
 function isMobile(){ return window.innerWidth <= 640; }
@@ -1023,31 +1015,37 @@ function setHeaderH(){
   document.documentElement.style.setProperty('--header-h', h+'px');
 }
 
-let activeTab = 'list';
+let activeTab = 'records';
+let tabSwitching = false; // タブ切替中フラグ（誤クローズ防止）
 
 function switchTab(tab){
+  if(activeTab === tab) return;
   activeTab = tab;
+  tabSwitching = true;
+  setTimeout(()=>{ tabSwitching = false; }, 400);
+
   document.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   const sidebar = document.getElementById('sidebar');
+
+  // まず全部閉じる
+  sidebar.classList.add('sp-hidden');
+  document.getElementById('records-overlay').classList.add('hidden');
+  document.getElementById('ranking-overlay').classList.add('hidden');
+
   if(tab==='list'){
     sidebar.classList.remove('sp-hidden');
-    closeRecordsPanel(); closeRankingPanel();
   } else if(tab==='map'){
-    sidebar.classList.add('sp-hidden');
-    closeRecordsPanel(); closeRankingPanel();
-    setTimeout(()=>map.invalidateSize(), 280);
+    setTimeout(()=>map.invalidateSize(), 300);
   } else if(tab==='records'){
-    sidebar.classList.add('sp-hidden'); closeRankingPanel();
     setTimeout(()=>{
       renderRecordsPanel();
       document.getElementById('records-overlay').classList.remove('hidden');
-    }, 50);
+    }, 150);
   } else if(tab==='ranking'){
-    sidebar.classList.add('sp-hidden'); closeRecordsPanel();
     setTimeout(()=>{
       renderRankingPanel();
       document.getElementById('ranking-overlay').classList.remove('hidden');
-    }, 50);
+    }, 150);
   }
 }
 
@@ -1055,30 +1053,37 @@ document.querySelectorAll('.nav-tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{ if(isMobile()) switchTab(btn.dataset.tab); });
 });
 
-function onPanelClose(btnId, overlayId){
-  const btn = document.getElementById(btnId);
-  const overlay = document.getElementById(overlayId);
-  if(btn) btn.addEventListener('click', ()=>{
-    if(!isMobile()) return;
-    setTimeout(()=>{
-      activeTab='list';
-      document.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab==='list'));
-      document.getElementById('sidebar').classList.remove('sp-hidden');
-    }, 50);
-  });
-  if(overlay) overlay.addEventListener('click', e=>{
-    if(!isMobile()||e.target!==overlay) return;
-    setTimeout(()=>{
-      activeTab='list';
-      document.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab==='list'));
-      document.getElementById('sidebar').classList.remove('sp-hidden');
-    }, 50);
-  });
+// パネルの✕ボタン → リストタブへ戻る
+function goBackToList(){
+  activeTab = 'list';
+  tabSwitching = true;
+  setTimeout(()=>{ tabSwitching = false; }, 400);
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab==='list'));
+  document.getElementById('sidebar').classList.remove('sp-hidden');
 }
-onPanelClose('records-panel-close', 'records-overlay');
-onPanelClose('ranking-panel-close', 'ranking-overlay');
 
-// Swipe right to close panels
+document.getElementById('records-panel-close').addEventListener('click', ()=>{
+  closeRecordsPanel();
+  if(isMobile()) goBackToList();
+});
+document.getElementById('ranking-panel-close').addEventListener('click', ()=>{
+  closeRankingPanel();
+  if(isMobile()) goBackToList();
+});
+
+// オーバーレイ背景タップで閉じる（タブ切替直後は無効）
+document.getElementById('records-overlay').addEventListener('click', e=>{
+  if(tabSwitching || e.target !== document.getElementById('records-overlay')) return;
+  closeRecordsPanel();
+  if(isMobile()) goBackToList();
+});
+document.getElementById('ranking-overlay').addEventListener('click', e=>{
+  if(tabSwitching || e.target !== document.getElementById('ranking-overlay')) return;
+  closeRankingPanel();
+  if(isMobile()) goBackToList();
+});
+
+// スワイプで閉じる
 (function(){
   ['records-panel','ranking-panel'].forEach(cls=>{
     const panel = document.querySelector('.'+cls);
@@ -1094,11 +1099,7 @@ onPanelClose('ranking-panel-close', 'ranking-overlay');
       if(dx>80 && dy<60){
         if(cls==='records-panel') closeRecordsPanel();
         else closeRankingPanel();
-        setTimeout(()=>{
-          activeTab='list';
-          document.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab==='list'));
-          document.getElementById('sidebar').classList.remove('sp-hidden');
-        }, 50);
+        goBackToList();
       }
     }, {passive:true});
   });
@@ -1106,7 +1107,12 @@ onPanelClose('ranking-panel-close', 'ranking-overlay');
 
 if(isMobile()){
   setHeaderH();
-  document.getElementById('sidebar').classList.remove('sp-hidden');
+  // 起動時は足あとタブをデフォルト表示
+  document.getElementById('sidebar').classList.add('sp-hidden');
+  setTimeout(()=>{
+    renderRecordsPanel();
+    document.getElementById('records-overlay').classList.remove('hidden');
+  }, 2400); // スプラッシュ後に表示
 }
 window.addEventListener('resize', ()=>{ if(isMobile()) setHeaderH(); });
 
