@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-011';
+const APP_VERSION = '20260531-012';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -65,26 +65,26 @@ if (stored !== APP_VERSION) {
   .app{display:flex;flex-direction:column;height:100vh;height:100dvh}
   .main{display:flex;flex:1;overflow:hidden;position:relative}
   #map{flex:1;height:100%}
-  .sidebar{width:340px;height:100%;background:#13131e;border-left:1px solid #2a2a3a;display:flex;flex-direction:column;overflow:hidden}
+  .sidebar{width:340px;height:100%;background:#f8f9fa;border-left:1px solid #d0d0d8;display:flex;flex-direction:column;overflow:hidden}
 
   /* SIDEBAR */
-  .sidebar-header{padding:12px 14px 8px;border-bottom:1px solid #2a2a3a;flex-shrink:0}
-  .sidebar-title{font-size:0.8rem;font-weight:700;color:#888;margin-bottom:8px}
+  .sidebar-header{padding:12px 14px 8px;border-bottom:1px solid #d0d0d8;flex-shrink:0}
+  .sidebar-title{font-size:0.8rem;font-weight:700;color:#555;margin-bottom:8px}
   .filter-row{display:flex;gap:6px;flex-wrap:wrap}
-  .filter-btn{background:#1a1a2e;border:1px solid #2a2a3a;color:#888;padding:5px 10px;border-radius:20px;font-size:0.72rem;cursor:pointer;transition:all 0.15s;white-space:nowrap}
-  .filter-btn.active{background:#4c1d95;border-color:#7c3aed;color:#e2e2e8}
-  .search-box{width:100%;padding:8px 12px;background:#0f0f13;border:1px solid #2a2a3a;border-radius:10px;color:#e2e2e8;font-size:0.85rem;margin-bottom:8px;outline:none}
+  .filter-btn{background:#e8e8f0;border:1px solid #c8c8d8;color:#555;padding:5px 10px;border-radius:20px;font-size:0.72rem;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+  .filter-btn.active{background:#4c1d95;border-color:#7c3aed;color:#fff}
+  .search-box{width:100%;padding:8px 12px;background:#fff;border:1px solid #c8c8d8;border-radius:10px;color:#1a1a2a;font-size:0.85rem;margin-bottom:8px;outline:none}
   .search-box:focus{border-color:#7c3aed}
   .venue-list{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
-  .venue-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #1a1a2e;cursor:pointer;transition:background 0.15s;-webkit-tap-highlight-color:transparent}
-  .venue-item:hover{background:#1a1a2e}
-  .venue-item.highlighted{background:#1a1224}
-  .venue-check{width:24px;height:24px;border-radius:50%;border:2px solid #2a2a3a;display:flex;align-items:center;justify-content:center;font-size:0.8rem;flex-shrink:0;transition:all 0.2s}
+  .venue-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #e8e8f0;cursor:pointer;transition:background 0.15s;-webkit-tap-highlight-color:transparent}
+  .venue-item:hover{background:#eeeef8}
+  .venue-item.highlighted{background:#ede9ff}
+  .venue-check{width:24px;height:24px;border-radius:50%;border:2px solid #c8c8d8;display:flex;align-items:center;justify-content:center;font-size:0.8rem;flex-shrink:0;transition:all 0.2s}
   .venue-check.visited{background:#4c1d95;border-color:#7c3aed}
   .venue-info{flex:1;min-width:0}
-  .venue-name{font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .venue-meta{font-size:0.68rem;color:#666;margin-top:2px}
-  .venue-cap{font-size:0.65rem;color:#555;margin-top:1px}
+  .venue-name{font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1a1a2a}
+  .venue-meta{font-size:0.68rem;color:#777;margin-top:2px}
+  .venue-cap{font-size:0.65rem;color:#999;margin-top:1px}
   .venue-visits{font-size:0.7rem;color:#a78bfa;margin-left:auto;flex-shrink:0}
 
   /* MAP MARKERS */
@@ -158,46 +158,46 @@ if (stored !== APP_VERSION) {
   .lightbox-nav.next{right:12px}
 
   /* RECORDS PANEL */
-  .records-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:900;display:flex;align-items:center;justify-content:flex-end}
+  .records-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:900;display:flex;align-items:center;justify-content:flex-end}
   .records-overlay.hidden{display:none}
-  .records-panel{background:#13131e;width:380px;max-width:100%;height:100%;overflow-y:auto;border-left:1px solid #2a2a3a;display:flex;flex-direction:column}
-  .records-panel-header{padding:20px 18px;border-bottom:1px solid #2a2a3a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-  .records-panel-title{font-size:1rem;font-weight:700;color:#c084fc}
+  .records-panel{background:#f8f9fa;width:380px;max-width:100%;height:100%;overflow-y:auto;border-left:1px solid #d0d0d8;display:flex;flex-direction:column}
+  .records-panel-header{padding:20px 18px;border-bottom:1px solid #d0d0d8;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .records-panel-title{font-size:1rem;font-weight:700;color:#7c3aed}
   .records-panel-close{background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer;padding:6px 10px;border-radius:8px;transition:color 0.15s;-webkit-tap-highlight-color:transparent}
-  .records-panel-close:hover{color:#e2e2e8}
-  .records-year-tabs{display:flex;gap:6px;padding:10px 14px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0;border-bottom:1px solid #2a2a3a}
+  .records-panel-close:hover{color:#1a1a2a}
+  .records-year-tabs{display:flex;gap:6px;padding:10px 14px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0;border-bottom:1px solid #d0d0d8}
   .records-year-tabs::-webkit-scrollbar{display:none}
-  .records-year-tab{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:0.78rem;font-weight:600;border:1px solid #2a2a3a;background:#1a1a2e;color:#888;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
-  .records-year-tab.active{background:#4c1d95;border-color:#7c3aed;color:#e2e2e8}
+  .records-year-tab{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:0.78rem;font-weight:600;border:1px solid #c8c8d8;background:#e8e8f0;color:#555;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+  .records-year-tab.active{background:#4c1d95;border-color:#7c3aed;color:#fff}
   .records-content{padding:16px 18px;flex:1}
-  .records-empty{color:#555;font-size:0.85rem;padding:30px 0;text-align:center}
-  .record-card{background:#1a1a2e;border:1px solid #2a2a3a;border-radius:14px;padding:14px;margin-bottom:10px}
-  .record-venue-name{font-size:0.9rem;font-weight:700;margin-bottom:4px;color:#e2e2e8}
-  .record-venue-meta{font-size:0.7rem;color:#666;margin-bottom:8px}
+  .records-empty{color:#999;font-size:0.85rem;padding:30px 0;text-align:center}
+  .record-card{background:#fff;border:1px solid #d8d8e8;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+  .record-venue-name{font-size:0.9rem;font-weight:700;margin-bottom:4px;color:#1a1a2a}
+  .record-venue-meta{font-size:0.7rem;color:#888;margin-bottom:8px}
   .record-visits{display:flex;flex-wrap:wrap;gap:4px}
-  .record-visit-chip{background:#1a1a3a;border:1px solid #2a2a4a;border-radius:6px;padding:3px 8px;font-size:0.68rem;color:#a78bfa}
+  .record-visit-chip{background:#f0ecff;border:1px solid #d4c8f8;border-radius:6px;padding:3px 8px;font-size:0.68rem;color:#6d28d9}
   .record-photos-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .record-photo{width:56px;height:56px;border-radius:8px;object-fit:cover;cursor:pointer}
 
   /* RANKING PANEL */
-  .ranking-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:900;display:flex;align-items:center;justify-content:flex-end}
+  .ranking-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:900;display:flex;align-items:center;justify-content:flex-end}
   .ranking-overlay.hidden{display:none}
-  .ranking-panel{background:#13131e;width:380px;max-width:100%;height:100%;overflow-y:auto;border-left:1px solid #2a2a3a;display:flex;flex-direction:column}
-  .ranking-panel-header{padding:20px 18px;border-bottom:1px solid #2a2a3a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-  .ranking-panel-title{font-size:1rem;font-weight:700;color:#c084fc}
+  .ranking-panel{background:#f8f9fa;width:380px;max-width:100%;height:100%;overflow-y:auto;border-left:1px solid #d0d0d8;display:flex;flex-direction:column}
+  .ranking-panel-header{padding:20px 18px;border-bottom:1px solid #d0d0d8;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .ranking-panel-title{font-size:1rem;font-weight:700;color:#7c3aed}
   .ranking-panel-close{background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer;padding:6px 10px;border-radius:8px;transition:color 0.15s;-webkit-tap-highlight-color:transparent}
-  .ranking-panel-close:hover{color:#e2e2e8}
+  .ranking-panel-close:hover{color:#1a1a2a}
   .ranking-content{padding:16px 18px;flex:1}
-  .rank-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #1a1a2e}
+  .rank-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #e0e0ea}
   .rank-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;flex-shrink:0}
-  .rank-num.gold{background:#4a3000;color:#fbbf24}
-  .rank-num.silver{background:#2a2a3a;color:#94a3b8}
-  .rank-num.bronze{background:#3a1a00;color:#fb923c}
-  .rank-num.normal{background:#1a1a2e;color:#555}
+  .rank-num.gold{background:#fff3cd;color:#b45309}
+  .rank-num.silver{background:#e8e8f0;color:#4b5563}
+  .rank-num.bronze{background:#ffedd5;color:#c2410c}
+  .rank-num.normal{background:#e8e8f0;color:#6b7280}
   .rank-info{flex:1;min-width:0}
-  .rank-name{font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .rank-meta{font-size:0.68rem;color:#666;margin-top:2px}
-  .rank-count{font-size:1rem;font-weight:800;color:#a78bfa;flex-shrink:0}
+  .rank-name{font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1a1a2a}
+  .rank-meta{font-size:0.68rem;color:#888;margin-top:2px}
+  .rank-count{font-size:1rem;font-weight:800;color:#7c3aed;flex-shrink:0}
 
   /* GPS button */
   .gps-btn{position:absolute;bottom:110px;right:14px;width:52px;height:52px;border-radius:50%;background:#1a1a24;border:2px solid #4c1d95;color:#a78bfa;font-size:1.4rem;cursor:pointer;z-index:400;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 16px rgba(0,0,0,0.6);transition:all 0.15s;-webkit-tap-highlight-color:transparent}
@@ -261,8 +261,8 @@ if (stored !== APP_VERSION) {
   .speech-bubble-name{font-size:0.65rem;color:#888;margin-top:6px;text-align:right}
   /* 推し名前 */
   .oshi-name-area{text-align:center}
-  .oshi-name{font-size:1.1rem;font-weight:800;color:#c084fc;margin-bottom:4px}
-  .oshi-name-edit{font-size:0.7rem;color:#555;cursor:pointer;-webkit-tap-highlight-color:transparent;text-decoration:underline}
+  .oshi-name{display:inline-block;font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:6px;background:rgba(0,0,0,0.45);padding:4px 14px;border-radius:20px;backdrop-filter:blur(4px)}
+  .oshi-name-edit{display:inline-block;font-size:0.7rem;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;background:rgba(0,0,0,0.4);padding:3px 10px;border-radius:12px;backdrop-filter:blur(4px)}
   /* ホーム底部 */
   .home-footer{padding:16px 20px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0));border-top:1px solid #1a1a2e;display:flex;gap:10px}
   .home-footer-btn{flex:1;padding:12px;border-radius:12px;border:1px solid #2a2a3a;background:#1a1a2e;color:#888;font-size:0.8rem;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
@@ -286,9 +286,21 @@ if (stored !== APP_VERSION) {
   .home-bg-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:10;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .home-bg-btn{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.25);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:all 0.15s}
   .home-bg-btn:active{background:rgba(124,58,237,0.6);border-color:#a78bfa}
-  .home-bg-label{font-size:0.55rem;color:rgba(255,255,255,0.7);font-weight:600;letter-spacing:0.02em;text-shadow:0 1px 4px rgba(0,0,0,0.8);white-space:nowrap}
+  .home-bg-label{font-size:0.55rem;color:#fff;font-weight:600;letter-spacing:0.02em;white-space:nowrap;background:rgba(0,0,0,0.45);padding:2px 6px;border-radius:6px;backdrop-filter:blur(4px)}
 
   /* 名前入力モーダル */
+  /* 画像クロップモーダル */
+  .crop-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10020;display:flex;align-items:center;justify-content:center;padding:20px}
+  .crop-overlay.hidden{display:none}
+  .crop-modal{width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px}
+  .crop-title{font-size:1rem;font-weight:700;color:#fff;text-align:center}
+  .crop-hint{font-size:0.72rem;color:#aaa;text-align:center}
+  .crop-frame{width:100%;aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:#111;position:relative;touch-action:none;cursor:grab;border:2px solid #7c3aed}
+  .crop-frame.portrait{aspect-ratio:4/5}
+  .crop-img{position:absolute;transform-origin:0 0;will-change:transform;pointer-events:none;user-select:none;-webkit-user-select:none}
+  .crop-actions{display:flex;gap:12px;margin-top:4px}
+  .crop-actions .btn-secondary,.crop-actions .btn-primary{flex:1}
+
   .oshi-name-modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10010;display:flex;align-items:flex-end;justify-content:center}
   .oshi-name-modal.hidden{display:none}
   .oshi-name-modal-inner{background:#1a1a2e;border-radius:18px 18px 0 0;width:100%;padding:24px 20px 36px;border-top:1px solid #3a2a5a}
@@ -330,14 +342,15 @@ if (stored !== APP_VERSION) {
     .venue-list{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
     .bottom-nav{
       display:flex;position:fixed;bottom:0;left:0;right:0;
-      height:60px;background:#1a1a24;border-top:2px solid #2a2a3a;
+      height:72px;background:#1a1a24;border-top:2px solid #2a2a3a;
       z-index:1000;padding-bottom:env(safe-area-inset-bottom,0);
+      align-items:flex-start;padding-top:8px;
     }
     .nav-tab{
       flex:1;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;
+      align-items:center;justify-content:flex-start;
       background:none;border:none;color:#555;
-      gap:2px;cursor:pointer;padding:6px 0;
+      gap:2px;cursor:pointer;padding:4px 0 0;
       transition:color 0.15s;min-height:44px;
       -webkit-tap-highlight-color:transparent;
     }
@@ -348,7 +361,7 @@ if (stored !== APP_VERSION) {
     .venue-check{width:26px;height:26px}
     .venue-item{padding:11px 10px}
     .ranking-panel,.records-panel{width:100vw;border-radius:0}
-    .ranking-overlay,.records-overlay,.home-overlay{bottom:calc(60px + env(safe-area-inset-bottom,0))}
+    .ranking-overlay,.records-overlay,.home-overlay{bottom:calc(72px + env(safe-area-inset-bottom,0))}
     .ranking-overlay,.records-overlay{align-items:stretch}
     .ranking-panel-header,.records-panel-header{padding:18px 16px}
     /* モバイルでは×ボタンを非表示（タブで切り替えるため） */
@@ -455,7 +468,7 @@ if (stored !== APP_VERSION) {
   <!-- 背景変更ボタン -->
   <div class="home-bg-wrap" id="home-bg-wrap">
     <button class="home-bg-btn" id="home-bg-btn">🖼️</button>
-    <span class="home-bg-label">背景を登録する</span>
+    <span class="home-bg-label">背景を変更</span>
   </div>
   <div class="home-content">
     <div class="oshi-scene" id="oshi-scene"></div>
@@ -468,6 +481,21 @@ if (stored !== APP_VERSION) {
   </div>
 </div>
 <input type="file" id="home-bg-input" accept="image/*" style="display:none">
+
+<!-- 画像クロップモーダル -->
+<div class="crop-overlay hidden" id="crop-overlay">
+  <div class="crop-modal">
+    <div class="crop-title" id="crop-title">📷 写真を調整</div>
+    <div class="crop-hint">ピンチで拡大縮小・ドラッグで移動</div>
+    <div class="crop-frame" id="crop-frame">
+      <img class="crop-img" id="crop-img" draggable="false">
+    </div>
+    <div class="crop-actions">
+      <button class="btn-secondary" id="crop-cancel">キャンセル</button>
+      <button class="btn-primary" id="crop-ok">この位置で保存</button>
+    </div>
+  </div>
+</div>
 
 <!-- 推し名前入力モーダル -->
 <div class="oshi-name-modal hidden" id="oshi-name-modal">
@@ -570,7 +598,7 @@ if (stored !== APP_VERSION) {
 
     <div class="modal-actions">
       <button class="btn-secondary" id="modal-cancel">閉じる</button>
-      <button class="btn-primary" id="modal-save">✓ 記録を保存</button>
+      <button class="btn-primary" id="modal-save">✓ 記録</button>
     </div>
   </div>
 </div>
@@ -893,6 +921,138 @@ document.getElementById('oshi-name-save').addEventListener('click', ()=>{
   renderHome();
 });
 
+// =========================================
+// 画像クロップモーダル
+// =========================================
+let cropCallback = null;
+let cropAspectW = 1, cropAspectH = 1;
+let cropScale = 1, cropX = 0, cropY = 0;
+let cropImgNatW = 0, cropImgNatH = 0;
+let cropFrameW = 0, cropFrameH = 0;
+
+function openCropModal(dataUrl, aspectW, aspectH, title, onSave){
+  cropCallback = onSave;
+  cropAspectW = aspectW; cropAspectH = aspectH;
+  const overlay = document.getElementById('crop-overlay');
+  const frame = document.getElementById('crop-frame');
+  const imgEl = document.getElementById('crop-img');
+  document.getElementById('crop-title').textContent = title;
+
+  // アスペクト比セット
+  frame.className = 'crop-frame' + (aspectW < aspectH ? ' portrait' : '');
+
+  overlay.classList.remove('hidden');
+
+  imgEl.onload = ()=>{
+    cropImgNatW = imgEl.naturalWidth;
+    cropImgNatH = imgEl.naturalHeight;
+    cropFrameW = frame.clientWidth;
+    cropFrameH = frame.clientHeight;
+
+    // 初期スケール：フレームをちょうど覆うように
+    const scaleX = cropFrameW / cropImgNatW;
+    const scaleY = cropFrameH / cropImgNatH;
+    cropScale = Math.max(scaleX, scaleY);
+
+    // 中央に配置
+    cropX = (cropFrameW - cropImgNatW * cropScale) / 2;
+    cropY = (cropFrameH - cropImgNatH * cropScale) / 2;
+    applyCropTransform();
+  };
+  imgEl.src = dataUrl;
+}
+
+function applyCropTransform(){
+  const imgEl = document.getElementById('crop-img');
+  imgEl.style.transform = `translate(${cropX}px,${cropY}px) scale(${cropScale})`;
+}
+
+function clampCrop(){
+  const minScale = Math.max(cropFrameW / cropImgNatW, cropFrameH / cropImgNatH);
+  cropScale = Math.max(minScale, Math.min(cropScale, minScale * 6));
+  const scaledW = cropImgNatW * cropScale;
+  const scaledH = cropImgNatH * cropScale;
+  cropX = Math.min(0, Math.max(cropX, cropFrameW - scaledW));
+  cropY = Math.min(0, Math.max(cropY, cropFrameH - scaledH));
+}
+
+// タッチ操作
+(()=>{
+  let touches = [];
+  let lastDist = 0, lastMid = {x:0,y:0};
+  const frame = ()=>document.getElementById('crop-frame');
+
+  function getTouches(e){ return Array.from(e.touches).slice(0,2); }
+  function dist(a,b){ return Math.hypot(a[0].clientX-a[1].clientX, a[0].clientY-a[1].clientY); }
+  function mid(a){ return {x:(a[0].clientX+a[1].clientX)/2, y:(a[0].clientY+a[1].clientY)/2}; }
+
+  document.addEventListener('touchstart', e=>{
+    if(!e.target.closest('#crop-frame')) return;
+    e.preventDefault();
+    touches = getTouches(e);
+    if(touches.length===2){ lastDist = dist(touches); lastMid = mid(touches); }
+  },{passive:false});
+
+  document.addEventListener('touchmove', e=>{
+    if(!e.target.closest('#crop-frame')) return;
+    e.preventDefault();
+    const cur = getTouches(e);
+    if(cur.length===1 && touches.length===1){
+      // パン
+      const dx = cur[0].clientX - touches[0].clientX;
+      const dy = cur[0].clientY - touches[0].clientY;
+      cropX += dx; cropY += dy;
+    } else if(cur.length===2){
+      // ピンチズーム
+      const curDist = dist(cur);
+      const curMid = mid(cur);
+      const ratio = curDist / lastDist;
+      const rect = frame().getBoundingClientRect();
+      const px = curMid.x - rect.left;
+      const py = curMid.y - rect.top;
+      cropX = px - (px - cropX) * ratio;
+      cropY = py - (py - cropY) * ratio;
+      cropScale *= ratio;
+      lastDist = curDist; lastMid = curMid;
+    }
+    touches = cur;
+    clampCrop();
+    applyCropTransform();
+  },{passive:false});
+
+  document.addEventListener('touchend', e=>{
+    touches = getTouches(e);
+  });
+})();
+
+function saveCropToCanvas(quality, outputW, outputH){
+  const canvas = document.createElement('canvas');
+  canvas.width = outputW; canvas.height = outputH;
+  const ctx = canvas.getContext('2d');
+  const imgEl = document.getElementById('crop-img');
+  // クロップ枠内での描画位置を逆算
+  const scaleRatio = outputW / cropFrameW;
+  ctx.drawImage(imgEl,
+    -cropX / cropScale, -cropY / cropScale,
+    cropFrameW / cropScale, cropFrameH / cropScale * (outputH/outputW),
+    0, 0, outputW, outputH
+  );
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
+document.getElementById('crop-ok').addEventListener('click', ()=>{
+  if(!cropCallback) return;
+  const isPortrait = cropAspectW < cropAspectH;
+  const result = saveCropToCanvas(0.80, isPortrait ? 800 : 1080, isPortrait ? 1000 : 1080);
+  document.getElementById('crop-overlay').classList.add('hidden');
+  cropCallback(result);
+  cropCallback = null;
+});
+document.getElementById('crop-cancel').addEventListener('click', ()=>{
+  document.getElementById('crop-overlay').classList.add('hidden');
+  cropCallback = null;
+});
+
 // 背景画像
 document.getElementById('home-bg-wrap').addEventListener('click', ()=>{
   document.getElementById('home-bg-input').click();
@@ -901,19 +1061,7 @@ document.getElementById('home-bg-input').addEventListener('change', e=>{
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = ev=>{
-    // Canvasで圧縮してからlocalStorageに保存（容量節約）
-    const img = new Image();
-    img.onload = ()=>{
-      const canvas = document.createElement('canvas');
-      const MAX = 1080;
-      let w = img.width, h = img.height;
-      if(w > MAX || h > MAX){
-        if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
-        else { w = Math.round(w * MAX / h); h = MAX; }
-      }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const compressed = canvas.toDataURL('image/jpeg', 0.75);
+    openCropModal(ev.target.result, 9, 16, '🖼️ 背景を調整', (compressed)=>{
       try {
         const data = loadOshiData();
         data.bg = compressed;
@@ -922,8 +1070,7 @@ document.getElementById('home-bg-input').addEventListener('change', e=>{
       } catch(err){
         alert('画像が大きすぎて保存できませんでした。もう少し小さい画像を使ってください。');
       }
-    };
-    img.src = ev.target.result;
+    });
   };
   reader.readAsDataURL(file);
   e.target.value='';
@@ -933,18 +1080,7 @@ document.getElementById('oshi-photo-input').addEventListener('change', e=>{
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = ev=>{
-    const img = new Image();
-    img.onload = ()=>{
-      const canvas = document.createElement('canvas');
-      const MAX = 800;
-      let w = img.width, h = img.height;
-      if(w > MAX || h > MAX){
-        if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
-        else { w = Math.round(w * MAX / h); h = MAX; }
-      }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const compressed = canvas.toDataURL('image/jpeg', 0.80);
+    openCropModal(ev.target.result, 4, 5, '📷 推し写真を調整', (compressed)=>{
       try {
         const data = loadOshiData();
         data.photo = compressed;
@@ -954,8 +1090,7 @@ document.getElementById('oshi-photo-input').addEventListener('change', e=>{
       } catch(err){
         alert('画像が大きすぎて保存できませんでした。もう少し小さい画像を使ってください。');
       }
-    };
-    img.src = ev.target.result;
+    });
   };
   reader.readAsDataURL(file);
   e.target.value='';
@@ -1302,6 +1437,9 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
   renderPhotoRow();
   document.getElementById('form-artist').value='';
   document.getElementById('form-memo').value='';
+  // 保存後に足あと画面へ移動
+  closeModal();
+  switchTab('records');
 });
 
 document.getElementById('modal-cancel').addEventListener('click', closeModal);
