@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-013';
+const APP_VERSION = '20260531-014';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -618,36 +618,36 @@ if (stored !== APP_VERSION) {
 <script>
 const VENUES_CLEAN = [
   // ドーム
-  {id:1, name:'東京ドーム', lat:35.7056, lng:139.7519, pref:'東京都', type:'dome', cap:55000, seat:'https://www.tokyo-dome.co.jp/dome/seat/'},
-  {id:2, name:'京セラドーム大阪', lat:34.6745, lng:135.4730, pref:'大阪府', type:'dome', cap:55000, seat:'https://www.kyoceradome-osaka.jp/guide/seat.html'},
-  {id:3, name:'バンテリンドームナゴヤ', lat:35.1854, lng:136.9484, pref:'愛知県', type:'dome', cap:50000, seat:'https://www.vantelin-dome-nagoya.com/guide/seat/'},
-  {id:4, name:'福岡PayPayドーム', lat:33.6073, lng:130.3619, pref:'福岡県', type:'dome', cap:52000, seat:'https://www.softbankhawks.co.jp/stadium/guide/seat/'},
-  {id:5, name:'札幌ドーム', lat:43.0149, lng:141.4096, pref:'北海道', type:'dome', cap:54000, seat:'https://www.sapporo-dome.co.jp/guide/seat.html'},
-  {id:6, name:'ベルーナドーム（メットライフドーム）', lat:35.7697, lng:139.4254, pref:'埼玉県', type:'dome', cap:36000, seat:'https://www.seibulions.jp/stadium/guide/'},
-  {id:7, name:'エスコンフィールドHOKKAIDO', lat:43.1455, lng:141.6275, pref:'北海道', type:'dome', cap:35000, seat:'https://es-confield.jp/guide/seat/'},
+  {id:1, name:'東京ドーム', lat:35.7056, lng:139.7519, pref:'東京都', type:'dome', cap:55000, seat:'https://www.tokyo-dome.co.jp/'},
+  {id:2, name:'京セラドーム大阪', lat:34.6745, lng:135.4730, pref:'大阪府', type:'dome', cap:55000, seat:'https://www.kyoceradome-osaka.jp/'},
+  {id:3, name:'バンテリンドームナゴヤ', lat:35.1854, lng:136.9484, pref:'愛知県', type:'dome', cap:50000, seat:'https://www.vantelin-dome-nagoya.com/'},
+  {id:4, name:'福岡PayPayドーム', lat:33.6073, lng:130.3619, pref:'福岡県', type:'dome', cap:52000, seat:'https://www.softbankhawks.co.jp/stadium/'},
+  {id:5, name:'札幌ドーム', lat:43.0149, lng:141.4096, pref:'北海道', type:'dome', cap:54000, seat:'https://www.sapporo-dome.co.jp/'},
+  {id:6, name:'ベルーナドーム（メットライフドーム）', lat:35.7697, lng:139.4254, pref:'埼玉県', type:'dome', cap:36000, seat:'https://www.seibulions.jp/stadium/'},
+  {id:7, name:'エスコンフィールドHOKKAIDO', lat:43.1455, lng:141.6275, pref:'北海道', type:'dome', cap:35000, seat:'https://es-confield.jp/'},
 
   // アリーナ
-  {id:10, name:'さいたまスーパーアリーナ', lat:35.8951, lng:139.6302, pref:'埼玉県', type:'arena', cap:37000, seat:'https://www.saitama-arena.co.jp/guide/seat.html'},
-  {id:11, name:'横浜アリーナ', lat:35.5017, lng:139.6178, pref:'神奈川県', type:'arena', cap:17000, seat:'https://www.yokohama-arena.co.jp/guide/seat/'},
-  {id:12, name:'日本武道館', lat:35.6937, lng:139.7497, pref:'東京都', type:'arena', cap:14000, seat:'https://www.nipponbudokan.or.jp/guide/'},
+  {id:10, name:'さいたまスーパーアリーナ', lat:35.8951, lng:139.6302, pref:'埼玉県', type:'arena', cap:37000, seat:'https://www.saitama-arena.co.jp/'},
+  {id:11, name:'横浜アリーナ', lat:35.5017, lng:139.6178, pref:'神奈川県', type:'arena', cap:17000, seat:'https://www.yokohama-arena.co.jp/'},
+  {id:12, name:'日本武道館', lat:35.6937, lng:139.7497, pref:'東京都', type:'arena', cap:14000, seat:'https://www.nipponbudokan.or.jp/'},
   {id:13, name:'国立代々木競技場第一体育館', lat:35.6644, lng:139.6951, pref:'東京都', type:'arena', cap:13291},
-  {id:14, name:'大阪城ホール', lat:34.6862, lng:135.5257, pref:'大阪府', type:'arena', cap:16000, seat:'https://www.osaka-johall.com/hall/'},
-  {id:15, name:'横浜BUNTAI', lat:35.4440, lng:139.6380, pref:'神奈川県', type:'arena', cap:10000, seat:'https://yokohama-buntai.jp/guide/'},
-  {id:16, name:'マリンメッセ福岡Aホール', lat:33.5994, lng:130.4063, pref:'福岡県', type:'arena', cap:15000, seat:'https://www.marinemesse.or.jp/hall/'},
+  {id:14, name:'大阪城ホール', lat:34.6862, lng:135.5257, pref:'大阪府', type:'arena', cap:16000, seat:'https://www.osaka-johall.com/'},
+  {id:15, name:'横浜BUNTAI', lat:35.4440, lng:139.6380, pref:'神奈川県', type:'arena', cap:10000, seat:'https://yokohama-buntai.jp/'},
+  {id:16, name:'マリンメッセ福岡Aホール', lat:33.5994, lng:130.4063, pref:'福岡県', type:'arena', cap:15000, seat:'https://www.marinemesse.or.jp/'},
   {id:17, name:'インテックス大阪', lat:34.6503, lng:135.4131, pref:'大阪府', type:'arena', cap:14000},
-  {id:18, name:'幕張メッセ国際展示場', lat:35.6478, lng:140.0302, pref:'千葉県', type:'arena', cap:15000, seat:'https://www.m-messe.co.jp/guide/'},
-  {id:19, name:'ゼビオアリーナ仙台', lat:38.2682, lng:140.8867, pref:'宮城県', type:'arena', cap:8000, seat:'https://xebio-arena-sendai.jp/guide/'},
-  {id:20, name:'北海道立総合体育センター（北海きたえーる）', lat:43.0461, lng:141.3588, pref:'北海道', type:'arena', cap:8000, seat:'https://www.hokkai-kitaell.jp/guide/'},
-  {id:21, name:'広島グリーンアリーナ', lat:34.3803, lng:132.4726, pref:'広島県', type:'arena', cap:8800, seat:'https://www.hiroshima-greenarena.jp/guide/'},
+  {id:18, name:'幕張メッセ国際展示場', lat:35.6478, lng:140.0302, pref:'千葉県', type:'arena', cap:15000, seat:'https://www.m-messe.co.jp/'},
+  {id:19, name:'ゼビオアリーナ仙台', lat:38.2682, lng:140.8867, pref:'宮城県', type:'arena', cap:8000, seat:'https://xebio-arena-sendai.jp/'},
+  {id:20, name:'北海道立総合体育センター（北海きたえーる）', lat:43.0461, lng:141.3588, pref:'北海道', type:'arena', cap:8000, seat:'https://www.hokkai-kitaell.jp/'},
+  {id:21, name:'広島グリーンアリーナ', lat:34.3803, lng:132.4726, pref:'広島県', type:'arena', cap:8800, seat:'https://www.hiroshima-greenarena.jp/'},
   {id:22, name:'アクアドームくまもと', lat:32.7800, lng:130.7013, pref:'熊本県', type:'arena', cap:8000},
-  {id:23, name:'カルッツかわさき', lat:35.5276, lng:139.7014, pref:'神奈川県', type:'arena', cap:5000, seat:'https://karuttz.jp/guide/'},
+  {id:23, name:'カルッツかわさき', lat:35.5276, lng:139.7014, pref:'神奈川県', type:'arena', cap:5000, seat:'https://karuttz.jp/'},
   {id:24, name:'沖縄コンベンションセンター', lat:26.3512, lng:127.7594, pref:'沖縄県', type:'arena', cap:5000},
   {id:25, name:'ポートメッセなごや', lat:35.0853, lng:136.8986, pref:'愛知県', type:'arena', cap:10000},
   {id:26, name:'アイシン・エィ・ダブリュ文化ホール', lat:35.2147, lng:137.0753, pref:'愛知県', type:'arena', cap:1500},
-  {id:27, name:'神戸ワールド記念ホール', lat:34.6532, lng:135.1742, pref:'兵庫県', type:'arena', cap:8000, seat:'https://www.kobe-wmh.co.jp/guide/'},
-  {id:28, name:'東京ガーデンシアター', lat:35.6509, lng:139.7963, pref:'東京都', type:'arena', cap:8000, seat:'https://www.tokyo-garden-theater.jp/guide/'},
-  {id:29, name:'ぴあアリーナMM', lat:35.4558, lng:139.6316, pref:'神奈川県', type:'arena', cap:10000, seat:'https://pia-arena-mm.jp/guide/'},
-  {id:30, name:'GLION ARENA KOBE', lat:34.6869, lng:135.1951, pref:'兵庫県', type:'arena', cap:10000, seat:'https://www.totteikobe.jp/'},
+  {id:27, name:'神戸ワールド記念ホール', lat:34.6532, lng:135.1742, pref:'兵庫県', type:'arena', cap:8000, seat:'https://www.kobe-wmh.co.jp/'},
+  {id:28, name:'東京ガーデンシアター', lat:35.6509, lng:139.7963, pref:'東京都', type:'arena', cap:8000, seat:'https://www.tokyo-garden-theater.jp/'},
+  {id:29, name:'ぴあアリーナMM', lat:35.4558, lng:139.6316, pref:'神奈川県', type:'arena', cap:10000, seat:'https://pia-arena-mm.jp/'},
+  {id:30, name:'GLION ARENA KOBE', lat:34.6822, lng:135.1960, pref:'兵庫県', type:'arena', cap:10000, seat:'https://www.totteikobe.jp/'},
 
   // ホール
   {id:40, name:'Zepp Tokyo（閉館）', lat:35.6276, lng:139.7742, pref:'東京都', type:'zepp', cap:2709},
@@ -1127,7 +1127,7 @@ function makePopupHtml(venue){
   const visitText = count > 0 ? `✅ ${count}回訪問済み` : '未訪問';
   const mapsUrl = `https://www.google.com/maps?q=${venue.lat},${venue.lng}`;
   const seatBtn = venue.seat
-    ? `<a class="popup-btn popup-btn-sub" href="${venue.seat}" target="_blank" rel="noopener">🪑 座席表を見る</a>`
+    ? `<a class="popup-btn popup-btn-sub" href="${venue.seat}" target="_blank" rel="noopener">🏠 公式HP</a>`
     : '';
   return `<div class="popup-body">
     <div class="popup-type">${TYPE_ICON[venue.type]} ${TYPE_LABEL[venue.type]}</div>
