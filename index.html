@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-007';
+const APP_VERSION = '20260531-009';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -239,7 +239,7 @@ if (stored !== APP_VERSION) {
   }
 
   /* HOME PANEL */
-  .home-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:900;display:flex;flex-direction:column;background:linear-gradient(160deg,#0d0d1a 0%,#1a0a2e 50%,#0d1a1a 100%);background-size:cover;background-position:center}
+  .home-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:900;display:flex;flex-direction:column;background-image:linear-gradient(160deg,#0d0d1a 0%,#1a0a2e 50%,#0d1a1a 100%);background-size:cover;background-position:center}
   .home-overlay.hidden{display:none}
   .home-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:24px}
   /* 推し写真エリア */
@@ -641,7 +641,7 @@ const VENUES_CLEAN = [
   {id:72, name:'パシフィコ横浜国立大ホール', lat:35.4574, lng:139.6339, pref:'神奈川県', type:'hall', cap:5002},
   {id:73, name:'埼玉県民健康福祉村文化ホール', lat:35.9786, lng:139.3948, pref:'埼玉県', type:'hall', cap:2000},
   {id:74, name:'仙台サンプラザ', lat:38.2630, lng:140.8835, pref:'宮城県', type:'hall', cap:3000},
-  {id:75, name:'福岡サンパレス', lat:33.5981, lng:130.4001, pref:'福岡県', type:'hall', cap:4000},
+  {id:75, name:'福岡サンパレス', lat:33.6038, lng:130.4020, pref:'福岡県', type:'hall', cap:4000},
   {id:76, name:'熊本県立劇場', lat:32.8008, lng:130.7098, pref:'熊本県', type:'hall', cap:1820},
   {id:77, name:'渋谷公会堂（LINE CUBE SHIBUYA）', lat:35.6612, lng:139.6991, pref:'東京都', type:'hall', cap:2198},
   {id:78, name:'ニトリ文化ホール', lat:43.0640, lng:141.3404, pref:'北海道', type:'hall', cap:1765},
@@ -815,8 +815,11 @@ function applyHomeBg(){
     el.style.backgroundImage = `url('${data.bg}')`;
     el.style.backgroundSize = 'cover';
     el.style.backgroundPosition = 'center';
+    el.style.backgroundRepeat = 'no-repeat';
   } else {
-    el.style.backgroundImage = '';
+    el.style.backgroundImage = 'linear-gradient(160deg,#0d0d1a 0%,#1a0a2e 50%,#0d1a1a 100%)';
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
   }
 }
 
@@ -1383,6 +1386,10 @@ function switchTab(tab){
   document.getElementById('records-overlay').classList.add('hidden');
   document.getElementById('ranking-overlay').classList.add('hidden');
   document.getElementById('home-overlay').classList.add('hidden');
+
+  // マップ以外でズームコントロールを隠す
+  const zoomCtrl = document.querySelector('.leaflet-control-container');
+  if(zoomCtrl) zoomCtrl.style.display = (tab==='map') ? '' : 'none';
 
   if(tab==='home'){
     renderHome();
