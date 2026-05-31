@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-009';
+const APP_VERSION = '20260531-011';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -165,6 +165,10 @@ if (stored !== APP_VERSION) {
   .records-panel-title{font-size:1rem;font-weight:700;color:#c084fc}
   .records-panel-close{background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer;padding:6px 10px;border-radius:8px;transition:color 0.15s;-webkit-tap-highlight-color:transparent}
   .records-panel-close:hover{color:#e2e2e8}
+  .records-year-tabs{display:flex;gap:6px;padding:10px 14px 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0;border-bottom:1px solid #2a2a3a}
+  .records-year-tabs::-webkit-scrollbar{display:none}
+  .records-year-tab{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:0.78rem;font-weight:600;border:1px solid #2a2a3a;background:#1a1a2e;color:#888;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+  .records-year-tab.active{background:#4c1d95;border-color:#7c3aed;color:#e2e2e8}
   .records-content{padding:16px 18px;flex:1}
   .records-empty{color:#555;font-size:0.85rem;padding:30px 0;text-align:center}
   .record-card{background:#1a1a2e;border:1px solid #2a2a3a;border-radius:14px;padding:14px;margin-bottom:10px}
@@ -502,6 +506,7 @@ if (stored !== APP_VERSION) {
       <div class="records-panel-title">👣 私の足あと</div>
       <button class="records-panel-close" id="records-panel-close">✕</button>
     </div>
+    <div class="records-year-tabs" id="records-year-tabs"></div>
     <div class="records-content" id="records-content"></div>
   </div>
 </div>
@@ -896,10 +901,29 @@ document.getElementById('home-bg-input').addEventListener('change', e=>{
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = ev=>{
-    const data = loadOshiData();
-    data.bg = ev.target.result;
-    saveOshiData(data);
-    applyHomeBg();
+    // Canvasで圧縮してからlocalStorageに保存（容量節約）
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement('canvas');
+      const MAX = 1080;
+      let w = img.width, h = img.height;
+      if(w > MAX || h > MAX){
+        if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.75);
+      try {
+        const data = loadOshiData();
+        data.bg = compressed;
+        saveOshiData(data);
+        applyHomeBg();
+      } catch(err){
+        alert('画像が大きすぎて保存できませんでした。もう少し小さい画像を使ってください。');
+      }
+    };
+    img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
   e.target.value='';
@@ -909,12 +933,29 @@ document.getElementById('oshi-photo-input').addEventListener('change', e=>{
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = ev=>{
-    const data = loadOshiData();
-    data.photo = ev.target.result;
-    saveOshiData(data);
-    // 写真登録後に名前を聞く
-    if(!data.name) openOshiNameModal();
-    else renderHome();
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement('canvas');
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if(w > MAX || h > MAX){
+        if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.80);
+      try {
+        const data = loadOshiData();
+        data.photo = compressed;
+        saveOshiData(data);
+        if(!data.name) openOshiNameModal();
+        else renderHome();
+      } catch(err){
+        alert('画像が大きすぎて保存できませんでした。もう少し小さい画像を使ってください。');
+      }
+    };
+    img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
   e.target.value='';
@@ -1292,16 +1333,61 @@ document.getElementById('lightbox').addEventListener('click', e=>{
 });
 
 // Records Panel
+let recordsSelectedYear = 'all';
+
 function renderRecordsPanel(){
   const content = document.getElementById('records-content');
-  const visitedVenues = VENUES_CLEAN.filter(v=>getVisitCount(v.id)>0)
-    .sort((a,b)=>getVisitCount(b.id)-getVisitCount(a.id));
+  const tabsEl = document.getElementById('records-year-tabs');
+
+  // 全レコードから年度一覧を作成
+  const allRecs = Object.values(visited).flat();
+  const years = [...new Set(
+    allRecs.map(r=> r.date ? r.date.substring(0,4) : null).filter(Boolean)
+  )].sort((a,b)=>b-a);
+
+  // 年度タブ描画
+  if(years.length > 0){
+    // 選択中の年度が存在しない年になっていたらリセット
+    if(recordsSelectedYear !== 'all' && !years.includes(recordsSelectedYear)){
+      recordsSelectedYear = 'all';
+    }
+    tabsEl.innerHTML = `<button class="records-year-tab${recordsSelectedYear==='all'?' active':''}" data-year="all">すべて</button>`
+      + years.map(y=>`<button class="records-year-tab${recordsSelectedYear===y?' active':''}" data-year="${y}">${y}年</button>`).join('');
+    tabsEl.querySelectorAll('.records-year-tab').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        recordsSelectedYear = btn.dataset.year;
+        renderRecordsPanel();
+      });
+    });
+    tabsEl.style.display = 'flex';
+  } else {
+    tabsEl.innerHTML = '';
+    tabsEl.style.display = 'none';
+  }
+
+  // 選択年度でフィルタリング
+  const visitedVenues = VENUES_CLEAN.filter(v=>{
+    const recs = visited[v.id]||[];
+    if(recordsSelectedYear === 'all') return recs.length > 0;
+    return recs.some(r=> r.date && r.date.startsWith(recordsSelectedYear));
+  }).sort((a,b)=>{
+    // 選択年度内の最新訪問日順
+    const latestDate = recs => recs
+      .filter(r=> recordsSelectedYear==='all' || (r.date && r.date.startsWith(recordsSelectedYear)))
+      .map(r=>r.date||'').sort().reverse()[0] || '';
+    return latestDate(visited[b.id]||[]).localeCompare(latestDate(visited[a.id]||[]));
+  });
+
   if(!visitedVenues.length){
-    content.innerHTML='<div class="records-empty">まだ訪問記録がありません</div>';
+    content.innerHTML=`<div class="records-empty">${recordsSelectedYear==='all'?'まだ訪問記録がありません':`${recordsSelectedYear}年の記録はありません`}</div>`;
     return;
   }
+
   content.innerHTML = visitedVenues.map(v=>{
-    const recs = visited[v.id]||[];
+    const allRecs = visited[v.id]||[];
+    const recs = recordsSelectedYear === 'all'
+      ? allRecs
+      : allRecs.filter(r=> r.date && r.date.startsWith(recordsSelectedYear));
     const photos = recs.flatMap(r=>r.photos||[]);
     return `<div class="record-card">
       <div class="record-venue-name">${TYPE_ICON[v.type]} ${v.name}</div>
