@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-027';
+const APP_VERSION = '20260531-028';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -893,6 +893,8 @@ const VENUES_CLEAN = [
   {id:130, name:'Billboard Live TOKYO', lat:35.6664, lng:139.7305, pref:'東京都', type:'live', cap:300, seat:'https://www.billboard-live.com/tokyo'},
   {id:131, name:'Billboard Live OSAKA', lat:34.6998, lng:135.4945, pref:'大阪府', type:'live', cap:500, seat:'https://www.billboard-live.com/osaka'},
   {id:132, name:'Billboard Live YOKOHAMA', lat:35.4513, lng:139.6360, pref:'神奈川県', type:'live', cap:330, seat:'https://www.billboard-live.com/yokohama'},
+  {id:133, name:'住友生命いずみホール', lat:34.6909, lng:135.5342, pref:'大阪府', type:'concert', cap:821, seat:'https://www.izumihall.jp/'},
+  {id:134, name:'ロームシアター京都', lat:35.0144, lng:135.7807, pref:'京都府', type:'hall', cap:2000, seat:'https://rohmtheatrekyoto.jp/'},
 
   // 野外
   {id:150, name:'国立競技場', lat:35.6782, lng:139.7143, pref:'東京都', type:'outdoor', cap:68000, seat:'https://www.jpnsport.go.jp/kokuritu/'},
