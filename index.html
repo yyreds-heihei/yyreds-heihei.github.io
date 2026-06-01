@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-024';
+const APP_VERSION = '20260531-025';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -129,6 +129,21 @@ if (stored !== APP_VERSION) {
   .photo-add{width:72px;height:72px;border-radius:10px;border:2px dashed #2a2a3a;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;color:#555;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
   .photo-add:hover{border-color:#7c3aed;color:#a78bfa}
   .photo-input{display:none}
+
+  /* 座席登録 */
+  .seat-upload{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border:2px dashed #2a2a3a;border-radius:10px;color:#888;font-size:0.82rem;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+  .seat-upload:hover,.seat-upload:active{border-color:#7c3aed;color:#a78bfa}
+  .seat-map-wrap{position:relative;display:inline-block;max-width:100%;border-radius:10px;overflow:hidden;border:1px solid #2a2a3a;cursor:crosshair;-webkit-tap-highlight-color:transparent;line-height:0}
+  .seat-map-img{max-width:100%;display:block;user-select:none;-webkit-user-select:none}
+  .seat-mark{position:absolute;width:24px;height:24px;border-radius:50%;border:3px solid #ff3b6b;background:rgba(255,59,107,0.35);box-shadow:0 0 0 2px rgba(255,255,255,0.8),0 0 8px rgba(255,59,107,0.8);transform:translate(-50%,-50%);pointer-events:none}
+  .seat-hint{font-size:0.7rem;color:#777;margin-top:6px}
+  .seat-clear{background:#1a1a2e;border:1px solid #3a2a5a;color:#a78bfa;font-size:0.72rem;padding:5px 12px;border-radius:14px;cursor:pointer;margin-top:8px;-webkit-tap-highlight-color:transparent}
+  .seat-clear:active{background:#4c1d95;color:#fff}
+  /* 足あと表示側 */
+  .visit-seat{margin-top:8px;font-size:0.8rem;color:#aaa}
+  .visit-seat-no{color:#a78bfa;font-weight:600}
+  .visit-seat-map{position:relative;display:inline-block;max-width:220px;margin-top:6px;border-radius:8px;overflow:hidden;border:1px solid #2a2a3a;line-height:0}
+  .visit-seat-map img{max-width:100%;display:block}
   .modal-actions{display:flex;gap:10px;margin-top:18px}
   .btn-primary{flex:1;padding:12px;border-radius:12px;border:none;background:#4c1d95;color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
   .btn-primary:hover,.btn-primary:active{background:#7c3aed}
@@ -616,9 +631,15 @@ if (stored !== APP_VERSION) {
         </div>
         <div id="setlist-rows"></div>
       </div>
-      <div>
+      <div style="margin-bottom:14px">
         <label class="form-label" style="display:block;margin-bottom:4px">写真 <span id="photo-count-label" style="color:#666;font-weight:400">（0/5枚）</span></label>
         <div class="photo-row" id="photo-row"></div>
+      </div>
+      <div>
+        <label class="form-label" style="display:block;margin-bottom:6px">🪑 座席</label>
+        <input class="form-input" type="text" id="form-seat" placeholder="例：アリーナA6ブロック 12列 345番" style="margin-bottom:8px">
+        <div id="seat-area"></div>
+        <input type="file" id="seat-img-input" accept="image/*" style="display:none">
       </div>
     </div>
 
@@ -1263,6 +1284,76 @@ let pendingSetlist = []; // セットリスト（文字列の配列）
 let currentLightboxPhotos = [];
 let lightboxIdx = 0;
 
+// ===== 座席登録 =====
+let pendingSeatNo = '';        // 座席番号テキスト
+let pendingSeatImg = null;     // 座席表画像（圧縮済みdataUrl）
+let pendingSeatX = null;       // 円の相対座標 X（0〜1）
+let pendingSeatY = null;       // 円の相対座標 Y（0〜1）
+
+function renderSeatArea(){
+  const area = document.getElementById('seat-area');
+  if(!area) return;
+  if(pendingSeatImg){
+    // 座席表画像＋タップで円
+    area.innerHTML = `
+      <div class="seat-map-wrap" id="seat-map-wrap">
+        <img class="seat-map-img" src="${pendingSeatImg}" draggable="false">
+        ${(pendingSeatX!=null && pendingSeatY!=null)
+          ? `<div class="seat-mark" style="left:${pendingSeatX*100}%;top:${pendingSeatY*100}%"></div>` : ''}
+      </div>
+      <div class="seat-hint">座席表をタップして自分の席に印をつけられます</div>
+      <button class="seat-clear" id="seat-clear-btn" type="button">🗑 座席表を削除</button>`;
+    const wrap = document.getElementById('seat-map-wrap');
+    wrap.addEventListener('click', e=>{
+      const rect = wrap.getBoundingClientRect();
+      pendingSeatX = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+      pendingSeatY = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+      renderSeatArea();
+    });
+    document.getElementById('seat-clear-btn').addEventListener('click', ()=>{
+      pendingSeatImg = null; pendingSeatX = null; pendingSeatY = null;
+      renderSeatArea();
+    });
+  } else {
+    // アップロードボタン
+    area.innerHTML = `<div class="seat-upload" id="seat-upload-btn">🗺️ 座席表の画像を登録（任意）</div>`;
+    document.getElementById('seat-upload-btn').addEventListener('click', ()=>{
+      document.getElementById('seat-img-input').click();
+    });
+  }
+}
+
+// 座席表画像アップロード（Canvasで圧縮）
+document.getElementById('seat-img-input').addEventListener('change', e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement('canvas');
+      const MAX = 1000;
+      let w = img.width, h = img.height;
+      if(w > MAX || h > MAX){
+        if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      pendingSeatImg = canvas.toDataURL('image/jpeg', 0.7);
+      pendingSeatX = null; pendingSeatY = null;
+      renderSeatArea();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+});
+
+// 座席番号テキスト
+document.getElementById('form-seat').addEventListener('input', e=>{
+  pendingSeatNo = e.target.value;
+});
+
 const MAX_SETLIST = 30;
 
 function renderSetlistRows(){
@@ -1327,6 +1418,10 @@ function openModal(id){
   pendingSetlist = [];
   renderSetlistRows();
   renderPhotoRow();
+  // reset seat
+  pendingSeatNo=''; pendingSeatImg=null; pendingSeatX=null; pendingSeatY=null;
+  document.getElementById('form-seat').value='';
+  renderSeatArea();
   renderVisitList(id);
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
@@ -1410,6 +1505,17 @@ function startEditVisit(idx){
   renderSetlistRows();
   pendingPhotos = [...(r.photos||[])];
   renderPhotoRow();
+  // 座席を読み込み
+  pendingSeatNo = r.seatNo || '';
+  document.getElementById('form-seat').value = pendingSeatNo;
+  if(r.seatMark){
+    pendingSeatImg = r.seatMark.img || null;
+    pendingSeatX = (r.seatMark.x!=null) ? r.seatMark.x : null;
+    pendingSeatY = (r.seatMark.y!=null) ? r.seatMark.y : null;
+  } else {
+    pendingSeatImg = null; pendingSeatX = null; pendingSeatY = null;
+  }
+  renderSeatArea();
   // ボタン表示を「更新」に
   document.getElementById('modal-save').textContent = '✓ 更新';
   // フォームまでスクロール
@@ -1427,6 +1533,9 @@ function cancelEditVisit(){
   renderSetlistRows();
   pendingPhotos = [];
   renderPhotoRow();
+  pendingSeatNo=''; pendingSeatImg=null; pendingSeatX=null; pendingSeatY=null;
+  document.getElementById('form-seat').value='';
+  renderSeatArea();
   document.getElementById('modal-save').textContent = '✓ 記録';
 }
 
@@ -1450,6 +1559,16 @@ function renderVisitList(id){
           <ol class="visit-setlist-list">${r.setlist.filter(s=>s).map((s,j)=>`<li class="visit-setlist-item"><span>${j+1}.</span>${s}</li>`).join('')}</ol>
         </div>` : ''}
       ${(r.photos||[]).length ? `<div class="visit-photos">${r.photos.map((p,j)=>`<img class="visit-photo" src="${p}" data-photos="${i}" data-idx="${j}">`).join('')}</div>` : ''}
+      ${(r.seatNo || r.seatMark) ? `
+        <div class="visit-seat">
+          ${r.seatNo ? `🪑 座席：<span class="visit-seat-no">${r.seatNo}</span>` : '🪑 座席'}
+          ${r.seatMark && r.seatMark.img ? `
+            <div class="visit-seat-map">
+              <img src="${r.seatMark.img}">
+              ${(r.seatMark.x!=null && r.seatMark.y!=null)
+                ? `<div class="seat-mark" style="left:${r.seatMark.x*100}%;top:${r.seatMark.y*100}%"></div>` : ''}
+            </div>` : ''}
+        </div>` : ''}
     </div>
   `).join('');
 
@@ -1491,7 +1610,9 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
     weather: selectedWeather,
     memo: document.getElementById('form-memo').value.trim(),
     setlist: pendingSetlist.filter(s=>s.trim()),
-    photos: [...pendingPhotos]
+    photos: [...pendingPhotos],
+    seatNo: (document.getElementById('form-seat').value||'').trim(),
+    seatMark: pendingSeatImg ? {img: pendingSeatImg, x: pendingSeatX, y: pendingSeatY} : null
   };
   if(!visited[modalVenueId]) visited[modalVenueId]=[];
   if(editingVisitIdx !== null){
@@ -1513,6 +1634,9 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
   renderSetlistRows();
   renderPhotoRow();
+  pendingSeatNo=''; pendingSeatImg=null; pendingSeatX=null; pendingSeatY=null;
+  document.getElementById('form-seat').value='';
+  renderSeatArea();
   document.getElementById('form-artist').value='';
   document.getElementById('form-memo').value='';
   // 保存後に足あと画面へ移動（同タブでも必ず再描画）
