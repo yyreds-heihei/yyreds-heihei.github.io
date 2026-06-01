@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-026';
+const APP_VERSION = '20260531-027';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -760,6 +760,7 @@ if (stored !== APP_VERSION) {
         <input class="form-input" type="text" id="form-seat" placeholder="例：アリーナA6ブロック 12列 345番" style="margin-bottom:8px">
         <div id="seat-area"></div>
         <input type="file" id="seat-img-input" accept="image/*" style="display:none">
+        <div style="font-size:0.66rem;color:#999;margin-top:8px;line-height:1.5">※登録した画像は個人利用の範囲でご利用ください</div>
       </div>
     </div>
 
@@ -889,6 +890,9 @@ const VENUES_CLEAN = [
   {id:127, name:'高松festhalle', lat:34.3450, lng:134.0490, pref:'香川県', type:'live', cap:500, seat:'https://festhalle.jp/'},
   {id:128, name:'熊本B9 V2', lat:32.8001, lng:130.7028, pref:'熊本県', type:'live', cap:500, seat:'http://www.live-drum.com/be9/'},
   {id:129, name:'那覇HACOSTYLE', lat:26.2178, lng:127.6871, pref:'沖縄県', type:'live', cap:300},
+  {id:130, name:'Billboard Live TOKYO', lat:35.6664, lng:139.7305, pref:'東京都', type:'live', cap:300, seat:'https://www.billboard-live.com/tokyo'},
+  {id:131, name:'Billboard Live OSAKA', lat:34.6998, lng:135.4945, pref:'大阪府', type:'live', cap:500, seat:'https://www.billboard-live.com/osaka'},
+  {id:132, name:'Billboard Live YOKOHAMA', lat:35.4513, lng:139.6360, pref:'神奈川県', type:'live', cap:330, seat:'https://www.billboard-live.com/yokohama'},
 
   // 野外
   {id:150, name:'国立競技場', lat:35.6782, lng:139.7143, pref:'東京都', type:'outdoor', cap:68000, seat:'https://www.jpnsport.go.jp/kokuritu/'},
@@ -1037,7 +1041,6 @@ function renderHome(){
       </div>
       <div class="speech-bubble">
         <div class="speech-bubble-text">${msg}</div>
-        <div class="speech-bubble-name">— ${name}</div>
       </div>`;
     document.getElementById('oshi-photo-change-btn').addEventListener('click', ()=>{
       document.getElementById('oshi-photo-input').click();
