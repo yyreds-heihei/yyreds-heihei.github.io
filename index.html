@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-029';
+const APP_VERSION = '20260531-030';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -224,8 +224,12 @@ if (stored !== APP_VERSION) {
   .record-card{background:#fff;border:1px solid #d8d8e8;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
   .record-venue-name{font-size:0.9rem;font-weight:700;margin-bottom:4px;color:#1a1a2a}
   .record-venue-meta{font-size:0.7rem;color:#888;margin-bottom:8px}
-  .record-visits{display:flex;flex-wrap:wrap;gap:4px}
-  .record-visit-chip{background:#f0ecff;border:1px solid #d4c8f8;border-radius:6px;padding:3px 8px;font-size:0.68rem;color:#6d28d9}
+  .record-visits{display:flex;flex-direction:column;gap:6px}
+  .record-visit-row{display:flex;align-items:center;gap:8px}
+  .record-visit-chip{background:#f0ecff;border:1px solid #d4c8f8;border-radius:6px;padding:5px 9px;font-size:0.68rem;color:#6d28d9}
+  .record-visit-row .record-visit-chip{flex:1;min-width:0}
+  .record-visit-del{flex-shrink:0;background:#fff;border:1px solid #f1c2cf;color:#e0567a;font-size:0.68rem;font-weight:700;padding:5px 10px;border-radius:14px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+  .record-visit-del:active{background:#ffe5ec}
   .record-visit-chip-tap{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s;user-select:none}
   .record-visit-chip-tap:active{background:#7c3aed;color:#fff;border-color:#7c3aed}
   .record-chip-hint{font-size:0.62rem;color:#bbb;margin-top:4px;letter-spacing:0.02em}
@@ -2027,10 +2031,13 @@ function renderRecordsPanel(){
       <div class="record-venue-name">${TYPE_ICON[v.type]} ${v.name}</div>
       <div class="record-venue-meta">${v.pref} · ${TYPE_LABEL[v.type]}</div>
       <div class="record-visits">${recs.map(r=>`
-        <span class="record-visit-chip record-visit-chip-tap" data-venue="${v.id}" data-uid="${r.uid||''}">
-          ✏️ ${r.date||'?'}${r.artist?' · '+r.artist:''}${r.weather?' '+WEATHER_ICON[r.weather]:''}
-        </span>`).join('')}</div>
-      <div class="record-chip-hint">↑ タップで編集</div>
+        <div class="record-visit-row">
+          <span class="record-visit-chip record-visit-chip-tap" data-venue="${v.id}" data-uid="${r.uid||''}" data-aidx="${allRecs.indexOf(r)}">
+            ✏️ ${r.date||'?'}${r.artist?' · '+r.artist:''}${r.weather?' '+WEATHER_ICON[r.weather]:''}
+          </span>
+          <button class="record-visit-del" data-venue="${v.id}" data-uid="${r.uid||''}" data-aidx="${allRecs.indexOf(r)}">🗑 削除</button>
+        </div>`).join('')}</div>
+      <div class="record-chip-hint">✏️ タップで編集 ／ 🗑 で削除</div>
       ${photos.length ? `<div class="record-photos-row">${photos.slice(0,6).map((p,i)=>`<img class="record-photo" src="${p}" data-venue="${v.id}" data-idx="${i}">`).join('')}</div>` : ''}
     </div>`;
   }).join('');
@@ -2040,9 +2047,36 @@ function renderRecordsPanel(){
     chip.addEventListener('click', ()=>{
       const vid = +chip.dataset.venue;
       const uid = chip.dataset.uid;
-      const idx = (visited[vid]||[]).findIndex(r=> uid ? r.uid===uid : false);
+      const aidx = +chip.dataset.aidx;
+      const idx = uid ? (visited[vid]||[]).findIndex(r=> r.uid===uid) : aidx;
       openModal(vid);
       if(idx >= 0) setTimeout(()=>startEditVisit(idx), 50);
+    });
+  });
+
+  // 削除ボタン → 該当レコードを削除
+  content.querySelectorAll('.record-visit-del').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const vid = +btn.dataset.venue;
+      const uid = btn.dataset.uid;
+      const aidx = +btn.dataset.aidx;
+      const recs = visited[vid]||[];
+      const rec = uid ? recs.find(r=>r.uid===uid) : recs[aidx];
+      const label = rec ? `${rec.date||''}${rec.artist?' '+rec.artist:''}`.trim() || 'この記録' : 'この記録';
+      if(!confirm(`「${label}」の足あとを削除しますか？\nこの操作は取り消せません。`)) return;
+      if(uid){
+        visited[vid] = recs.filter(r=> r.uid!==uid);
+      } else {
+        recs.splice(aidx, 1);
+        visited[vid] = recs;
+      }
+      if(!visited[vid].length) delete visited[vid];
+      saveVisited();
+      refreshMarker(vid);
+      renderSidebar();
+      updateStats();
+      renderRecordsPanel();
     });
   });
 
