@@ -1,7 +1,7 @@
 {
-  "name": "全国ライブ会場マップ",
-  "short_name": "ライブ会場",
-  "description": "全国のライブ会場を地図で確認・訪問記録できるアプリ",
+  "name": "Ricor Live",
+  "short_name": "ライブ記録",
+  "description": "推し活・ライブ参戦の記録アプリ。全国のライブ会場マップ・足あと・セットリスト・座席。",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f13",
@@ -9,16 +9,16 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "icon.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
