@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-031';
+const APP_VERSION = '20260531-034';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -29,10 +29,11 @@ if (stored !== APP_VERSION) {
 <meta name="theme-color" content="#7c3aed">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ライブ会場">
+<meta name="apple-mobile-web-app-title" content="Ricor Live">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>全国ライブ会場マップ</title>
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Ricor Live</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -311,7 +312,7 @@ if (stored !== APP_VERSION) {
   .splash.fade-out{opacity:0;pointer-events:none}
   .splash-bg{
     position:absolute;inset:0;
-    background-image:url('Otaアイコン.png');
+    background-image:url('splash.png');
     background-size:cover;background-position:center;
     animation:splashZoom 2.0s cubic-bezier(0.22,0.61,0.36,1) forwards;
     transform-origin:center center;
@@ -526,7 +527,7 @@ if (stored !== APP_VERSION) {
   <header id="main-header">
     <div class="header-row1">
       <span class="header-logo">🎵</span>
-      <h1>全国ライブ会場マップ</h1>
+      <h1>Ricor Live</h1>
       <div class="stats">
         <div class="stat-item">
           <div class="stat-num" id="stat-visited">0</div>
