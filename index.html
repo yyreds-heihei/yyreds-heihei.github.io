@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-030';
+const APP_VERSION = '20260531-031';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -73,6 +73,20 @@ if (stored !== APP_VERSION) {
   .filter-row{display:flex;gap:6px;flex-wrap:wrap}
   .filter-btn{background:#e8e8f0;border:1px solid #c8c8d8;color:#555;padding:5px 10px;border-radius:20px;font-size:0.72rem;cursor:pointer;transition:all 0.15s;white-space:nowrap}
   .filter-btn.active{background:#4c1d95;border-color:#7c3aed;color:#fff}
+  .filter-btn-add{background:#fff;border:1px dashed #7c3aed;color:#7c3aed;font-weight:700}
+  .filter-btn-add:active{background:#f0ecff}
+  /* 自分で入力モーダル */
+  .cv-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10016;display:flex;align-items:center;justify-content:center;padding:18px}
+  .cv-overlay.hidden{display:none}
+  .cv-modal{background:#fff;border-radius:20px;width:100%;max-width:380px;padding:22px;color:#1a1a2a;box-shadow:0 16px 60px rgba(0,0,0,0.5)}
+  .cv-title{font-size:1.05rem;font-weight:800;color:#7c3aed;margin-bottom:4px}
+  .cv-desc{font-size:0.8rem;color:#888;margin-bottom:16px}
+  .cv-label{display:block;font-size:0.75rem;color:#555;font-weight:700;margin-bottom:5px;margin-top:10px}
+  .cv-input{width:100%;background:#fff;border:1px solid #c8c8d8;border-radius:10px;padding:11px 12px;font-size:16px;color:#1a1a2a;font-family:inherit;outline:none}
+  .cv-input:focus{border-color:#7c3aed}
+  .cv-actions{display:flex;gap:10px;margin-top:20px}
+  .cv-actions .btn-secondary{flex:1;border:1px solid #c8c8d8;color:#666}
+  .cv-actions .btn-primary{flex:2}
   .search-box{width:100%;padding:8px 12px;background:#fff;border:1px solid #c8c8d8;border-radius:10px;color:#1a1a2a;font-size:0.85rem;margin-bottom:8px;outline:none}
   .search-box:focus{border-color:#7c3aed}
   .venue-list{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
@@ -549,8 +563,10 @@ if (stored !== APP_VERSION) {
           <button class="filter-btn" data-type="live">ライブハウス</button>
           <button class="filter-btn" data-type="outdoor">野外</button>
           <button class="filter-btn" data-type="concert">コンサートホール</button>
+          <button class="filter-btn" data-type="theater">劇場</button>
           <button class="filter-btn" data-type="visited">訪問済み</button>
           <button class="filter-btn" data-type="unvisited">未訪問</button>
+          <button class="filter-btn filter-btn-add" id="add-custom-venue" type="button">➕ 自分で入力</button>
         </div>
       </div>
       <div class="venue-list" id="venue-list"></div>
@@ -659,6 +675,22 @@ if (stored !== APP_VERSION) {
 </div>
 <input type="file" id="oshi-photo-input" accept="image/*" style="display:none">
 
+<!-- 自分で入力（カスタム会場）モーダル -->
+<div class="cv-overlay hidden" id="cv-overlay">
+  <div class="cv-modal">
+    <div class="cv-title">➕ 会場を自分で入力</div>
+    <div class="cv-desc">リストに無い会場を追加して記録できます。</div>
+    <label class="cv-label">会場名 <span style="color:#e0567a">*</span></label>
+    <input class="cv-input" type="text" id="cv-name" placeholder="例：〇〇市民ホール" maxlength="40">
+    <label class="cv-label">都道府県（任意）</label>
+    <input class="cv-input" type="text" id="cv-pref" placeholder="例：東京都" maxlength="12">
+    <div class="cv-actions">
+      <button class="btn-secondary" id="cv-cancel" type="button">キャンセル</button>
+      <button class="btn-primary" id="cv-save" type="button">追加して記録する</button>
+    </div>
+  </div>
+</div>
+
 <!-- Backup Modal -->
 <div class="backup-overlay hidden" id="backup-overlay">
   <div class="backup-modal">
@@ -731,7 +763,7 @@ if (stored !== APP_VERSION) {
           <input class="form-input" type="date" id="form-date">
         </div>
         <div class="form-group">
-          <label class="form-label">アーティスト</label>
+          <label class="form-label">アーティスト（舞台の場合は担当メンバー名）</label>
           <input class="form-input" type="text" id="form-artist" placeholder="">
         </div>
       </div>
@@ -904,7 +936,7 @@ const VENUES_CLEAN = [
   {id:150, name:'国立競技場', lat:35.6782, lng:139.7143, pref:'東京都', type:'outdoor', cap:68000, seat:'https://www.jpnsport.go.jp/kokuritu/'},
   {id:151, name:'横浜国際総合競技場（日産スタジアム）', lat:35.5102, lng:139.6062, pref:'神奈川県', type:'outdoor', cap:72000, seat:'https://www.nissan-stadium.jp/'},
   {id:152, name:'ヤンマースタジアム長居', lat:34.5955, lng:135.5178, pref:'大阪府', type:'outdoor', cap:50000, seat:'https://nagaipark.com/stadium/'},
-  {id:153, name:'ノエビアスタジアム神戸', lat:34.6436, lng:135.1831, pref:'兵庫県', type:'outdoor', cap:42000, seat:'https://www.noevir-stadium.jp/'},
+  {id:153, name:'ノエビアスタジアム神戸', lat:34.6568, lng:135.1696, pref:'兵庫県', type:'outdoor', cap:42000, seat:'https://www.noevir-stadium.jp/'},
   {id:154, name:'豊田スタジアム', lat:35.0856, lng:137.1563, pref:'愛知県', type:'outdoor', cap:45000, seat:'https://www.toyota-stadium.co.jp/'},
   {id:155, name:'宮城スタジアム', lat:38.3181, lng:140.9869, pref:'宮城県', type:'outdoor', cap:49000, seat:'https://www.mspf.jp/grande21/'},
   {id:156, name:'富士急ハイランドコニファーフォレスト', lat:35.4904, lng:138.7779, pref:'山梨県', type:'outdoor', cap:30000, seat:'http://www.soundconifer229.com/'},
@@ -940,11 +972,33 @@ const VENUES_CLEAN = [
   {id:197, name:'山形テルサ', lat:38.2558, lng:140.3382, pref:'山形県', type:'hall', cap:1000, seat:'https://yamagataterrsa.or.jp/'},
   {id:198, name:'郡山市民文化センター', lat:37.3945, lng:140.3875, pref:'福島県', type:'civic', cap:2000, seat:'https://bunka-manabi.or.jp/kc-center/'},
   {id:199, name:'新潟県民会館', lat:37.9263, lng:139.0345, pref:'新潟県', type:'civic', cap:2000, seat:'https://www.niigata-kenminkaikan.jp/'},
+
+  // 劇場・舞台
+  {id:200, name:'梅田芸術劇場 メインホール', lat:34.7068, lng:135.4990, pref:'大阪府', type:'theater', cap:1905, seat:'https://www.umegei.com/'},
+  {id:201, name:'梅田芸術劇場 シアター・ドラマシティ', lat:34.7072, lng:135.4988, pref:'大阪府', type:'theater', cap:898, seat:'https://www.umegei.com/'},
+  {id:202, name:'大阪松竹座', lat:34.6686, lng:135.5013, pref:'大阪府', type:'theater', cap:1033, seat:'https://www.shochiku.co.jp/play/theater/shochikuza/'},
+  {id:203, name:'宝塚大劇場', lat:34.8047, lng:135.3437, pref:'兵庫県', type:'theater', cap:2550, seat:'https://kageki.hankyu.co.jp/'},
+  {id:204, name:'南座', lat:35.0036, lng:135.7724, pref:'京都府', type:'theater', cap:1082, seat:'https://www.shochiku.co.jp/play/theater/minamiza/'},
+  {id:205, name:'御園座', lat:35.1676, lng:136.8985, pref:'愛知県', type:'theater', cap:1318, seat:'https://www.misonoza.co.jp/'},
+  {id:206, name:'愛知県芸術劇場 大ホール', lat:35.1742, lng:136.9087, pref:'愛知県', type:'theater', cap:2480, seat:'https://www.aac.pref.aichi.jp/'},
+  {id:207, name:'日生劇場', lat:35.6735, lng:139.7588, pref:'東京都', type:'theater', cap:1330, seat:'https://www.nissaytheatre.or.jp/'},
+  {id:208, name:'帝国劇場', lat:35.6757, lng:139.7607, pref:'東京都', type:'theater', cap:1897, seat:'https://www.tohostage.com/'},
+  {id:209, name:'東京宝塚劇場', lat:35.6726, lng:139.7591, pref:'東京都', type:'theater', cap:2069, seat:'https://kageki.hankyu.co.jp/'},
+  {id:210, name:'明治座', lat:35.6889, lng:139.7889, pref:'東京都', type:'theater', cap:1368, seat:'https://www.meijiza.co.jp/'},
+  {id:211, name:'新橋演舞場', lat:35.6668, lng:139.7670, pref:'東京都', type:'theater', cap:1428, seat:'https://www.shochiku.co.jp/play/theater/enbujo/'},
+  {id:212, name:'シアタークリエ', lat:35.6722, lng:139.7596, pref:'東京都', type:'theater', cap:609, seat:'https://www.tohostage.com/'},
+  {id:213, name:'KAAT 神奈川芸術劇場', lat:35.4449, lng:139.6474, pref:'神奈川県', type:'theater', cap:1230, seat:'https://www.kaat.jp/'},
+  {id:214, name:'KAAT 大スタジオ', lat:35.4449, lng:139.6470, pref:'神奈川県', type:'theater', cap:300, seat:'https://www.kaat.jp/'},
+  {id:215, name:'札幌文化芸術劇場 hitaru', lat:43.0626, lng:141.3560, pref:'北海道', type:'theater', cap:2302, seat:'https://www.sosakuhall.jp/'},
+  {id:216, name:'仙台銀行ホール イズミティ21', lat:38.3247, lng:140.8847, pref:'宮城県', type:'theater', cap:1456, seat:'https://www.izumity21.jp/'},
+  {id:217, name:'博多座', lat:33.5939, lng:130.4092, pref:'福岡県', type:'theater', cap:1454, seat:'https://www.hakataza.co.jp/'},
+  {id:218, name:'キャナルシティ劇場', lat:33.5897, lng:130.4112, pref:'福岡県', type:'theater', cap:1100},
+  {id:219, name:'久留米シティプラザ ザ・グランドホール', lat:33.3169, lng:130.5085, pref:'福岡県', type:'theater', cap:1514, seat:'https://kurumecityplaza.jp/'},
 ];
 
-const TYPE_ICON = {dome:'🏟️', arena:'🎪', hall:'🎭', zepp:'⚡', civic:'🏛️', live:'🎸', outdoor:'🌿', concert:'🎶'};
-const TYPE_COLOR = {dome:'#ef4444', arena:'#f97316', hall:'#3b82f6', zepp:'#8b5cf6', civic:'#06b6d4', live:'#22c55e', outdoor:'#84cc16', concert:'#ec4899'};
-const TYPE_LABEL = {dome:'ドーム', arena:'アリーナ', hall:'ホール', zepp:'Zepp', civic:'市民会館', live:'ライブハウス', outdoor:'野外', concert:'コンサートホール'};
+const TYPE_ICON = {dome:'🏟️', arena:'🎪', hall:'🎭', zepp:'⚡', civic:'🏛️', live:'🎸', outdoor:'🌿', concert:'🎶', theater:'🎟️', custom:'📍'};
+const TYPE_COLOR = {dome:'#ef4444', arena:'#f97316', hall:'#3b82f6', zepp:'#8b5cf6', civic:'#06b6d4', live:'#22c55e', outdoor:'#84cc16', concert:'#ec4899', theater:'#d946ef', custom:'#64748b'};
+const TYPE_LABEL = {dome:'ドーム', arena:'アリーナ', hall:'ホール', zepp:'Zepp', civic:'市民会館', live:'ライブハウス', outdoor:'野外', concert:'コンサートホール', theater:'劇場', custom:'その他'};
 
 let visited = {};
 function loadVisited(){
@@ -1475,12 +1529,51 @@ function refreshMarker(id){
   markers[id].getPopup()?.setContent(makePopupHtml(venue));
 }
 
-VENUES_CLEAN.forEach(venue=>{
+// ===== 自分で入力した会場（カスタム会場）=====
+function loadCustomVenues(){
+  try{ return JSON.parse(localStorage.getItem('custom_venues')||'[]'); }catch{ return []; }
+}
+function saveCustomVenues(list){ localStorage.setItem('custom_venues', JSON.stringify(list)); }
+function nextCustomId(){
+  const ids = VENUES_CLEAN.map(v=>v.id).filter(i=>i>=9001);
+  return ids.length ? Math.max(...ids)+1 : 9001;
+}
+// 起動時：保存済みのカスタム会場を会場リストへ統合
+loadCustomVenues().forEach(v=>{ if(!VENUES_CLEAN.some(x=>x.id===v.id)) VENUES_CLEAN.push(v); });
+
+function openCustomVenueModal(){
+  document.getElementById('cv-name').value='';
+  document.getElementById('cv-pref').value='';
+  document.getElementById('cv-overlay').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('cv-name').focus(), 100);
+}
+document.getElementById('cv-cancel').addEventListener('click', ()=>{
+  document.getElementById('cv-overlay').classList.add('hidden');
+});
+document.getElementById('cv-overlay').addEventListener('click', e=>{
+  if(e.target===document.getElementById('cv-overlay')) document.getElementById('cv-overlay').classList.add('hidden');
+});
+document.getElementById('cv-save').addEventListener('click', ()=>{
+  const name = document.getElementById('cv-name').value.trim();
+  const pref = document.getElementById('cv-pref').value.trim() || 'その他';
+  if(!name){ alert('会場名を入力してください'); return; }
+  const venue = { id: nextCustomId(), name, pref, type:'custom', custom:true };
+  VENUES_CLEAN.push(venue);
+  const list = loadCustomVenues(); list.push(venue); saveCustomVenues(list);
+  document.getElementById('cv-overlay').classList.add('hidden');
+  renderSidebar();
+  updateStats();
+  openModal(venue.id);  // 追加後すぐ記録できるように
+});
+
+function addVenueMarker(venue){
+  if(venue.lat==null || venue.lng==null) return; // 座標なし（自分で入力した会場）はマップに出さない
   const m = L.marker([venue.lat, venue.lng], {icon: makeMarkerIcon(venue)});
   m.bindPopup(makePopupHtml(venue), {maxWidth:280, minWidth:230});
   m.addTo(map);
   markers[venue.id] = m;
-});
+}
+VENUES_CLEAN.forEach(addVenueMarker);
 
 // SIDEBAR
 let currentFilter = 'all';
@@ -1517,6 +1610,11 @@ function renderSidebar(){
       ${count>0 ? `<div class="venue-visits">${count}回</div>` : ''}
     `;
     item.addEventListener('click', ()=>{
+      // 座標が無い会場（自分で入力）は、マップではなく直接記録画面を開く
+      if(venue.lat==null || venue.lng==null || !markers[venue.id]){
+        openModal(venue.id);
+        return;
+      }
       if(isMobile()){
         switchTab('map');
         setTimeout(()=>{
@@ -1551,6 +1649,7 @@ function updateStats(){
 document.getElementById('filter-row').addEventListener('click', e=>{
   const btn = e.target.closest('.filter-btn');
   if(!btn) return;
+  if(btn.id === 'add-custom-venue'){ openCustomVenueModal(); return; } // 「自分で入力」は別処理
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   currentFilter = btn.dataset.type;
@@ -2355,7 +2454,8 @@ document.getElementById('backup-export').addEventListener('click', ()=>{
     exported: new Date().toISOString(),
     visited,
     oshi: oshiData,   // 推し写真・背景画像・名前をすべて含める
-    schedule: loadSchedule()   // ライブ予定カレンダー
+    schedule: loadSchedule(),   // ライブ予定カレンダー
+    customVenues: loadCustomVenues()   // 自分で入力した会場
   };
   const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -2413,6 +2513,17 @@ document.getElementById('backup-import-input').addEventListener('change', e=>{
         const merged = [...cur, ...data.schedule.filter(e=>e&&e.uid&&!uids.has(e.uid))];
         saveSchedule(merged);
         renderNextLiveBanner();
+      }
+
+      // 自分で入力した会場をマージ（id重複なし）
+      if(Array.isArray(data.customVenues) && data.customVenues.length){
+        const cur = loadCustomVenues();
+        const ids = new Set(cur.map(v=>v.id));
+        const add = data.customVenues.filter(v=>v && v.id!=null && !ids.has(v.id));
+        if(add.length){
+          saveCustomVenues([...cur, ...add]);
+          add.forEach(v=>{ if(!VENUES_CLEAN.some(x=>x.id===v.id)) VENUES_CLEAN.push(v); });
+        }
       }
 
       VENUES_CLEAN.forEach(v=>refreshMarker(v.id));
