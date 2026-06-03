@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-035';
+const APP_VERSION = '20260531-036';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -207,6 +207,7 @@ if (stored !== APP_VERSION) {
   .visit-edit{background:none;border:1px solid #3a2a5a;color:#a78bfa;cursor:pointer;font-size:0.72rem;font-weight:600;padding:3px 10px;border-radius:12px;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
   .visit-edit:hover,.visit-edit:active{background:#4c1d95;color:#fff;border-color:#7c3aed}
   .visit-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .visit-tour{font-size:0.76rem;color:#7c3aed;font-weight:700;margin-bottom:4px}
   .visit-memo{font-size:0.78rem;color:#aaa;line-height:1.6;white-space:pre-wrap}
   .visit-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .visit-photo{width:60px;height:60px;border-radius:8px;object-fit:cover;cursor:pointer}
@@ -214,11 +215,23 @@ if (stored !== APP_VERSION) {
   /* LIGHTBOX */
   .lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:20000;display:flex;align-items:center;justify-content:center}
   .lightbox.hidden{display:none}
-  .lightbox-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
-  .lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;color:#fff;width:44px;height:44px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.1);border:none;color:#fff;width:44px;height:44px;border-radius:50%;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+  .lightbox-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;touch-action:pan-y}
+  .lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;color:#fff;width:44px;height:44px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3}
+  .lightbox-edit{position:absolute;top:16px;left:16px;background:rgba(255,255,255,0.12);border:none;color:#fff;width:44px;height:44px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3;-webkit-tap-highlight-color:transparent}
+  .lightbox-edit.active{background:#7c3aed}
+  .lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.1);border:none;color:#fff;width:44px;height:44px;border-radius:50%;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;z-index:3}
   .lightbox-nav.prev{left:12px}
   .lightbox-nav.next{right:12px}
+  .lb-counter{position:absolute;top:22px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.8);font-size:0.8rem;font-weight:600;z-index:3}
+  /* 写真編集パネル */
+  .lb-edit-panel{position:absolute;left:0;right:0;bottom:0;background:rgba(20,12,35,0.95);padding:16px 20px calc(18px + env(safe-area-inset-bottom,0));z-index:4;display:flex;flex-direction:column;gap:12px;border-top:1px solid #3a2a5a}
+  .lb-edit-panel.hidden{display:none}
+  .lb-edit-row{display:flex;align-items:center;gap:12px}
+  .lb-edit-row span{color:#fff;font-size:0.8rem;font-weight:700;width:56px;flex-shrink:0}
+  .lb-edit-row input[type=range]{flex:1;accent-color:#ff6ec4;height:24px}
+  .lb-edit-actions{display:flex;gap:10px;margin-top:4px}
+  .lb-reset{flex:1;background:rgba(255,255,255,0.12);border:none;color:#fff;padding:11px;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .lb-save{flex:2;background:linear-gradient(135deg,#ff6ec4,#7c3aed);border:none;color:#fff;padding:11px;border-radius:10px;font-size:0.9rem;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
 
   /* RECORDS PANEL */
   .records-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:900;display:flex;align-items:center;justify-content:flex-end}
@@ -291,21 +304,21 @@ if (stored !== APP_VERSION) {
   /* Backup modal */
   .backup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10002;display:flex;align-items:center;justify-content:center;padding:20px}
   .backup-overlay.hidden{display:none}
-  .backup-modal{background:#1a1a2e;border:1px solid #3a3a5a;border-radius:18px;width:100%;max-width:400px;padding:24px 22px;box-shadow:0 12px 60px rgba(0,0,0,0.9)}
-  .backup-title{font-size:1.05rem;font-weight:700;color:#c084fc;margin-bottom:6px}
-  .backup-desc{font-size:0.8rem;color:#777;margin-bottom:20px;line-height:1.7}
+  .backup-modal{background:#ffffff;border:1px solid #e0e0ea;border-radius:18px;width:100%;max-width:400px;padding:24px 22px;box-shadow:0 12px 60px rgba(0,0,0,0.4);color:#1a1a2a}
+  .backup-title{font-size:1.05rem;font-weight:800;color:#7c3aed;margin-bottom:6px}
+  .backup-desc{font-size:0.8rem;color:#666;margin-bottom:20px;line-height:1.7}
   .backup-btn{width:100%;padding:15px;border-radius:12px;border:none;font-size:0.95rem;font-weight:700;cursor:pointer;margin-bottom:10px;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent}
-  .backup-btn-export{background:#4c1d95;color:#fff}
-  .backup-btn-export:hover,.backup-btn-export:active{background:#7c3aed}
-  .backup-btn-import{background:#1a3a2a;border:2px solid #4ade80;color:#4ade80}
-  .backup-btn-import:hover,.backup-btn-import:active{background:#2a4a2a}
-  .backup-close{width:100%;padding:12px;border-radius:10px;border:1px solid #2a2a3a;background:transparent;color:#666;font-size:0.88rem;cursor:pointer;margin-top:6px}
-  .backup-note{font-size:0.73rem;color:#555;margin-top:16px;line-height:1.8;border-top:1px solid #2a2a3a;padding-top:14px}
+  .backup-btn-export{background:#7c3aed;color:#fff}
+  .backup-btn-export:hover,.backup-btn-export:active{background:#6d28d9}
+  .backup-btn-import{background:#f0ecff;border:2px solid #a78bfa;color:#6d28d9}
+  .backup-btn-import:hover,.backup-btn-import:active{background:#e7defc}
+  .backup-close{width:100%;padding:12px;border-radius:10px;border:1px solid #d0d0d8;background:#fff;color:#888;font-size:0.88rem;cursor:pointer;margin-top:6px}
+  .backup-note{font-size:0.73rem;color:#888;margin-top:16px;line-height:1.8;border-top:1px solid #e0e0ea;padding-top:14px}
   .backup-step{margin-bottom:16px}
-  .backup-step-label{font-size:0.72rem;font-weight:700;color:#a78bfa;margin-bottom:6px;letter-spacing:0.03em}
-  .backup-step-desc{font-size:0.75rem;color:#888;margin-top:8px;line-height:1.7}
-  .backup-step-desc b{color:#c084fc}
-  .backup-step-sub{font-size:0.68rem;color:#555;display:block;margin-top:2px;letter-spacing:0.01em}
+  .backup-step-label{font-size:0.72rem;font-weight:700;color:#7c3aed;margin-bottom:6px;letter-spacing:0.03em}
+  .backup-step-desc{font-size:0.75rem;color:#666;margin-top:8px;line-height:1.7}
+  .backup-step-desc b{color:#7c3aed}
+  .backup-step-sub{font-size:0.68rem;color:#999;display:block;margin-top:2px;letter-spacing:0.01em}
 
   /* SPLASH SCREEN */
   .splash{position:fixed;inset:0;z-index:99999;overflow:hidden;background:#000;transition:opacity 0.5s ease}
@@ -416,10 +429,13 @@ if (stored !== APP_VERSION) {
   .visit-setlist-item{font-size:0.75rem;color:#bbb;display:flex;gap:6px;line-height:1.5}
   .visit-setlist-item span{color:#555;font-weight:700;flex-shrink:0;width:20px;text-align:right}
 
+  /* 設定ボタン（ホーム左上） */
+  .home-settings-btn{position:absolute;top:12px;left:12px;z-index:11;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.45);border:1.5px solid rgba(255,255,255,0.25);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+  .home-settings-btn:active{background:rgba(124,58,237,0.6)}
   /* 背景変更ボタン */
   .home-bg-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:10;cursor:pointer;-webkit-tap-highlight-color:transparent}
-  .home-bg-btn{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.5);border:1.5px solid rgba(255,255,255,0.25);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);transition:all 0.15s}
-  .home-bg-btn:active{background:rgba(124,58,237,0.6);border-color:#a78bfa}
+  .home-bg-btn{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#ff6ec4,#7c3aed);border:none;color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(124,58,237,0.5);transition:all 0.15s}
+  .home-bg-btn:active{transform:scale(0.92)}
   .home-bg-label{font-size:0.55rem;color:#fff;font-weight:600;letter-spacing:0.02em;white-space:nowrap;background:rgba(0,0,0,0.45);padding:2px 6px;border-radius:6px;backdrop-filter:blur(4px)}
 
   /* 名前入力モーダル */
@@ -540,7 +556,6 @@ if (stored !== APP_VERSION) {
       </div>
       <button class="btn-ranking" id="btn-open-ranking">🏆 ランキング</button>
       <button class="btn-records" id="btn-open-records">私の足あと👣</button>
-      <button class="btn-settings" id="btn-settings" title="データバックアップ・設定">⚙️</button>
     </div>
   </header>
 
@@ -601,6 +616,8 @@ if (stored !== APP_VERSION) {
 
 <!-- Home Panel -->
 <div class="home-overlay" id="home-overlay">
+  <!-- 設定ボタン（左上） -->
+  <button class="home-settings-btn" id="btn-settings" title="設定・データ引き継ぎ">⚙️</button>
   <!-- 背景変更ボタン -->
   <div class="home-bg-wrap" id="home-bg-wrap">
     <button class="home-bg-btn" id="home-bg-btn">🖼️</button>
@@ -757,7 +774,7 @@ if (stored !== APP_VERSION) {
     <div class="visit-list" id="visit-list"></div>
 
     <div style="margin-top:18px;padding-top:16px;border-top:1px solid #2a2a3a">
-      <div style="font-size:0.8rem;font-weight:700;color:#888;margin-bottom:12px">➕ 新しい訪問を追加</div>
+      <div style="font-size:0.8rem;font-weight:700;color:#888;margin-bottom:12px">➕ 新しいイベントを追加</div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">訪問日</label>
@@ -767,6 +784,10 @@ if (stored !== APP_VERSION) {
           <label class="form-label">アーティスト（舞台の場合は担当メンバー名）</label>
           <input class="form-input" type="text" id="form-artist" placeholder="">
         </div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">ツアー名・舞台演目名</label>
+        <input class="form-input" type="text" id="form-tour" placeholder="">
       </div>
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">天気</label>
@@ -812,8 +833,20 @@ if (stored !== APP_VERSION) {
 <div class="lightbox hidden" id="lightbox">
   <img class="lightbox-img" id="lightbox-img" src="" alt="">
   <button class="lightbox-close" id="lightbox-close">✕</button>
+  <button class="lightbox-edit" id="lightbox-edit" title="写真を編集">🎨</button>
   <button class="lightbox-nav prev" id="lightbox-prev">‹</button>
   <button class="lightbox-nav next" id="lightbox-next">›</button>
+  <div class="lb-counter" id="lb-counter"></div>
+  <!-- 写真編集パネル -->
+  <div class="lb-edit-panel hidden" id="lb-edit-panel">
+    <div class="lb-edit-row"><span>明るさ</span><input type="range" id="lb-bright" min="50" max="150" value="100"></div>
+    <div class="lb-edit-row"><span>色合い</span><input type="range" id="lb-sat" min="0" max="200" value="100"></div>
+    <div class="lb-edit-row"><span>シャープ</span><input type="range" id="lb-con" min="80" max="170" value="100"></div>
+    <div class="lb-edit-actions">
+      <button class="lb-reset" id="lb-reset" type="button">リセット</button>
+      <button class="lb-save" id="lb-save" type="button">💾 保存</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet-src.js"></script>
@@ -932,6 +965,7 @@ const VENUES_CLEAN = [
   {id:132, name:'Billboard Live YOKOHAMA', lat:35.4513, lng:139.6360, pref:'神奈川県', type:'live', cap:330, seat:'https://www.billboard-live.com/yokohama'},
   {id:133, name:'住友生命いずみホール', lat:34.6909, lng:135.5342, pref:'大阪府', type:'concert', cap:821, seat:'https://www.izumihall.jp/'},
   {id:134, name:'ロームシアター京都', lat:35.0144, lng:135.7807, pref:'京都府', type:'hall', cap:2000, seat:'https://rohmtheatrekyoto.jp/'},
+  {id:135, name:'フェニーチェ堺（堺市民芸術文化ホール）', lat:34.5722, lng:135.4795, pref:'大阪府', type:'hall', cap:2007, seat:'https://www.fenice-sacay.jp/'},
 
   // 野外
   {id:150, name:'国立競技場', lat:35.6782, lng:139.7143, pref:'東京都', type:'outdoor', cap:68000, seat:'https://www.jpnsport.go.jp/kokuritu/'},
@@ -1026,6 +1060,26 @@ const MESSAGES = {
     '朝ごはん\nちゃんと食べてね🍳',
     '今日も会いに来てくれて\nありがとう💜',
     'おはよう！\n今日もかわいいね✨',
+    'おはよう🌞\n君なら今日も\nきっと大丈夫！',
+    'いってらっしゃい！\n応援してるよ📣',
+    '今日のあなたも\n最高だよ✨',
+    '深呼吸して\nいってらっしゃい😊',
+    '焦らなくていいよ\nあなたのペースで💜',
+    'おはよう！\n君が頑張る姿\n大好きだよ',
+    '今日も味方だからね\n安心して🍀',
+    '朝の光みたいに\n今日も輝いてね☀️',
+    'ちょっと不安でも\n大丈夫、そばにいるよ',
+    'おはよ☕\n無理しすぎないでね',
+    '今日できることを\n少しずつでOK👍',
+    '君の笑顔が\n一番の元気の素💜',
+    '新しい一日\n楽しんでいこう🎵',
+    'おはよう！\nどんな日もあなたの\n味方だよ',
+    '今日も生きてるだけで\n100点満点💯',
+    'がんばり屋さんへ\n今日もほどほどにね😊',
+    'おはよう✨\n君の夢、応援してる',
+    '今日もよろしくね\n一緒にいこう🤝',
+    'まずは一歩から\nゆっくりでいいよ🐢',
+    'あなたが起きてくれて\n今日もうれしい💜',
   ],
   afternoon: [ // 11〜17時
     'お昼は\n何食べた？🍱\n教えて！',
@@ -1033,6 +1087,25 @@ const MESSAGES = {
     '頑張ってる？\n無理しないでね💜',
     'お疲れじゃない？\nちゃんと休んで💤',
     'もうひと踏ん張り！\n一緒に頑張ろう💪',
+    'ここまでよく\n頑張ったね、えらい！',
+    '休憩も大事だよ\n一息ついて☕',
+    '午後も君なら\n大丈夫、信じてる✨',
+    'しんどい時は\n頼っていいんだよ🤝',
+    'あなたの努力\nちゃんと見てるよ👀💜',
+    'お水飲んだ？\n体も大事にね💧',
+    '焦らなくていい\n君のペースが正解🍀',
+    'ちょっと疲れたら\n空を見上げてみて☁️',
+    '今日のタスク\n一個できたら花丸💮',
+    '無理は禁物だよ\nがんばりすぎ注意⚠️💜',
+    '君が頑張る分\n私も応援するよ📣',
+    'うまくいかなくても\nあなたの価値は変わらない',
+    'お昼休み\nちゃんと取れてる？😊',
+    'あと半分！\n一緒に乗り切ろう💪',
+    '小さな前進も\n立派な前進だよ👏',
+    'たまにはサボっても\nいいんだからね😌',
+    '君の笑顔が見たいな\n午後もファイト🎵',
+    'できない日は\n休む日。それでいい💜',
+    'いつもありがとう\n会いに来てくれて',
   ],
   evening: [ // 17〜21時
     '今日も\nお疲れさま！✨\nよく頑張ったね',
@@ -1040,6 +1113,25 @@ const MESSAGES = {
     '今日どんな一日\nだった？\n教えて💜',
     '次また\n会えるの楽しみ！🎵',
     'お疲れさま😊\n今日も来てくれて\nうれしいよ',
+    '今日も一日\n本当によく頑張った💮',
+    'しんどかった日も\n乗り越えたね、すごい',
+    'たくさん頑張った自分を\n褒めてあげて👏',
+    '今日のあなたに\n100点あげる💯',
+    '無事に帰ってきて\nえらい！おかえり🏠',
+    '頑張った日も\nそうでない日も大好き💜',
+    '夜は心を\nゆるめていい時間だよ😌',
+    '今日もそばにいてくれて\nありがとう✨',
+    'お疲れさま🍵\nゆっくりしてね',
+    '君が笑えた瞬間が\n少しでもありますように',
+    '明日のことは\n明日考えよう、ね？💜',
+    '今日もよく\nやりきったね、お疲れさま',
+    'がんばったご褒美\n何か食べちゃお🍰',
+    'あなたがいるだけで\nうれしいんだよ',
+    '一日の終わり\n深呼吸しよ〜😮‍💨',
+    '今日の小さな幸せ\n思い出してみて🍀',
+    'いつも応援\nありがとうね💜',
+    '次に会える日まで\n元気でいてね🎵',
+    'お疲れさま！\n君は今日も頑張り屋さん',
   ],
   night: [ // 21〜5時
     'もう寝ないと\nダメだよ？🌙',
@@ -1047,6 +1139,25 @@ const MESSAGES = {
     'ゆっくり休んでね\nおやすみ🌙💜',
     '今日も一日\n本当にお疲れさま✨',
     '夢の中でも\n会えるよ😴💜',
+    'スマホ置いて\nそろそろ休も？🌙',
+    '今日の頑張り\n明日への力になるよ⭐',
+    'おやすみ\nいい夢みてね😴',
+    '不安な夜は\nそばにいるからね💜',
+    '一日おつかれさま\nもう休んでいいよ',
+    '布団あったかい？\nぬくぬくしてね🛌',
+    '今日もよく\n生き抜いたね、えらい💮',
+    '明日は明日の風が吹く\n今は休もう🍃',
+    '考えすぎないで\nまずは眠ろう😌',
+    'あなたが眠る間も\n応援してるよ⭐',
+    'ゆっくり休んで\nまた明日ね🌙💜',
+    '今日のあなたに\nおつかれさまの花束💐',
+    '眠れない夜も\nひとりじゃないよ',
+    '深呼吸して\nまぶた閉じよ〜😴',
+    '明日もそっと\n支えるからね💜',
+    '今日も一日\nありがとう、おやすみ',
+    'たくさん頑張ったね\nゆっくり眠ってね⭐',
+    '夜は休む時間\nがんばらなくていい🌙',
+    'おやすみ\n明日も君の味方だよ💜',
   ]
 };
 
@@ -1166,15 +1277,15 @@ function renderNextLiveBanner(){
   const timeStr = next.time ? ` ${next.time}` : '';
 
   let countHtml, emoji;
-  if(days === 0){ countHtml = `今日はライブ！`; emoji='🎉'; }
+  if(days === 0){ countHtml = `今日はイベント！`; emoji='🎉'; }
   else if(days === 1){ countHtml = `あと <b>1</b> 日！`; emoji='🔥'; }
   else { countHtml = `あと <b>${days}</b> 日`; emoji='✨'; }
 
   banner.innerHTML = `
     <div class="next-live-emoji">${emoji}</div>
     <div class="next-live-text">
-      <div class="next-live-count">次のライブまで ${countHtml}</div>
-      <div class="next-live-sub">🎤 ${next.artist||'ライブ'}（${+mm}/${+dd}${timeStr}）</div>
+      <div class="next-live-count">次のイベントまで ${countHtml}</div>
+      <div class="next-live-sub">🎤 ${next.artist||'イベント'}（${+mm}/${+dd}${timeStr}）</div>
     </div>`;
   banner.classList.add('show');
 }
@@ -1795,8 +1906,9 @@ function openModal(id){
   const venue = VENUES_CLEAN.find(v=>v.id===id);
   document.getElementById('modal-title').textContent = `📝 ${venue.name}`;
   document.getElementById('modal-venue').textContent = `${venue.pref} · ${TYPE_LABEL[venue.type]}`;
-  document.getElementById('form-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('form-date').value = '';   // 「新しいイベントを追加」欄は空欄に
   document.getElementById('form-artist').value = '';
+  document.getElementById('form-tour').value = '';
   document.getElementById('form-memo').value = '';
   // reset weather
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
@@ -1884,6 +1996,7 @@ function startEditVisit(idx){
   // フォームに既存データを流し込む
   document.getElementById('form-date').value = r.date || '';
   document.getElementById('form-artist').value = r.artist || '';
+  document.getElementById('form-tour').value = r.tour || '';
   document.getElementById('form-memo').value = r.memo || '';
   selectedWeather = r.weather || '';
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.toggle('selected', b.dataset.weather===selectedWeather));
@@ -1910,8 +2023,9 @@ function startEditVisit(idx){
 
 function cancelEditVisit(){
   editingVisitIdx = null;
-  document.getElementById('form-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('form-date').value = '';
   document.getElementById('form-artist').value = '';
+  document.getElementById('form-tour').value = '';
   document.getElementById('form-memo').value = '';
   selectedWeather = '';
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
@@ -1938,6 +2052,7 @@ function renderVisitList(id){
           <button class="visit-del" data-idx="${i}">🗑</button>
         </div>
       </div>
+      ${r.tour ? `<div class="visit-tour">🎫 ${r.tour}</div>` : ''}
       ${r.memo ? `<div class="visit-memo">${r.memo}</div>` : ''}
       ${(r.setlist||[]).filter(s=>s).length ? `
         <div class="visit-setlist">
@@ -1980,7 +2095,10 @@ function renderVisitList(id){
     img.addEventListener('click', ()=>{
       const rIdx = +img.dataset.photos;
       const pIdx = +img.dataset.idx;
-      openLightbox((visited[modalVenueId][rIdx]||{}).photos||[], pIdx);
+      const rec = visited[modalVenueId][rIdx]||{};
+      const photos = rec.photos||[];
+      const meta = photos.map((p,j)=>({vid:modalVenueId, ruid:rec.uid, pidx:j}));
+      openLightbox(photos, pIdx, meta);
     });
   });
 }
@@ -1993,6 +2111,7 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
       : Date.now()+'_'+Math.random().toString(36).slice(2),
     date: document.getElementById('form-date').value,
     artist: document.getElementById('form-artist').value.trim(),
+    tour: document.getElementById('form-tour').value.trim(),
     weather: selectedWeather,
     memo: document.getElementById('form-memo').value.trim(),
     setlist: pendingSetlist.filter(s=>s.trim()),
@@ -2024,9 +2143,9 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
   document.getElementById('form-seat').value='';
   renderSeatArea();
   document.getElementById('form-artist').value='';
+  document.getElementById('form-tour').value='';
   document.getElementById('form-memo').value='';
-  // 保存後に「足あと」タブへ必ず移動（どこから登録しても確実に切替）
-  closeModal();
+  // 保存後に「足あと」タブへ必ず移動（マップを挟まず即表示）
   activeTab = 'records';
   tabSwitching = true;
   setTimeout(()=>{ tabSwitching = false; }, 400);
@@ -2036,10 +2155,10 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
   document.getElementById('ranking-overlay').classList.add('hidden');
   const zc = document.querySelector('.leaflet-control-container');
   if(zc) zc.style.display = 'none';
-  setTimeout(()=>{
-    renderRecordsPanel();
-    document.getElementById('records-overlay').classList.remove('hidden');
-  }, 120);
+  // 先に足あとパネルを表示してからモーダルを閉じる（マップが見えないように）
+  renderRecordsPanel();
+  document.getElementById('records-overlay').classList.remove('hidden');
+  closeModal();
 });
 
 document.getElementById('modal-cancel').addEventListener('click', closeModal);
@@ -2048,26 +2167,140 @@ document.getElementById('modal-overlay').addEventListener('click', e=>{
 });
 
 // Lightbox
-function openLightbox(photos, idx){
+let lightboxMeta = null;        // [{vid,ruid,pidx}] or null
+let lbFilters = {bright:100, sat:100, con:100};
+
+function lbImgEl(){ return document.getElementById('lightbox-img'); }
+
+function applyLbFilter(){
+  lbImgEl().style.filter = `brightness(${lbFilters.bright}%) saturate(${lbFilters.sat}%) contrast(${lbFilters.con}%)`;
+}
+function resetLbFilter(){
+  lbFilters = {bright:100, sat:100, con:100};
+  document.getElementById('lb-bright').value = 100;
+  document.getElementById('lb-sat').value = 100;
+  document.getElementById('lb-con').value = 100;
+  applyLbFilter();
+}
+function showLbPhoto(){
+  lbImgEl().src = currentLightboxPhotos[lightboxIdx];
+  resetLbFilter();
+  const n = currentLightboxPhotos.length;
+  document.getElementById('lb-counter').textContent = n>1 ? `${lightboxIdx+1} / ${n}` : '';
+  // 編集（保存）はメタ情報がある時だけ
+  document.getElementById('lightbox-edit').style.display = lightboxMeta ? 'flex' : 'none';
+  closeLbEdit();
+}
+function closeLbEdit(){
+  document.getElementById('lb-edit-panel').classList.add('hidden');
+  document.getElementById('lightbox-edit').classList.remove('active');
+}
+
+function openLightbox(photos, idx, meta){
   if(!photos||!photos.length) return;
   currentLightboxPhotos = photos;
+  lightboxMeta = meta || null;
   lightboxIdx = idx;
-  document.getElementById('lightbox-img').src = photos[idx];
   document.getElementById('lightbox').classList.remove('hidden');
   document.getElementById('lightbox-prev').style.display = photos.length>1?'flex':'none';
   document.getElementById('lightbox-next').style.display = photos.length>1?'flex':'none';
+  showLbPhoto();
 }
-document.getElementById('lightbox-close').addEventListener('click', ()=>document.getElementById('lightbox').classList.add('hidden'));
+function closeLightbox(){ document.getElementById('lightbox').classList.add('hidden'); closeLbEdit(); }
+
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
 document.getElementById('lightbox-prev').addEventListener('click', ()=>{
   lightboxIdx = (lightboxIdx-1+currentLightboxPhotos.length)%currentLightboxPhotos.length;
-  document.getElementById('lightbox-img').src = currentLightboxPhotos[lightboxIdx];
+  showLbPhoto();
 });
 document.getElementById('lightbox-next').addEventListener('click', ()=>{
   lightboxIdx = (lightboxIdx+1)%currentLightboxPhotos.length;
-  document.getElementById('lightbox-img').src = currentLightboxPhotos[lightboxIdx];
+  showLbPhoto();
 });
 document.getElementById('lightbox').addEventListener('click', e=>{
-  if(e.target===document.getElementById('lightbox')) document.getElementById('lightbox').classList.add('hidden');
+  if(e.target===document.getElementById('lightbox')) closeLightbox();
+});
+
+// 横スワイプで写真切替
+(function(){
+  let sx=0, sy=0, moved=false;
+  const lb = document.getElementById('lightbox');
+  lb.addEventListener('touchstart', e=>{ if(e.touches.length!==1) return; sx=e.touches[0].clientX; sy=e.touches[0].clientY; moved=false; }, {passive:true});
+  lb.addEventListener('touchmove', e=>{ moved=true; }, {passive:true});
+  lb.addEventListener('touchend', e=>{
+    if(!moved || currentLightboxPhotos.length<2) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)){
+      if(dx < 0) lightboxIdx = (lightboxIdx+1)%currentLightboxPhotos.length;
+      else lightboxIdx = (lightboxIdx-1+currentLightboxPhotos.length)%currentLightboxPhotos.length;
+      showLbPhoto();
+    }
+  }, {passive:true});
+})();
+
+// 編集パネルの開閉
+document.getElementById('lightbox-edit').addEventListener('click', ()=>{
+  const panel = document.getElementById('lb-edit-panel');
+  const willOpen = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !willOpen);
+  document.getElementById('lightbox-edit').classList.toggle('active', willOpen);
+});
+['lb-bright','lb-sat','lb-con'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', e=>{
+    if(id==='lb-bright') lbFilters.bright = +e.target.value;
+    if(id==='lb-sat') lbFilters.sat = +e.target.value;
+    if(id==='lb-con') lbFilters.con = +e.target.value;
+    applyLbFilter();
+  });
+});
+document.getElementById('lb-reset').addEventListener('click', resetLbFilter);
+
+// 編集を写真に焼き込んで保存
+document.getElementById('lb-save').addEventListener('click', ()=>{
+  if(!lightboxMeta){ return; }
+  const m = lightboxMeta[lightboxIdx];
+  const src = currentLightboxPhotos[lightboxIdx];
+  const img = new Image();
+  img.onload = ()=>{
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    // ピクセル演算（brightness→saturate→contrast）※全ブラウザ対応
+    const b = lbFilters.bright/100, s = lbFilters.sat/100, c = lbFilters.con/100;
+    try {
+      const data = ctx.getImageData(0,0,canvas.width,canvas.height);
+      const d = data.data;
+      for(let i=0;i<d.length;i+=4){
+        let r=d[i], g=d[i+1], bl=d[i+2];
+        // 明るさ
+        r*=b; g*=b; bl*=b;
+        // 彩度（色合い）
+        const gray = 0.299*r + 0.587*g + 0.114*bl;
+        r = gray + (r-gray)*s; g = gray + (g-gray)*s; bl = gray + (bl-gray)*s;
+        // コントラスト（シャープ感）
+        r = (r-128)*c + 128; g = (g-128)*c + 128; bl = (bl-128)*c + 128;
+        d[i]   = r<0?0:r>255?255:r;
+        d[i+1] = g<0?0:g>255?255:g;
+        d[i+2] = bl<0?0:bl>255?255:bl;
+      }
+      ctx.putImageData(data, 0, 0);
+    } catch(err){ /* CORS等で失敗したらフィルタ無しのまま */ }
+    const out = canvas.toDataURL('image/jpeg', 0.85);
+    // 記録へ書き戻し
+    const recs = visited[m.vid]||[];
+    const rec = m.ruid ? recs.find(r=>r.uid===m.ruid) : recs[0];
+    if(rec && rec.photos && rec.photos[m.pidx]!=null){
+      rec.photos[m.pidx] = out;
+      saveVisited();
+      currentLightboxPhotos[lightboxIdx] = out;
+      showLbPhoto();
+      renderRecordsPanel();
+      alert('写真を保存しました📸');
+    }
+  };
+  img.src = src;
 });
 
 // Records Panel
@@ -2133,7 +2366,7 @@ function renderRecordsPanel(){
       <div class="record-visits">${recs.map(r=>`
         <div class="record-visit-row">
           <span class="record-visit-chip record-visit-chip-tap" data-venue="${v.id}" data-uid="${r.uid||''}" data-aidx="${allRecs.indexOf(r)}">
-            ✏️ ${r.date||'?'}${r.artist?' · '+r.artist:''}${r.weather?' '+WEATHER_ICON[r.weather]:''}
+            ✏️ ${r.date||'?'}${r.artist?' · '+r.artist:''}${r.tour?' / '+r.tour:''}${r.weather?' '+WEATHER_ICON[r.weather]:''}
           </span>
           <button class="record-visit-del" data-venue="${v.id}" data-uid="${r.uid||''}" data-aidx="${allRecs.indexOf(r)}">🗑 削除</button>
         </div>`).join('')}</div>
@@ -2310,15 +2543,12 @@ function switchTab(tab){
   } else if(tab==='map'){
     setTimeout(()=>map.invalidateSize(), 300);
   } else if(tab==='records'){
-    setTimeout(()=>{
-      renderRecordsPanel();
-      document.getElementById('records-overlay').classList.remove('hidden');
-    }, 150);
+    // マップを挟まず即表示（ちらつき防止）
+    renderRecordsPanel();
+    document.getElementById('records-overlay').classList.remove('hidden');
   } else if(tab==='ranking'){
-    setTimeout(()=>{
-      renderRankingPanel();
-      document.getElementById('ranking-overlay').classList.remove('hidden');
-    }, 150);
+    renderRankingPanel();
+    document.getElementById('ranking-overlay').classList.remove('hidden');
   }
 }
 
