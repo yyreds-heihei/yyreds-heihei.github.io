@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-039';
+const APP_VERSION = '20260531-040';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -446,6 +446,7 @@ if (stored !== APP_VERSION) {
   .crop-modal{width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px}
   .crop-title{font-size:1rem;font-weight:700;color:#fff;text-align:center}
   .crop-hint{font-size:0.72rem;color:#aaa;text-align:center}
+  .crop-note{font-size:0.66rem;color:#ffd9ec;text-align:center;line-height:1.5}
   .crop-frame{width:100%;aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:#111;position:relative;touch-action:none;cursor:grab;border:2px solid #7c3aed}
   .crop-frame.portrait{aspect-ratio:4/5}
   .crop-img{position:absolute;transform-origin:0 0;will-change:transform;pointer-events:none;user-select:none;-webkit-user-select:none}
@@ -670,6 +671,7 @@ if (stored !== APP_VERSION) {
 <div class="crop-overlay hidden" id="crop-overlay">
   <div class="crop-modal">
     <div class="crop-title" id="crop-title">📷 写真を調整</div>
+    <div class="crop-note">※登録した画像は個人利用の範囲でご利用ください</div>
     <div class="crop-hint">ピンチで拡大縮小・ドラッグで移動</div>
     <div class="crop-frame" id="crop-frame">
       <img class="crop-img" id="crop-img" draggable="false">
@@ -1577,7 +1579,7 @@ document.getElementById('oshi-photo-input').addEventListener('change', e=>{
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = ev=>{
-    openCropModal(ev.target.result, 4, 5, '📷 推し写真を調整', (compressed)=>{
+    openCropModal(ev.target.result, 4, 5, '📷 写真を調整', (compressed)=>{
       try {
         const data = loadOshiData();
         data.photo = compressed;
