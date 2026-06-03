@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-040';
+const APP_VERSION = '20260531-041';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -41,18 +41,18 @@ if (stored !== APP_VERSION) {
   :root{--accent:#7c3aed;--accent2:#a78bfa;--bg:#0f0f13;--bg2:#1a1a24;--bg3:#13131e;--border:#2a2a3a;--text:#e2e2e8;--muted:#888}
 
   /* HEADER */
-  header{background:linear-gradient(135deg,#1a0a2e 0%,#13131e 100%);border-bottom:1px solid #2a2a3a;flex-shrink:0}
+  header{background:#ffffff;border-bottom:1px solid #e0e0ea;flex-shrink:0}
   .header-row1{display:flex;align-items:center;gap:10px;padding:10px 16px}
   .header-logo{font-size:1.4rem;flex-shrink:0}
   header h1{font-size:0.95rem;font-weight:700;color:#c084fc;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .stats{display:flex;align-items:center;gap:12px;flex-shrink:0}
   .stat-item{text-align:center}
-  .stat-num{font-size:1.2rem;font-weight:800;color:#a78bfa;line-height:1}
-  .stat-label{font-size:0.6rem;color:#666;margin-top:1px}
-  .progress-bar{width:90px;height:6px;background:#1a1a2e;border-radius:3px;overflow:hidden}
+  .stat-num{font-size:1.2rem;font-weight:800;color:#7c3aed;line-height:1}
+  .stat-label{font-size:0.6rem;color:#888;margin-top:1px}
+  .progress-bar{width:90px;height:6px;background:#e8e8f0;border-radius:3px;overflow:hidden}
   .progress-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:3px;transition:width 0.5s ease}
   .progress-pct{font-size:0.65rem;color:#888;margin-top:2px;text-align:center}
-  .btn-records,.btn-ranking{background:#1a1a2e;border:1px solid #2a2a3a;color:#888;padding:6px 12px;border-radius:20px;font-size:0.8rem;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+  .btn-records,.btn-ranking{background:#f0ecff;border:1px solid #d4c8f8;color:#6d28d9;padding:6px 12px;border-radius:20px;font-size:0.8rem;cursor:pointer;transition:all 0.15s;white-space:nowrap}
   .btn-records:hover,.btn-ranking:hover{border-color:#7c3aed;color:#a78bfa}
   .header-row2{padding:0 12px 8px;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .header-row2::-webkit-scrollbar{display:none}
@@ -66,11 +66,15 @@ if (stored !== APP_VERSION) {
   .app{display:flex;flex-direction:column;height:100vh;height:100dvh}
   .main{display:flex;flex:1;overflow:hidden;position:relative}
   #map{flex:1;height:100%}
-  .sidebar{width:340px;height:100%;background:#f8f9fa;border-left:1px solid #d0d0d8;display:flex;flex-direction:column;overflow:hidden}
+  .sidebar{width:340px;height:100%;background:#ffffff;border-left:1px solid #d0d0d8;display:flex;flex-direction:column;overflow:hidden}
 
   /* SIDEBAR */
   .sidebar-header{padding:12px 14px 8px;border-bottom:1px solid #d0d0d8;flex-shrink:0}
-  .sidebar-title{font-size:0.8rem;font-weight:700;color:#555;margin-bottom:8px}
+  .sidebar-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+  .sidebar-title{font-size:0.9rem;font-weight:800;color:#1a1a2a}
+  .sidebar-title-row .stats{flex-shrink:0}
+  .sidebar-title-row .stat-num{font-size:1rem}
+  .sidebar-title-row .progress-bar{width:64px}
   .filter-row{display:flex;gap:6px;flex-wrap:wrap}
   .filter-btn{background:#e8e8f0;border:1px solid #c8c8d8;color:#555;padding:5px 10px;border-radius:20px;font-size:0.72rem;cursor:pointer;transition:all 0.15s;white-space:nowrap}
   .filter-btn.active{background:#4c1d95;border-color:#7c3aed;color:#fff}
@@ -494,19 +498,20 @@ if (stored !== APP_VERSION) {
     .venue-list{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
     .bottom-nav{
       display:flex;position:fixed;bottom:0;left:0;right:0;
-      height:72px;background:#1a1a24;border-top:2px solid #2a2a3a;
+      height:72px;background:linear-gradient(135deg,#ff6ec4,#7c3aed);border-top:none;
       z-index:1000;padding-bottom:env(safe-area-inset-bottom,0);
       align-items:flex-start;padding-top:8px;
+      box-shadow:0 -2px 12px rgba(124,58,237,0.3);
     }
     .nav-tab{
       flex:1;display:flex;flex-direction:column;
       align-items:center;justify-content:flex-start;
-      background:none;border:none;color:#555;
+      background:none;border:none;color:rgba(255,255,255,0.7);
       gap:2px;cursor:pointer;padding:4px 0 0;
       transition:color 0.15s;min-height:44px;
       -webkit-tap-highlight-color:transparent;
     }
-    .nav-tab.active{color:#a78bfa}
+    .nav-tab.active{color:#ffffff}
     .nav-tab-icon{font-size:1.35rem;line-height:1}
     .nav-tab-label{font-size:0.6rem;font-weight:600;letter-spacing:0.03em}
     .filter-btn{padding:7px 14px;font-size:0.78rem;min-height:36px}
@@ -545,17 +550,6 @@ if (stored !== APP_VERSION) {
   <header id="main-header">
     <div class="header-row1">
       <span class="header-logo">🎵</span>
-      <h1>Ricor Live</h1>
-      <div class="stats">
-        <div class="stat-item">
-          <div class="stat-num" id="stat-visited">0</div>
-          <div class="stat-label">訪問済み</div>
-        </div>
-        <div>
-          <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-          <div class="progress-pct" id="progress-pct">0会場中 0%</div>
-        </div>
-      </div>
       <button class="btn-ranking" id="btn-open-ranking">🏆 ランキング</button>
       <button class="btn-records" id="btn-open-records">私の足あと👣</button>
     </div>
@@ -567,7 +561,19 @@ if (stored !== APP_VERSION) {
 
     <div class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-title">📋 会場リスト</div>
+        <div class="sidebar-title-row">
+          <div class="sidebar-title">📋 会場リスト</div>
+          <div class="stats">
+            <div class="stat-item">
+              <div class="stat-num" id="stat-visited">0</div>
+              <div class="stat-label">訪問済み</div>
+            </div>
+            <div>
+              <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+              <div class="progress-pct" id="progress-pct">0会場中 0%</div>
+            </div>
+          </div>
+        </div>
         <div style="margin-bottom:8px">
           <input class="search-box" type="text" id="search-box" placeholder="🔍 検索・絞り込み" autocomplete="off">
         </div>
