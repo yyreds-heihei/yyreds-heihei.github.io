@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-038';
+const APP_VERSION = '20260531-039';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -108,23 +108,24 @@ if (stored !== APP_VERSION) {
   .marker-dot.visited{box-shadow:0 0 12px rgba(167,139,250,0.8)}
 
   /* POPUP */
-  .leaflet-popup-content-wrapper{background:#1a1a2e;border:1px solid #3a2a5a;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,0.8);padding:0;overflow:hidden}
+  .leaflet-popup-content-wrapper{background:#ffffff;border:1px solid #e0e0ea;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,0.35);padding:0;overflow:hidden}
+  .leaflet-popup-content{color:#1a1a2a}
   .leaflet-popup-tip-container{display:none}
   .leaflet-popup-content{margin:0;min-width:220px}
   .popup-body{padding:14px 16px}
-  .popup-type{font-size:0.65rem;color:#a78bfa;font-weight:600;margin-bottom:4px}
-  .popup-name{font-size:1rem;font-weight:700;margin-bottom:6px}
-  .popup-pref{font-size:0.75rem;color:#888;margin-bottom:10px}
-  .popup-cap{font-size:0.72rem;color:#666;margin-bottom:10px}
-  .popup-visits{font-size:0.75rem;color:#a78bfa;margin-bottom:10px}
+  .popup-type{font-size:0.65rem;color:#7c3aed;font-weight:700;margin-bottom:4px}
+  .popup-name{font-size:1rem;font-weight:700;margin-bottom:6px;color:#1a1a2a}
+  .popup-pref{font-size:0.75rem;color:#666;margin-bottom:10px}
+  .popup-cap{font-size:0.72rem;color:#888;margin-bottom:10px}
+  .popup-visits{font-size:0.75rem;color:#6d28d9;font-weight:700;margin-bottom:10px}
   .popup-btn{width:100%;padding:10px;border-radius:10px;border:none;background:#4c1d95;color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
   .popup-btn:hover,.popup-btn:active{background:#7c3aed}
-  .popup-btn.visited-btn{background:#1a3a1a;border:1.5px solid #4ade80;color:#4ade80}
-  .popup-btn.visited-btn:hover,.popup-btn.visited-btn:active{background:#2a4a2a}
-  .popup-btn-map{display:block;width:100%;padding:9px;border-radius:10px;border:1.5px solid #3b82f6;background:#0f1a2e;color:#60a5fa;font-size:0.85rem;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;margin-top:6px;-webkit-tap-highlight-color:transparent}
-  .popup-btn-map:hover,.popup-btn-map:active{background:#1a2a4a}
-  .popup-btn-sub{display:block;width:100%;padding:9px;border-radius:10px;border:1.5px solid #f59e0b;background:#1a1500;color:#fbbf24;font-size:0.85rem;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;margin-top:6px;-webkit-tap-highlight-color:transparent}
-  .popup-btn-sub:hover,.popup-btn-sub:active{background:#2a2000}
+  .popup-btn.visited-btn{background:#eafff0;border:1.5px solid #22c55e;color:#15803d}
+  .popup-btn.visited-btn:hover,.popup-btn.visited-btn:active{background:#d6f8e2}
+  .popup-btn-map{display:block;width:100%;padding:9px;border-radius:10px;border:1.5px solid #3b82f6;background:#eef4ff;color:#2563eb;font-size:0.85rem;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;margin-top:6px;-webkit-tap-highlight-color:transparent}
+  .popup-btn-map:hover,.popup-btn-map:active{background:#dbe7ff}
+  .popup-btn-sub{display:block;width:100%;padding:9px;border-radius:10px;border:1.5px solid #f59e0b;background:#fff7e6;color:#b45309;font-size:0.85rem;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;margin-top:6px;-webkit-tap-highlight-color:transparent}
+  .popup-btn-sub:hover,.popup-btn-sub:active{background:#ffeccc}
 
   /* MODAL */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px}
