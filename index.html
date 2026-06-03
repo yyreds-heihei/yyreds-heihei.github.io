@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-041';
+const APP_VERSION = '20260531-042';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -471,6 +471,8 @@ if (stored !== APP_VERSION) {
 
   /* Mobile styles */
   @media (max-width:640px){
+    #main-header{display:none}   /* スマホではヘッダー（音符バー）を非表示にして上に詰める */
+    .sidebar-header{padding-top:calc(12px + env(safe-area-inset-top,0))}   /* ノッチに被らない最小マージン */
     .header-row1{padding:8px 10px;gap:6px}
     header h1{font-size:0.85rem}
     .stats{gap:6px}
