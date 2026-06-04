@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-050';
+const APP_VERSION = '20260531-051';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -364,6 +364,11 @@ if (stored !== APP_VERSION) {
   .oshi-name-area{text-align:center}
   .oshi-name{display:inline-block;font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:6px;background:rgba(0,0,0,0.45);padding:4px 14px;border-radius:20px;backdrop-filter:blur(4px)}
   .oshi-name-edit{display:inline-block;font-size:0.7rem;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;background:rgba(0,0,0,0.4);padding:3px 10px;border-radius:12px;backdrop-filter:blur(4px)}
+  /* 推し始めて〜年〜日 */
+  .oshi-since-row{margin-top:10px}
+  .oshi-since{display:inline-block;font-size:0.78rem;font-weight:800;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;background:linear-gradient(135deg,rgba(255,110,196,0.9),rgba(124,58,237,0.9));padding:6px 16px;border-radius:16px;box-shadow:0 3px 12px rgba(124,58,237,0.4)}
+  .oshi-since b{font-size:1.05rem;margin:0 2px}
+  .oshi-since.add{background:rgba(0,0,0,0.4);font-weight:600;font-size:0.72rem}
   /* 次のライブ カウントダウン バナー */
   .next-live-banner{display:none;align-items:center;gap:10px;background:linear-gradient(135deg,#ff6ec4 0%,#7c3aed 100%);border-radius:18px;padding:12px 18px;box-shadow:0 6px 24px rgba(124,58,237,0.5);margin-bottom:6px;animation:nlbPop 0.5s cubic-bezier(0.34,1.56,0.64,1)}
   .next-live-banner.show{display:flex}
@@ -639,6 +644,7 @@ if (stored !== APP_VERSION) {
     <div class="next-live-banner" id="next-live-banner"></div>
     <div class="oshi-scene" id="oshi-scene"></div>
     <div class="oshi-name-area" id="oshi-name-area"></div>
+    <input type="date" id="oshi-start-input" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
   </div>
   <button class="home-cal-btn" id="home-cal-btn">📅<span>予定</span></button>
   <div class="home-footer">
@@ -1345,16 +1351,50 @@ function renderHome(){
     });
   }
 
+  const sinceHtml = data.startDate
+    ? `<div class="oshi-since" id="oshi-since-btn">💕 推し始めて ${formatOshiSince(data.startDate)}</div>`
+    : `<div class="oshi-since add" id="oshi-since-btn">＋ 推し始めた日を登録</div>`;
   nameArea.innerHTML = data.photo ? `
     <div class="oshi-name">${name}</div>
     <div class="oshi-name-edit" id="oshi-name-edit-btn">✏️ 名前を変更</div>
+    <div class="oshi-since-row">${sinceHtml}</div>
   ` : '';
   if(document.getElementById('oshi-name-edit-btn')){
     document.getElementById('oshi-name-edit-btn').addEventListener('click', openOshiNameModal);
   }
+  const sinceBtn = document.getElementById('oshi-since-btn');
+  if(sinceBtn){
+    sinceBtn.addEventListener('click', ()=>{
+      const inp = document.getElementById('oshi-start-input');
+      inp.value = loadOshiData().startDate || '';
+      if(inp.showPicker){ try{ inp.showPicker(); return; }catch(e){} }
+      inp.click();
+    });
+  }
   applyHomeBg();
   renderNextLiveBanner();
 }
+
+// 推し始めてからの「X年 Y日」を計算
+function formatOshiSince(startDate){
+  const start = new Date(startDate+'T00:00:00');
+  const now = new Date(); now.setHours(0,0,0,0);
+  if(isNaN(start.getTime()) || start > now) return '<b>0</b>年 <b>0</b>日';
+  let years = now.getFullYear() - start.getFullYear();
+  const anniv = new Date(start); anniv.setFullYear(start.getFullYear() + years);
+  if(anniv > now){ years--; anniv.setFullYear(start.getFullYear() + years); }
+  const days = Math.floor((now - anniv) / 86400000);
+  return `<b>${years}</b>年 <b>${days}</b>日`;
+}
+
+// 推し始めた日を保存
+document.getElementById('oshi-start-input').addEventListener('change', e=>{
+  if(!e.target.value) return;
+  const d = loadOshiData();
+  d.startDate = e.target.value;
+  saveOshiData(d);
+  renderHome();
+});
 
 // ===== ライブ予定カレンダー =====
 function loadSchedule(){
@@ -2853,6 +2893,7 @@ document.getElementById('backup-import-input').addEventListener('change', e=>{
         if(!current.photo && importedOshi.photo) current.photo = importedOshi.photo;
         if(!current.bg    && importedOshi.bg)    current.bg    = importedOshi.bg;
         if(!current.name  && importedOshi.name)  current.name  = importedOshi.name;
+        if(!current.startDate && importedOshi.startDate) current.startDate = importedOshi.startDate;
         saveOshiData(current);
         applyHomeBg();
         renderHome();
