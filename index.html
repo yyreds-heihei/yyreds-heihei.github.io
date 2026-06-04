@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-052';
+const APP_VERSION = '20260531-053';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -711,6 +711,22 @@ if (stored !== APP_VERSION) {
     </div>
   </div>
 </div>
+
+<!-- 推し始めた日 モーダル -->
+<div class="oshi-name-modal hidden" id="oshi-start-modal">
+  <div class="oshi-name-modal-inner">
+    <div class="oshi-name-modal-title">💕 推し始めた日を選ぶ</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <select class="form-input" id="os-year" style="font-size:16px"></select>
+      <select class="form-input" id="os-month" style="font-size:16px"></select>
+      <select class="form-input" id="os-day" style="font-size:16px"></select>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-secondary" id="os-cancel">キャンセル</button>
+      <button class="btn-primary" id="os-save">保存</button>
+    </div>
+  </div>
+</div>
 <input type="file" id="oshi-photo-input" accept="image/*" style="display:none">
 
 <!-- 自分で入力（カスタム会場）モーダル -->
@@ -1353,31 +1369,69 @@ function renderHome(){
   }
 
   const sinceInner = data.startDate
-    ? `<div class="oshi-since">💕 推し始めて ${formatOshiSince(data.startDate)}</div>`
-    : `<div class="oshi-since add">＋ 推し始めた日を登録</div>`;
-  // 透明な日付入力をバッジに重ねて、タップで直接カレンダーを開く（全機種で確実）
-  const sinceHtml = `<div class="oshi-since-wrap">${sinceInner}<input type="date" class="oshi-since-input" id="oshi-start-input" value="${data.startDate||''}" max="${new Date().toISOString().slice(0,10)}"></div>`;
+    ? `<div class="oshi-since" id="oshi-since-btn">💕 推し始めて ${formatOshiSince(data.startDate)}</div>`
+    : `<div class="oshi-since add" id="oshi-since-btn">＋ 推し始めた日を登録</div>`;
   nameArea.innerHTML = data.photo ? `
     <div class="oshi-name">${name}</div>
     <div class="oshi-name-edit" id="oshi-name-edit-btn">✏️ 名前を変更</div>
-    <div class="oshi-since-row">${sinceHtml}</div>
+    <div class="oshi-since-row">${sinceInner}</div>
   ` : '';
   if(document.getElementById('oshi-name-edit-btn')){
     document.getElementById('oshi-name-edit-btn').addEventListener('click', openOshiNameModal);
   }
-  const startInp = document.getElementById('oshi-start-input');
-  if(startInp){
-    startInp.addEventListener('change', e=>{
-      if(!e.target.value) return;
-      const d = loadOshiData();
-      d.startDate = e.target.value;
-      saveOshiData(d);
-      renderHome();
-    });
+  const sinceBtn = document.getElementById('oshi-since-btn');
+  if(sinceBtn){
+    sinceBtn.addEventListener('click', openOshiStartModal);
   }
   applyHomeBg();
   renderNextLiveBanner();
 }
+
+// 「推し始めた日」を選ぶモーダル（年・月・日のプルダウン＝全機種で確実）
+function fillOshiStartDays(keep){
+  const y = +document.getElementById('os-year').value;
+  const m = +document.getElementById('os-month').value;
+  const dim = new Date(y, m, 0).getDate();
+  const dSel = document.getElementById('os-day');
+  const prev = keep || +dSel.value || 1;
+  let html = '';
+  for(let dd=1; dd<=dim; dd++) html += `<option value="${dd}">${dd}日</option>`;
+  dSel.innerHTML = html;
+  dSel.value = Math.min(prev, dim);
+}
+function openOshiStartModal(){
+  const today = new Date();
+  const curY = today.getFullYear();
+  const d = loadOshiData();
+  const cur = d.startDate ? new Date(d.startDate+'T00:00:00') : today;
+  const ySel = document.getElementById('os-year');
+  const mSel = document.getElementById('os-month');
+  let yh=''; for(let y=curY; y>=curY-60; y--) yh += `<option value="${y}">${y}年</option>`;
+  ySel.innerHTML = yh;
+  let mh=''; for(let m=1; m<=12; m++) mh += `<option value="${m}">${m}月</option>`;
+  mSel.innerHTML = mh;
+  ySel.value = cur.getFullYear();
+  mSel.value = cur.getMonth()+1;
+  fillOshiStartDays(cur.getDate());
+  document.getElementById('oshi-start-modal').classList.remove('hidden');
+}
+document.getElementById('os-year').addEventListener('change', ()=>fillOshiStartDays());
+document.getElementById('os-month').addEventListener('change', ()=>fillOshiStartDays());
+document.getElementById('os-cancel').addEventListener('click', ()=>{
+  document.getElementById('oshi-start-modal').classList.add('hidden');
+});
+document.getElementById('os-save').addEventListener('click', ()=>{
+  const y  = document.getElementById('os-year').value;
+  const m  = String(document.getElementById('os-month').value).padStart(2,'0');
+  const dd = String(document.getElementById('os-day').value).padStart(2,'0');
+  const val = `${y}-${m}-${dd}`;
+  if(new Date(val+'T00:00:00') > new Date()){ alert('未来の日付は選べません'); return; }
+  const d = loadOshiData();
+  d.startDate = val;
+  saveOshiData(d);
+  document.getElementById('oshi-start-modal').classList.add('hidden');
+  renderHome();
+});
 
 // 推し始めてからの「X年 Y日」を計算
 function formatOshiSince(startDate){
