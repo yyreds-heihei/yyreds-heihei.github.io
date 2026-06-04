@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ricor Live | 推し活・ライブ参戦の記録アプリ</title>
+<meta name="description" content="推し活の“行った”を、ぜんぶ思い出に。全国のライブ会場マップ・足あと記録・セットリスト・座席・カレンダー。買い切り300円。">
+<meta name="theme-color" content="#f7c6dd">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<!-- OGP -->
+<meta property="og:title" content="Ricor Live">
+<meta property="og:description" content="推し活の“行った”を、ぜんぶ思い出に。">
+<meta property="og:image" content="icon.png">
+<meta property="og:type" content="website">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --pink:#ff8cc0;--pink-d:#ff5ea8;--lav:#b9a3f0;--purple:#8b6df0;
+    --gold:#f3c14b;
+    --ink:#5a3d6e;--muted:#8c7d98;--bg:#fff6fb;--card:#ffffff;--line:#f4e2ef;
+    --grad:linear-gradient(120deg,#ff79b0 0%,#9b7bf0 100%);
+  }
+  html{scroll-behavior:smooth}
+  body{font-family:'Hiragino Sans','Yu Gothic UI','Meiryo',sans-serif;color:var(--ink);background:var(--bg);line-height:1.75;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+  section{padding:64px 0}
+  h2.sec-title{font-size:1.6rem;font-weight:800;text-align:center;margin-bottom:8px;color:#6b4a82}
+  .sec-sub{text-align:center;color:var(--muted);font-size:0.92rem;margin-bottom:40px}
+  .grad-text{background:linear-gradient(120deg,var(--pink-d),var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* ===== HEADER ===== */
+  header{position:sticky;top:0;z-index:50;background:rgba(255,246,251,0.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;color:#6b4a82}
+  .brand img{width:38px;height:38px;border-radius:11px;box-shadow:0 3px 10px rgba(255,140,192,0.4)}
+  .brand small{display:block;font-size:0.6rem;color:var(--muted);font-weight:600;letter-spacing:0.08em}
+  .nav-cta{background:var(--grad);color:#fff;text-decoration:none;font-size:0.82rem;font-weight:700;padding:9px 16px;border-radius:24px;white-space:nowrap;box-shadow:0 4px 14px rgba(255,110,168,0.4)}
+
+  /* ===== HERO ===== */
+  .hero{padding:64px 0 54px;background:linear-gradient(180deg,#e7d8ff 0%,#ffd9ec 58%,var(--bg) 100%);position:relative;overflow:hidden}
+  .hero::after{content:'';position:absolute;inset:0;background:radial-gradient(60% 40% at 80% 10%,rgba(255,255,255,0.5),transparent 70%);pointer-events:none}
+  .hero-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center;position:relative;z-index:1}
+  .hero-badge{display:inline-block;background:rgba(255,255,255,0.75);color:#a14b86;font-size:0.75rem;font-weight:700;padding:6px 14px;border-radius:20px;margin-bottom:18px;box-shadow:0 2px 8px rgba(255,140,192,0.25)}
+  .hero h1{font-size:2.6rem;font-weight:900;line-height:1.25;letter-spacing:0.01em;margin-bottom:8px;color:#5a3d6e}
+  .hero .en{font-size:0.95rem;color:#a98fc4;letter-spacing:0.22em;font-weight:700;margin-bottom:18px}
+  .hero p.lead{font-size:1.05rem;color:#6e5f7a;margin-bottom:28px}
+  .hero-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .btn-primary{background:var(--grad);color:#fff;text-decoration:none;font-weight:800;font-size:1rem;padding:15px 30px;border-radius:30px;box-shadow:0 10px 26px rgba(255,110,168,0.45);transition:transform .15s}
+  .btn-primary:hover{transform:translateY(-2px)}
+  .btn-ghost{color:var(--purple);text-decoration:none;font-weight:700;font-size:0.9rem}
+  .hero-note{font-size:0.78rem;color:var(--muted);margin-top:14px}
+
+  /* phone mockup */
+  .phone{justify-self:center;width:250px;aspect-ratio:9/19;border-radius:34px;background:linear-gradient(160deg,#3a2a52,#241338);padding:12px;box-shadow:0 24px 60px rgba(160,110,200,0.5);border:1px solid rgba(255,255,255,0.25)}
+  .phone-screen{position:relative;width:100%;height:100%;border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#1b0b30 0%,#0d0a1c 55%,#070510 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;padding:20px;text-align:center}
+  .phone-screen::before{content:'';position:absolute;top:-12%;left:50%;transform:translateX(-50%);width:150%;height:55%;background:radial-gradient(ellipse at center,rgba(167,139,250,0.5),rgba(255,110,196,0.22) 42%,transparent 72%);filter:blur(8px);pointer-events:none}
+  .venue{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .pl{position:absolute;width:6px;height:6px;border-radius:50%;box-shadow:0 0 7px 2px currentColor;opacity:0.95;animation:plSway 2.4s ease-in-out infinite}
+  @keyframes plSway{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .phone-screen>*:not(.venue){position:relative;z-index:2}
+  .idol{width:104px;height:132px;border-radius:16px;overflow:hidden;border:2px solid rgba(255,255,255,0.4);box-shadow:0 0 32px rgba(167,139,250,0.75);background:linear-gradient(160deg,#4a3570,#1c1233)}
+  .idol img{width:100%;height:100%;object-fit:cover;display:block}
+  .idol .silh{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3.4rem}
+  .phone-bubble{background:#fff;color:#5a3d6e;font-size:0.72rem;font-weight:700;padding:9px 12px;border-radius:13px;max-width:170px;line-height:1.5}
+  .phone-banner{background:linear-gradient(135deg,#ff8cc0,#9b7bf0);color:#fff;font-size:0.66rem;font-weight:800;padding:7px 12px;border-radius:13px}
+
+  /* ===== あるある ===== */
+  .pain{background:#fff}
+  .pain-list{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .pain-card{background:linear-gradient(160deg,#fff4fa,#f6efff);border:1px solid var(--line);border-radius:20px;padding:24px;text-align:center}
+  .pain-card .emo{font-size:2rem;display:block;margin-bottom:8px}
+  .pain-card p{font-size:0.9rem;color:#7a6b86;font-weight:600}
+
+  /* ===== 機能 ===== */
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .feat{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:0 8px 22px rgba(255,140,192,0.08)}
+  .feat .ico{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,#ffe1ef,#ece1ff);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:14px}
+  .feat h3{font-size:1.02rem;font-weight:800;margin-bottom:6px;color:#6b4a82}
+  .feat p{font-size:0.86rem;color:var(--muted)}
+
+  /* ===== 料金 ===== */
+  .price{background:linear-gradient(160deg,#fbe9f4,var(--bg))}
+  .price-table{max-width:560px;margin:0 auto;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 14px 40px rgba(255,140,192,0.18);border:1px solid var(--line)}
+  .price-head{display:grid;grid-template-columns:1.6fr 1fr 1fr}
+  .price-head>div{padding:18px 14px;text-align:center;font-weight:800}
+  .price-head .free{background:#faf5fd;color:var(--muted)}
+  .price-head .paid{background:linear-gradient(135deg,#ff8cc0,#9b7bf0);color:#fff}
+  .price-head .paid small{display:block;font-size:0.7rem;font-weight:700;opacity:0.95}
+  .price-row{display:grid;grid-template-columns:1.6fr 1fr 1fr;border-top:1px solid var(--line)}
+  .price-row>div{padding:13px 14px;font-size:0.86rem;display:flex;align-items:center;justify-content:center;text-align:center}
+  .price-row .lbl{justify-content:flex-start;font-weight:600;text-align:left;color:#6e5f7a}
+  .ok{color:var(--pink-d);font-weight:800}
+  .no{color:#d8cce0}
+  .price-cta{text-align:center;margin-top:30px}
+  .price-amount{font-size:2.2rem;font-weight:900;color:#6b4a82}
+  .price-amount small{font-size:0.9rem;color:var(--muted);font-weight:700}
+
+  /* ===== 使い方 ===== */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .step{text-align:center;padding:20px}
+  .step .num{width:48px;height:48px;border-radius:50%;background:var(--grad);color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.1rem;box-shadow:0 6px 16px rgba(255,110,168,0.4)}
+  .step h3{font-size:1rem;font-weight:800;margin-bottom:6px;color:#6b4a82}
+  .step p{font-size:0.85rem;color:var(--muted)}
+
+  /* ===== FAQ ===== */
+  .faq{background:#fff}
+  .faq-item{max-width:680px;margin:0 auto 12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--bg)}
+  .faq-q{width:100%;text-align:left;background:none;border:none;padding:16px 18px;font-size:0.95rem;font-weight:700;color:#6b4a82;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .faq-q .mk{color:var(--pink-d);font-size:1.2rem;flex-shrink:0;transition:transform .2s}
+  .faq-item.open .faq-q .mk{transform:rotate(45deg)}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .25s ease;color:var(--muted);font-size:0.88rem}
+  .faq-a div{padding:0 18px 16px}
+  .faq-item.open .faq-a{max-height:260px}
+
+  /* ===== 最終CTA ===== */
+  .final{background:linear-gradient(135deg,#ff8cc0,#9b7bf0);color:#fff;text-align:center;border-radius:30px;margin:0 20px 50px;padding:54px 24px;max-width:1000px;margin-left:auto;margin-right:auto;box-shadow:0 20px 50px rgba(255,110,168,0.4)}
+  .final h2{font-size:1.7rem;font-weight:900;margin-bottom:10px;color:#fff}
+  .final p{opacity:0.97;margin-bottom:26px}
+  .btn-white{background:#fff;color:#a14b86;text-decoration:none;font-weight:800;font-size:1rem;padding:15px 34px;border-radius:30px;display:inline-block;box-shadow:0 8px 24px rgba(0,0,0,0.15)}
+
+  /* ===== footer ===== */
+  footer{background:#f4e8fb;color:#8c7d98;padding:34px 0;font-size:0.82rem;border-top:1px solid var(--line)}
+  .foot-grid{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  footer a{color:#8b6df0;text-decoration:none;margin-left:18px}
+  footer a:hover{color:#6b4a82}
+  .foot-brand{font-weight:800;color:#6b4a82;display:flex;align-items:center;gap:8px}
+  .foot-brand img{width:26px;height:26px;border-radius:8px}
+
+  /* ===== 印刷・PDF用 ===== */
+  @media print{
+    *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
+    header{position:static;box-shadow:none}
+    .nav-cta{display:none}
+    section{padding:30px 0;break-inside:avoid}
+    .feat,.pain-card,.step,.faq-item,.price-table,.final{break-inside:avoid}
+    .hero-actions .btn-primary,.btn-white{box-shadow:none}
+    a[href^="http"]{text-decoration:none}
+  }
+  @page{margin:8mm}
+
+  @media(max-width:760px){
+    section{padding:46px 0}
+    .hero-grid{grid-template-columns:1fr;gap:30px;text-align:center}
+    .hero-actions{justify-content:center}
+    .hero h1{font-size:2.1rem}
+    .pain-list,.feat-grid,.steps{grid-template-columns:1fr}
+    .feat-grid{gap:14px}
+    h2.sec-title{font-size:1.4rem}
+    .phone{width:220px}
+    .foot-grid{flex-direction:column;text-align:center}
+    .foot-brand{justify-content:center}
+    footer a{margin:0 9px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand">
+      <img src="icon.png" alt="Ricor Live">
+      <div>Ricor Live<small>推し活・ライブ記録</small></div>
+    </div>
+    <a class="nav-cta" href="https://ricorlive.app/">無料で使ってみる</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="hero-badge">🎤 推し活・ライブ参戦の記録アプリ</span>
+      <h1>推し活の“行った”を、<br><span class="grad-text">ぜんぶ思い出に。</span></h1>
+      <div class="en">RICOR LIVE</div>
+      <p class="lead">行った会場、セットリスト、座席、次のライブまでのカウントダウン。<br>推しとの記憶を、地図とともに残せるアプリ。</p>
+      <div class="hero-actions">
+        <a class="btn-primary" href="https://ricorlive.app/">無料で使ってみる</a>
+        <a class="btn-ghost" href="#price">料金を見る →</a>
+      </div>
+      <div class="hero-note">※インストール不要・ブラウザですぐ使えます</div>
+    </div>
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="venue">
+          <i class="pl" style="left:8%;top:62%;color:#ff5ea8;animation-delay:.0s"></i>
+          <i class="pl" style="left:16%;top:74%;color:#5ec8ff;width:7px;height:7px;animation-delay:.3s"></i>
+          <i class="pl" style="left:24%;top:58%;color:#ffd24a;animation-delay:.6s"></i>
+          <i class="pl" style="left:30%;top:80%;color:#c084fc;animation-delay:.2s"></i>
+          <i class="pl" style="left:38%;top:66%;color:#7dffb0;width:7px;height:7px;animation-delay:.9s"></i>
+          <i class="pl" style="left:46%;top:84%;color:#fff;animation-delay:.5s"></i>
+          <i class="pl" style="left:54%;top:64%;color:#ff7a3c;animation-delay:1.1s"></i>
+          <i class="pl" style="left:62%;top:78%;color:#ff5ea8;width:7px;height:7px;animation-delay:.4s"></i>
+          <i class="pl" style="left:70%;top:60%;color:#5ec8ff;animation-delay:.8s"></i>
+          <i class="pl" style="left:78%;top:82%;color:#ffd24a;animation-delay:.1s"></i>
+          <i class="pl" style="left:86%;top:68%;color:#c084fc;width:7px;height:7px;animation-delay:1.3s"></i>
+          <i class="pl" style="left:92%;top:78%;color:#7dffb0;animation-delay:.7s"></i>
+          <i class="pl" style="left:12%;top:88%;color:#fff;animation-delay:1.0s"></i>
+          <i class="pl" style="left:20%;top:92%;color:#ff5ea8;animation-delay:.35s"></i>
+          <i class="pl" style="left:34%;top:90%;color:#5ec8ff;width:7px;height:7px;animation-delay:.95s"></i>
+          <i class="pl" style="left:48%;top:94%;color:#ffd24a;animation-delay:.55s"></i>
+          <i class="pl" style="left:60%;top:90%;color:#c084fc;animation-delay:1.2s"></i>
+          <i class="pl" style="left:74%;top:93%;color:#ff7a3c;width:7px;height:7px;animation-delay:.25s"></i>
+          <i class="pl" style="left:88%;top:90%;color:#fff;animation-delay:.85s"></i>
+          <i class="pl" style="left:5%;top:78%;color:#c084fc;width:5px;height:5px;animation-delay:.65s"></i>
+          <i class="pl" style="left:42%;top:76%;color:#5ec8ff;width:5px;height:5px;animation-delay:1.15s"></i>
+          <i class="pl" style="left:66%;top:72%;color:#ffd24a;width:5px;height:5px;animation-delay:.45s"></i>
+          <i class="pl" style="left:82%;top:60%;color:#ff5ea8;width:5px;height:5px;animation-delay:1.05s"></i>
+          <i class="pl" style="left:28%;top:70%;color:#fff;width:5px;height:5px;animation-delay:.15s"></i>
+        </div>
+        <div class="phone-banner">✨ 次のライブまで あと 12日</div>
+        <div class="idol">
+          <img src="idol.jpg" alt="推し"
+               onerror="if(!this.dataset.t){this.dataset.t=1;this.src='idol.png'}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
+          <span class="silh" style="display:none">👨‍🎤</span>
+        </div>
+        <div class="phone-bubble">今日もお疲れさま！<br>次のライブ楽しみだね🎶</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- あるある -->
+<section class="pain">
+  <div class="wrap">
+    <h2 class="sec-title">こんな“推し活あるある”、ありませんか？</h2>
+    <p class="sec-sub">記録がバラバラだと、せっかくの思い出も埋もれてしまう。</p>
+    <div class="pain-list">
+      <div class="pain-card"><span class="emo">🤔</span><p>「あのセトリ、どこにメモしたっけ…」</p></div>
+      <div class="pain-card"><span class="emo">🗺️</span><p>「この会場、前にも来たかな？」</p></div>
+      <div class="pain-card"><span class="emo">📅</span><p>「次のライブ、あと何日だっけ？」</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 機能 -->
+<section id="features">
+  <div class="wrap">
+    <h2 class="sec-title">Ricor Live で、できること</h2>
+    <p class="sec-sub">全国のライブ会場マップを中心に、参戦の記録をまるごと。</p>
+    <div class="feat-grid">
+      <div class="feat"><div class="ico">🗺️</div><h3>全国の会場マップ</h3><p>ドームからライブハウス・劇場まで、全国の会場を地図でチェック。公式HPもワンタップ。</p></div>
+      <div class="feat"><div class="ico">👣</div><h3>足あと（参戦記録）</h3><p>行った日・アーティストを記録。訪問した会場が地図に色づいていきます。</p></div>
+      <div class="feat"><div class="ico">🎵</div><h3>セットリスト</h3><p>その日歌われた曲を最大30曲まで記録。あとから何度でも見返せます。</p></div>
+      <div class="feat"><div class="ico">🪑</div><h3>座席の記録</h3><p>座席番号に加え、座席表の画像に“自分の席”の印もつけられます。</p></div>
+      <div class="feat"><div class="ico">📅</div><h3>ライブ予定カレンダー</h3><p>次の予定を登録すると「次のイベントまであと◯日」をホームに表示。</p></div>
+      <div class="feat"><div class="ico">💗</div><h3>推しホーム画面</h3><p>推しの写真を登録すると、時間帯で変わる吹き出しメッセージが届きます。（背景画像も変更可能）</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 料金 -->
+<section id="price" class="price">
+  <div class="wrap">
+    <h2 class="sec-title">料金プラン</h2>
+    <p class="sec-sub">まず無料でしっかり試せます。便利機能を全部使うなら買い切り300円。</p>
+    <div class="price-table">
+      <div class="price-head">
+        <div></div>
+        <div class="free">無料</div>
+        <div class="paid">プレミアム<small>買い切り ¥300</small></div>
+      </div>
+      <div class="price-row"><div class="lbl">足あと記録（日付・アーティスト）</div><div class="ok">○</div><div class="ok">○</div></div>
+      <div class="price-row"><div class="lbl">天気の記録</div><div class="ok">○</div><div class="ok">○</div></div>
+      <div class="price-row"><div class="lbl">写真の登録</div><div>1枚</div><div class="ok">20枚</div></div>
+      <div class="price-row"><div class="lbl">ランキング</div><div class="ok">○</div><div class="ok">○</div></div>
+      <div class="price-row"><div class="lbl">推しホーム画面</div><div class="ok">○</div><div class="ok">○</div></div>
+      <div class="price-row"><div class="lbl">メモ</div><div class="no">—</div><div class="ok">○</div></div>
+      <div class="price-row"><div class="lbl">セットリスト</div><div class="no">—</div><div class="ok">○</div></div>
+      <div class="price-row"><div class="lbl">座席の記録</div><div class="no">—</div><div class="ok">○</div></div>
+      <div class="price-row"><div class="lbl">ライブ予定カレンダー</div><div class="no">—</div><div class="ok">○</div></div>
+    </div>
+    <div class="price-cta">
+      <div class="price-amount">¥300 <small>買い切り（追加課金なし）</small></div>
+      <p class="sec-sub" style="margin:6px 0 18px">一度買えばずっと使えます。</p>
+      <a class="btn-primary" href="https://ricorlive.app/">まずは無料で使ってみる</a>
+    </div>
+  </div>
+</section>
+
+<!-- 使い方 -->
+<section id="how">
+  <div class="wrap">
+    <h2 class="sec-title">使い方はかんたん 3ステップ</h2>
+    <p class="sec-sub">アプリを開いてすぐ始められます。</p>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><h3>開く</h3><p>インストール不要。リンクを開くだけですぐスタート。</p></div>
+      <div class="step"><div class="num">2</div><h3>記録する</h3><p>行った会場をタップして、日付・アーティストを記録。</p></div>
+      <div class="step"><div class="num">3</div><h3>見返す</h3><p>足あと・セトリ・座席を、いつでも思い出として振り返り。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq">
+  <div class="wrap">
+    <h2 class="sec-title">よくある質問</h2>
+    <p class="sec-sub"></p>
+    <div class="faq-item">
+      <button class="faq-q">機種変更してもデータは引き継げますか？<span class="mk">＋</span></button>
+      <div class="faq-a"><div>はい。データのエクスポート／インポート機能があり、LINEで自分宛に送るなどして新しいスマホへ引き継げます。</div></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">課金は月額ですか？<span class="mk">＋</span></button>
+      <div class="faq-a"><div>いいえ、買い切り300円です。一度ご購入いただければ追加の料金はかかりません。</div></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">無料のままでも使えますか？<span class="mk">＋</span></button>
+      <div class="faq-a"><div>はい。会場マップ・足あと記録・ランキング・推しホーム画面などは無料でお使いいただけます。</div></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">アプリのインストールは必要ですか？<span class="mk">＋</span></button>
+      <div class="faq-a"><div>不要です。ブラウザで開くだけで使えます。ホーム画面に追加すればアプリのように起動できます。</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 最終CTA -->
+<div class="final">
+  <h2>推しとの思い出、残しはじめよう。</h2>
+  <p>まずは無料で。あなたの“参戦記録”がここに集まります。</p>
+  <a class="btn-white" href="https://ricorlive.app/">無料で使ってみる</a>
+</div>
+
+<!-- footer -->
+<footer>
+  <div class="wrap foot-grid">
+    <div class="foot-brand"><img src="icon.png" alt="">Ricor Live</div>
+    <div>
+      <a href="#features">機能</a>
+      <a href="#price">料金</a>
+      <a href="tokushoho.html">特定商取引法に基づく表記</a>
+      <a href="privacy.html">プライバシーポリシー</a>
+    </div>
+  </div>
+  <div class="wrap" style="margin-top:14px;opacity:0.7;font-size:0.74rem">© 2026 Ricor Live</div>
+</footer>
+
+<script>
+  // FAQ アコーディオン
+  document.querySelectorAll('.faq-q').forEach(q=>{
+    q.addEventListener('click', ()=>{
+      q.parentElement.classList.toggle('open');
+    });
+  });
+</script>
+</body>
+</html>
