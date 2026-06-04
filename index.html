@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-045';
+const APP_VERSION = '20260531-049';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -1042,6 +1042,105 @@ const VENUES_CLEAN = [
   {id:217, name:'博多座', lat:33.5939, lng:130.4092, pref:'福岡県', type:'theater', cap:1454, seat:'https://www.hakataza.co.jp/'},
   {id:218, name:'キャナルシティ劇場', lat:33.5897, lng:130.4112, pref:'福岡県', type:'theater', cap:1100},
   {id:219, name:'久留米シティプラザ ザ・グランドホール', lat:33.3169, lng:130.5085, pref:'福岡県', type:'theater', cap:1514, seat:'https://kurumecityplaza.jp/'},
+
+  // Bリーグ アリーナ（B1）
+  {id:300, name:'CNAアリーナ★あきた（秋田県立体育館）', lat:39.7235, lng:140.1015, pref:'秋田県', type:'arena', cap:4000, seat:'https://www.city.akita.lg.jp/shisetsu/sports-koen/1009703/1006397.html'},
+  {id:301, name:'アダストリアみとアリーナ', lat:36.3760, lng:140.4500, pref:'茨城県', type:'arena', cap:5000, seat:'https://maas.or.jp/pages/108/'},
+  {id:302, name:'ブレックスアリーナ宇都宮', lat:36.5640, lng:139.8930, pref:'栃木県', type:'arena', cap:4500, seat:'https://www.utsunomiya-sponavi.or.jp/facility/01.html'},
+  {id:303, name:'オープンハウスアリーナ太田', lat:36.2960, lng:139.3770, pref:'群馬県', type:'arena', cap:5000, seat:'https://openhouse-arena-ota.com/'},
+  {id:304, name:'越谷市立総合体育館', lat:35.8930, lng:139.8000, pref:'埼玉県', type:'arena', cap:4000, seat:'https://sougoutaiiku.kosi-kanri.com/'},
+  {id:305, name:'千葉ポートアリーナ', lat:35.6010, lng:140.1010, pref:'千葉県', type:'arena', cap:5000, seat:'https://chibacity.spo-sin.or.jp/shisetu/arena-top/'},
+  {id:306, name:'LaLa arena TOKYO-BAY', lat:35.6860, lng:139.9900, pref:'千葉県', type:'arena', cap:10000, seat:'https://lalaarenatokyo-bay.com/'},
+  {id:307, name:'TOYOTA ARENA TOKYO', lat:35.6255, lng:139.7770, pref:'東京都', type:'arena', cap:10000, seat:'https://www.toyota-arena-tokyo.jp/'},
+  {id:308, name:'青山学院記念館', lat:35.6595, lng:139.7110, pref:'東京都', type:'arena', cap:3500, seat:'https://www.sunrockers.jp/'},
+  {id:309, name:'川崎市とどろきアリーナ', lat:35.5790, lng:139.6560, pref:'神奈川県', type:'arena', cap:7000, seat:'https://kawasaki-todoroki-park.co.jp/guide/arena/'},
+  {id:310, name:'横浜国際プール', lat:35.5670, lng:139.5870, pref:'神奈川県', type:'arena', cap:5000, seat:'https://yokohama-sport.jp/waterarena/'},
+  {id:311, name:'富山市総合体育館', lat:36.6970, lng:137.2130, pref:'富山県', type:'arena', cap:4500, seat:'https://www.city.toyama.lg.jp/shisei/shisetsu/1011061/1011062/1004926.html'},
+  {id:312, name:'豊橋市総合体育館', lat:34.7480, lng:137.3700, pref:'愛知県', type:'arena', cap:4000, seat:'https://www.hamada-sports.com/toyohashi-sports/'},
+  {id:313, name:'ウィングアリーナ刈谷', lat:34.9760, lng:136.9970, pref:'愛知県', type:'arena', cap:4000, seat:'https://wing-kariya.jp/'},
+  {id:314, name:'名古屋市枇杷島スポーツセンター', lat:35.1980, lng:136.8780, pref:'愛知県', type:'arena', cap:3000, seat:'https://www.nespa.or.jp/facility/biwajima_sc/'},
+  {id:315, name:'IGアリーナ', lat:35.1860, lng:136.8990, pref:'愛知県', type:'arena', cap:17000, seat:'https://www.ig-arena.jp/'},
+  {id:316, name:'滋賀ダイハツアリーナ', lat:35.0090, lng:135.8650, pref:'滋賀県', type:'arena', cap:5000, seat:'https://shiga-arena.jp/'},
+  {id:317, name:'にっしんでんきアリーナ京都（京都市体育館）', lat:34.9850, lng:135.7170, pref:'京都府', type:'arena', cap:4500, seat:'https://shisetsu.mizuno.jp/m-7209'},
+  {id:318, name:'おおきにアリーナ舞洲', lat:34.6720, lng:135.3960, pref:'大阪府', type:'arena', cap:7000, seat:'https://human-arena.com/'},
+  {id:319, name:'松江市総合体育館', lat:35.4490, lng:133.0640, pref:'島根県', type:'arena', cap:4000, seat:'https://www.so-tai.jp/'},
+  {id:320, name:'広島サンプラザホール', lat:34.3870, lng:132.4200, pref:'広島県', type:'arena', cap:4000, seat:'https://www.hiroshima-sunplaza.or.jp/'},
+  {id:321, name:'SAGAアリーナ', lat:33.2640, lng:130.3160, pref:'佐賀県', type:'arena', cap:8400, seat:'https://saga-sunrisepark.com/arena/'},
+  {id:322, name:'HAPPINESS ARENA（長崎）', lat:32.7560, lng:129.8650, pref:'長崎県', type:'arena', cap:6000, seat:'https://www.nagasakistadiumcity.com/'},
+  {id:323, name:'沖縄アリーナ（沖縄サントリーアリーナ）', lat:26.3170, lng:127.8060, pref:'沖縄県', type:'arena', cap:10000, seat:'https://okinawa-arena.jp/'},
+
+  // Bリーグ アリーナ（B2）
+  {id:324, name:'カクヒログループスーパーアリーナ（青森市総合体育館）', lat:40.8250, lng:140.7450, pref:'青森県', type:'arena', cap:5000, seat:'https://aomori-arena.jp/'},
+  {id:325, name:'盛岡タカヤアリーナ', lat:39.6960, lng:141.1290, pref:'岩手県', type:'arena', cap:3100, seat:'https://morioka-sport.or.jp/facility/arena/'},
+  {id:326, name:'山形県総合運動公園総合体育館', lat:38.3470, lng:140.3680, pref:'山形県', type:'arena', cap:4000, seat:'https://park.montedio.co.jp/beni/'},
+  {id:327, name:'宝来屋ボンズアリーナ（郡山総合体育館）', lat:37.4010, lng:140.3760, pref:'福島県', type:'arena', cap:5000, seat:'https://kaiseizan-koriyama.jp/facility-01'},
+  {id:328, name:'横浜武道館', lat:35.4438, lng:139.6385, pref:'神奈川県', type:'arena', cap:5000, seat:'https://www.yokohama-budokan.com/'},
+  {id:329, name:'セーレン・ドリームアリーナ（福井県営体育館）', lat:36.0400, lng:136.1930, pref:'福井県', type:'arena', cap:4000, seat:'https://f-sports.pref.fukui.lg.jp/facility/125.html'},
+  {id:330, name:'ホワイトリング', lat:36.5970, lng:138.1980, pref:'長野県', type:'arena', cap:5000, seat:'https://whitering.jp/'},
+  {id:331, name:'静岡市中央体育館', lat:34.9785, lng:138.3820, pref:'静岡県', type:'arena', cap:3000, seat:'https://www.shizuokachuo-gym.jp/'},
+  {id:332, name:'ならでんアリーナ（奈良市中央体育館）', lat:34.6960, lng:135.8230, pref:'奈良県', type:'arena', cap:3000, seat:'https://www.city.nara.lg.jp/soshiki/22/5383.html'},
+  {id:333, name:'松山市総合コミュニティセンター', lat:33.8390, lng:132.7580, pref:'愛媛県', type:'arena', cap:4000, seat:'https://www.cul-spo.or.jp/comcen/'},
+  {id:334, name:'照葉積水ハウスアリーナ', lat:33.6560, lng:130.4180, pref:'福岡県', type:'arena', cap:5000, seat:'https://www.fukuoka-city-arena.jp/'},
+  {id:335, name:'熊本県立総合体育館', lat:32.8065, lng:130.6925, pref:'熊本県', type:'arena', cap:4500, seat:'https://www.kspa.or.jp/sougou_taiku/'},
+  {id:336, name:'西原商会アリーナ（鹿児島アリーナ）', lat:31.5830, lng:130.5410, pref:'鹿児島県', type:'arena', cap:6000, seat:'https://nishihara-shokai-arena.jp/'},
+
+  // Jリーグ スタジアム（J1）
+  {id:400, name:'メルカリスタジアム（カシマ）', lat:35.9920, lng:140.6400, pref:'茨城県', type:'outdoor', cap:40000, seat:'https://www.antlers.co.jp/mercari-stadium/'},
+  {id:401, name:'ケーズデンキスタジアム水戸', lat:36.3640, lng:140.4860, pref:'茨城県', type:'outdoor', cap:12000, seat:'https://www.mito-hollyhock.net/'},
+  {id:402, name:'埼玉スタジアム2002', lat:35.9035, lng:139.7170, pref:'埼玉県', type:'outdoor', cap:63000, seat:'https://www.stadium2002.com/'},
+  {id:403, name:'フクダ電子アリーナ', lat:35.5870, lng:140.1240, pref:'千葉県', type:'outdoor', cap:19000, seat:'https://sogasportspark.com/'},
+  {id:404, name:'三協フロンテア柏スタジアム', lat:35.8470, lng:139.9870, pref:'千葉県', type:'outdoor', cap:15000, seat:'https://www.reysol.co.jp/'},
+  {id:405, name:'味の素スタジアム', lat:35.6645, lng:139.5270, pref:'東京都', type:'outdoor', cap:49000, seat:'https://www.ajinomotostadium.com/'},
+  {id:406, name:'町田GIONスタジアム', lat:35.5760, lng:139.4470, pref:'東京都', type:'outdoor', cap:15000, seat:'https://www.nozuta-park.com/'},
+  {id:407, name:'Uvanceとどろきスタジアム', lat:35.5800, lng:139.6555, pref:'神奈川県', type:'outdoor', cap:26000, seat:'https://kawasaki-todoroki-park.co.jp/'},
+  {id:408, name:'IAIスタジアム日本平', lat:34.9560, lng:138.4470, pref:'静岡県', type:'outdoor', cap:20000, seat:'https://shimizu-nihondaira.com/'},
+  {id:409, name:'サンガスタジアム by KYOCERA', lat:35.0120, lng:135.5760, pref:'京都府', type:'outdoor', cap:21000, seat:'https://sangastadium-by-kyocera.jp/'},
+  {id:410, name:'パナソニックスタジアム吹田', lat:34.8030, lng:135.5380, pref:'大阪府', type:'outdoor', cap:40000, seat:'https://suitacityfootballstadium.jp/'},
+  {id:411, name:'ヨドコウ桜スタジアム', lat:34.6120, lng:135.5170, pref:'大阪府', type:'outdoor', cap:25000, seat:'https://www.yodoko-sakura-stadium.com/'},
+  {id:412, name:'JFE晴れの国スタジアム', lat:34.6610, lng:133.9460, pref:'岡山県', type:'outdoor', cap:20000, seat:'https://www.okayama-momo.jp/'},
+  {id:413, name:'エディオンピースウイング広島', lat:34.3980, lng:132.4520, pref:'広島県', type:'outdoor', cap:28000, seat:'https://hiroshima-stadiumpark.jp/peacewing/'},
+  {id:414, name:'ベスト電器スタジアム', lat:33.5910, lng:130.4470, pref:'福岡県', type:'outdoor', cap:22000, seat:'https://www.midorimachi.jp/park/guide.php?code=202002'},
+  {id:415, name:'PEACE STADIUM（長崎スタジアムシティ）', lat:32.7530, lng:129.8650, pref:'長崎県', type:'outdoor', cap:20000, seat:'https://nagasaki-stadiumcity.com/'},
+
+  // Jリーグ スタジアム（J2）
+  {id:416, name:'プライフーズスタジアム', lat:40.5750, lng:141.5000, pref:'青森県', type:'outdoor', cap:5000, seat:'https://taga-playground.com/'},
+  {id:417, name:'ユアテックスタジアム仙台', lat:38.3260, lng:140.8810, pref:'宮城県', type:'outdoor', cap:19000, seat:'https://www.vegalta.co.jp/game/stadium.html'},
+  {id:418, name:'ソユースタジアム', lat:39.7180, lng:140.0950, pref:'秋田県', type:'outdoor', cap:20000, seat:'https://www.city.akita.lg.jp/shisetsu/sports-koen/1009703/1006394.html'},
+  {id:419, name:'NDソフトスタジアム山形', lat:38.3520, lng:140.3700, pref:'山形県', type:'outdoor', cap:20000, seat:'https://park.montedio.co.jp/beni/'},
+  {id:420, name:'ハワイアンズスタジアムいわき', lat:37.0380, lng:140.8360, pref:'福島県', type:'outdoor', cap:5000, seat:'https://iwakicity-park.or.jp/greenfield/'},
+  {id:421, name:'NACK5スタジアム大宮', lat:35.9230, lng:139.6300, pref:'埼玉県', type:'outdoor', cap:15000, seat:'https://www.omiyaparksoccerstadium.com/'},
+  {id:422, name:'ニッパツ三ツ沢球技場', lat:35.4880, lng:139.6080, pref:'神奈川県', type:'outdoor', cap:15000, seat:'https://www.nippatsu-mitsuzawa.com/'},
+  {id:423, name:'レモンガススタジアム平塚', lat:35.3300, lng:139.3660, pref:'神奈川県', type:'outdoor', cap:15000, seat:'https://www.bellmare.co.jp/stadium'},
+  {id:424, name:'JITリサイクルインクスタジアム（山梨）', lat:35.6360, lng:138.5760, pref:'山梨県', type:'outdoor', cap:17000, seat:'https://www.kose-sp.pref.yamanashi.jp/guide/34/'},
+  {id:425, name:'デンカビッグスワンスタジアム', lat:37.8980, lng:139.0760, pref:'新潟県', type:'outdoor', cap:42000, seat:'https://www.denka-bigswan.com/'},
+  {id:426, name:'ヤマハスタジアム', lat:34.7170, lng:137.8970, pref:'静岡県', type:'outdoor', cap:15000, seat:'https://jubilo-iwata.co.jp/stadium'},
+  {id:427, name:'藤枝総合運動公園サッカー場', lat:34.8770, lng:138.2470, pref:'静岡県', type:'outdoor', cap:13000, seat:'https://www.fujiedascp.com/'},
+  {id:428, name:'富山県総合運動公園陸上競技場', lat:36.6630, lng:137.1830, pref:'富山県', type:'outdoor', cap:25000, seat:'https://toyamap.or.jp/kenso/'},
+  {id:429, name:'ポカリスエットスタジアム（鳴門大塚）', lat:34.1760, lng:134.6090, pref:'徳島県', type:'outdoor', cap:20000, seat:'https://www.awa-spo.net/naruto/pocari/'},
+  {id:430, name:'アシックス里山スタジアム', lat:34.0860, lng:133.0040, pref:'愛媛県', type:'outdoor', cap:5000, seat:'https://satoyamastadium.com/'},
+  {id:431, name:'駅前不動産スタジアム', lat:33.3760, lng:130.5180, pref:'佐賀県', type:'outdoor', cap:24000, seat:'https://www.city.tosu.lg.jp/soshiki/12/1166.html'},
+  {id:432, name:'クラサスドーム大分', lat:33.2010, lng:131.6580, pref:'大分県', type:'outdoor', cap:40000, seat:'https://www.oita-sportspark.jp/facility/dome'},
+  {id:433, name:'いちご宮崎新富サッカー場', lat:32.0750, lng:131.4940, pref:'宮崎県', type:'outdoor', cap:5000, seat:'https://www.ichigo-shintomi.jp/'},
+
+  // Jリーグ スタジアム（J3）
+  {id:434, name:'とうほう・みんなのスタジアム', lat:37.7260, lng:140.3980, pref:'福島県', type:'outdoor', cap:21000, seat:'https://www.azumapark.or.jp/'},
+  {id:435, name:'カンセキスタジアムとちぎ', lat:36.5340, lng:139.8570, pref:'栃木県', type:'outdoor', cap:25000, seat:'https://www.gsz-northcentralarea.com/facility/stadium.html'},
+  {id:436, name:'正田醤油スタジアム群馬', lat:36.4080, lng:139.0630, pref:'群馬県', type:'outdoor', cap:15000, seat:'https://shikishima-park.org/facility/stadium.html'},
+  {id:437, name:'相模原ギオンスタジアム', lat:35.5300, lng:139.3790, pref:'神奈川県', type:'outdoor', cap:15000, seat:'https://a-stadium.jpn.org/'},
+  {id:438, name:'サンプロ アルウィン', lat:36.1660, lng:137.9200, pref:'長野県', type:'outdoor', cap:20000, seat:'https://www.yamaga-fc.com/'},
+  {id:439, name:'長野Uスタジアム', lat:36.5570, lng:138.1340, pref:'長野県', type:'outdoor', cap:15000, seat:'https://minaminagano.jp/facility/'},
+  {id:440, name:'金沢ゴーゴーカレースタジアム', lat:36.5850, lng:136.6400, pref:'石川県', type:'outdoor', cap:10000, seat:'https://www.kanazawa-stadium.jp/'},
+  {id:441, name:'ヒマラヤスタジアム岐阜', lat:35.4440, lng:136.7700, pref:'岐阜県', type:'outdoor', cap:26000, seat:'https://gifu-sports.org/gmc/'},
+  {id:442, name:'Axisバードスタジアム', lat:35.5030, lng:134.2180, pref:'鳥取県', type:'outdoor', cap:16000, seat:'https://www.gainare.co.jp/stadiums/'},
+  {id:443, name:'維新みらいふスタジアム', lat:34.1660, lng:131.4540, pref:'山口県', type:'outdoor', cap:20000, seat:'https://www.ishin100.com/main/guide/gu-stadium/'},
+  {id:444, name:'四国化成MEGLIOスタジアム（丸亀）', lat:34.2900, lng:133.7850, pref:'香川県', type:'outdoor', cap:30000, seat:'https://www.marukyou.jp/'},
+  {id:445, name:'東大阪市花園ラグビー場', lat:34.6620, lng:135.6260, pref:'大阪府', type:'outdoor', cap:27000, seat:'https://hanazono-rugby-hos.com/'},
+  {id:446, name:'ニンジニアスタジアム', lat:33.8250, lng:132.7870, pref:'愛媛県', type:'outdoor', cap:20000, seat:'https://tobemori-seeds.com/park/facility/ningineerstadium'},
+  {id:447, name:'GIKENスタジアム（春野）', lat:33.5240, lng:133.4690, pref:'高知県', type:'outdoor', cap:15000, seat:'https://www.kochi-haruno.org/faci/rikujyou'},
+  {id:448, name:'ミクニワールドスタジアム北九州', lat:33.8870, lng:130.8800, pref:'福岡県', type:'outdoor', cap:15000, seat:'https://www.kitakyushu-stadium.jp/'},
+  {id:449, name:'えがお健康スタジアム', lat:32.8290, lng:130.7880, pref:'熊本県', type:'outdoor', cap:32000, seat:'https://www.kspa.or.jp/rikujo/'},
+  {id:450, name:'白波スタジアム', lat:31.5660, lng:130.5450, pref:'鹿児島県', type:'outdoor', cap:19000, seat:'https://ppp.seika-spc.co.jp/kamoike-undo/'},
+  {id:451, name:'沖縄県総合運動公園陸上競技場', lat:26.3000, lng:127.8330, pref:'沖縄県', type:'outdoor', cap:25000, seat:'https://okinawa-kenso.com/?page_id=213'},
 ];
 
 const TYPE_ICON = {dome:'🏟️', arena:'🎪', hall:'🎭', zepp:'⚡', civic:'🏛️', live:'🎸', outdoor:'🌿', concert:'🎶', theater:'🎟️', custom:'📍'};
