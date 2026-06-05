@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-064';
+const APP_VERSION = '20260531-065';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -281,6 +281,12 @@ if (stored !== APP_VERSION) {
   .record-visit-row .record-visit-chip{flex:1;min-width:0}
   .record-visit-del{flex-shrink:0;background:#fff;border:1px solid #f1c2cf;color:#e0567a;font-size:0.68rem;font-weight:700;padding:5px 10px;border-radius:14px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
   .record-visit-del:active{background:#ffe5ec}
+  .record-visit-copy{flex-shrink:0;background:#f0ecff;border:1px solid #d4c8f8;color:#6d28d9;font-size:0.68rem;font-weight:700;padding:5px 9px;border-radius:14px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+  .record-visit-copy:active{background:#7c3aed;color:#fff}
+  /* ミニトースト */
+  .mini-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(90px + env(safe-area-inset-bottom,0));z-index:21500;background:#2a2440;color:#fff;padding:10px 18px;border-radius:24px;box-shadow:0 8px 24px rgba(0,0,0,0.4);font-size:0.84rem;font-weight:700;opacity:0;transition:opacity 0.25s,transform 0.25s;white-space:nowrap;pointer-events:none}
+  .mini-toast.hidden{display:none}
+  .mini-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .record-visit-chip-tap{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s;user-select:none}
   .record-visit-chip-tap:active{background:#7c3aed;color:#fff;border-color:#7c3aed}
   .record-chip-hint{font-size:0.62rem;color:#bbb;margin-top:4px;letter-spacing:0.02em}
@@ -890,7 +896,7 @@ if (stored !== APP_VERSION) {
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;flex-wrap:wrap">
           <label class="form-label" style="flex:1;min-width:90px">🎵 セットリスト <span id="setlist-count-label" style="color:#666;font-weight:400">（0/30曲）</span></label>
           <div style="display:flex;gap:6px;flex-shrink:0">
-            <button class="setlist-add-btn" id="setlist-copy-btn" type="button">📋 コピー</button>
+            <button class="setlist-add-btn" id="setlist-copy-btn" type="button">📋 貼り付け</button>
             <button class="setlist-add-btn" id="setlist-add-btn" type="button">＋ 曲を追加</button>
           </div>
         </div>
@@ -915,6 +921,9 @@ if (stored !== APP_VERSION) {
     </div>
   </div>
 </div>
+
+<!-- ミニトースト（コピー/貼り付け通知） -->
+<div class="mini-toast hidden" id="mini-toast"></div>
 
 <!-- 削除の取り消しトースト -->
 <div class="undo-toast hidden" id="undo-toast">
@@ -2054,6 +2063,20 @@ let modalVenueId = null;
 let pendingPhotos = [];
 let selectedWeather = '';
 let pendingSetlist = []; // セットリスト（文字列の配列）
+let copiedSetlist = null; // コピーしたセットリスト（貼り付け用クリップボード）
+function showMiniToast(msg){
+  const t = document.getElementById('mini-toast');
+  if(!t) return;
+  t.textContent = msg;
+  clearTimeout(showMiniToast._t);
+  t.classList.remove('hidden');
+  void t.offsetWidth;
+  t.classList.add('show');
+  showMiniToast._t = setTimeout(()=>{
+    t.classList.remove('show');
+    setTimeout(()=>t.classList.add('hidden'), 280);
+  }, 1800);
+}
 let currentLightboxPhotos = [];
 let lightboxIdx = 0;
 
@@ -2208,7 +2231,17 @@ function openSetlistCopyModal(){
   }
   document.getElementById('setlist-copy-modal').classList.remove('hidden');
 }
-document.getElementById('setlist-copy-btn').addEventListener('click', openSetlistCopyModal);
+document.getElementById('setlist-copy-btn').addEventListener('click', ()=>{
+  if(copiedSetlist && copiedSetlist.length){
+    const space = MAX_SETLIST - pendingSetlist.length;
+    if(space <= 0){ alert(`セットリストは${MAX_SETLIST}曲までです`); return; }
+    pendingSetlist.push(...copiedSetlist.slice(0, space));
+    renderSetlistRows();
+    showMiniToast(`📋 貼り付けました（${Math.min(copiedSetlist.length,space)}曲）`);
+  } else {
+    openSetlistCopyModal();   // コピー未操作のときは履歴から選ぶ
+  }
+});
 document.getElementById('setlist-copy-cancel').addEventListener('click', ()=>{
   document.getElementById('setlist-copy-modal').classList.add('hidden');
 });
@@ -2744,9 +2777,10 @@ function renderRecordsPanel(){
           <span class="record-visit-chip record-visit-chip-tap" data-venue="${v.id}" data-uid="${r.uid||''}" data-aidx="${allRecs.indexOf(r)}">
             ✏️ ${r.date||'?'}${r.artist?' · '+r.artist:''}${r.tour?' / '+r.tour:''}${r.weather?' '+WEATHER_ICON[r.weather]:''}
           </span>
+          ${(r.setlist||[]).filter(s=>s&&s.trim()).length ? `<button class="record-visit-copy" data-venue="${v.id}" data-uid="${r.uid||''}" data-aidx="${allRecs.indexOf(r)}">📋 セトリ</button>` : ''}
           <button class="record-visit-del" data-venue="${v.id}" data-uid="${r.uid||''}" data-aidx="${allRecs.indexOf(r)}">🗑 削除</button>
         </div>`).join('')}</div>
-      <div class="record-chip-hint">✏️ タップで編集 ／ 🗑 で削除</div>
+      <div class="record-chip-hint">✏️ タップで編集 ／ 📋 セトリをコピー ／ 🗑 で削除</div>
       ${photos.length ? `<div class="record-photos-row">${photos.slice(0,6).map((p,i)=>`<img class="record-photo" src="${p}" data-venue="${v.id}" data-idx="${i}">`).join('')}</div>` : ''}
     </div>`;
   }).join('');
@@ -2760,6 +2794,22 @@ function renderRecordsPanel(){
       const idx = uid ? (visited[vid]||[]).findIndex(r=> r.uid===uid) : aidx;
       openModal(vid);
       if(idx >= 0) setTimeout(()=>startEditVisit(idx), 50);
+    });
+  });
+
+  // セトリ「コピー」ボタン → クリップボードへ保存
+  content.querySelectorAll('.record-visit-copy').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const vid = +btn.dataset.venue;
+      const uid = btn.dataset.uid;
+      const aidx = +btn.dataset.aidx;
+      const recs = visited[vid]||[];
+      const rec = uid ? recs.find(r=>r.uid===uid) : recs[aidx];
+      const songs = (rec?.setlist||[]).filter(s=>s&&s.trim());
+      if(!songs.length) return;
+      copiedSetlist = [...songs];
+      showMiniToast(`📋 セットリスト（${songs.length}曲）をコピーしました`);
     });
   });
 
