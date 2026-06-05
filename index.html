@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-053';
+const APP_VERSION = '20260531-060';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -218,6 +218,22 @@ if (stored !== APP_VERSION) {
   .visit-memo{font-size:0.78rem;color:#aaa;line-height:1.6;white-space:pre-wrap}
   .visit-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .visit-photo{width:60px;height:60px;border-radius:8px;object-fit:cover;cursor:pointer}
+
+  /* 削除の取り消しトースト */
+  .undo-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(84px + env(safe-area-inset-bottom,0));z-index:21000;display:flex;align-items:center;gap:14px;background:#2a2440;color:#fff;padding:11px 14px 11px 18px;border-radius:30px;box-shadow:0 8px 28px rgba(0,0,0,0.4);font-size:0.85rem;font-weight:600;opacity:0;transition:opacity 0.3s ease,transform 0.3s ease;white-space:nowrap}
+  .undo-toast.hidden{display:none}
+  .undo-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .undo-toast button{background:linear-gradient(135deg,#ff6ec4,#7c3aed);border:none;color:#fff;font-weight:800;font-size:0.8rem;padding:7px 14px;border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+
+  /* 登録完了ポップアップ */
+  .save-toast{position:fixed;inset:0;z-index:21000;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(124,58,237,0.12);opacity:0;transition:opacity 0.25s ease}
+  .save-toast.hidden{display:none}
+  .save-toast.show{opacity:1}
+  .save-toast-card{background:linear-gradient(160deg,#fff 0%,#f6efff 100%);border:2px solid #e3d4fb;border-radius:24px;padding:26px 34px;text-align:center;box-shadow:0 16px 50px rgba(124,58,237,0.35);transform:scale(0.7);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1)}
+  .save-toast.show .save-toast-card{transform:scale(1)}
+  .save-toast-heart{font-size:3rem;line-height:1;animation:toastHeart 0.9s ease-in-out infinite}
+  .save-toast-text{margin-top:8px;font-size:1.1rem;font-weight:800;color:#7c3aed;letter-spacing:0.04em}
+  @keyframes toastHeart{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 
   /* LIGHTBOX */
   .lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:20000;display:flex;align-items:center;justify-content:center}
@@ -729,6 +745,22 @@ if (stored !== APP_VERSION) {
 </div>
 <input type="file" id="oshi-photo-input" accept="image/*" style="display:none">
 
+<!-- 足あと用 写真入力（永続）＋ 初回アクセス許可モーダル -->
+<input type="file" id="visit-photo-input" accept="image/*" multiple style="display:none">
+<div class="oshi-name-modal hidden" id="photo-perm-modal">
+  <div class="oshi-name-modal-inner">
+    <div class="oshi-name-modal-title">📷 写真へのアクセス</div>
+    <div style="font-size:0.82rem;color:#bbb;line-height:1.7;margin-bottom:16px">
+      足あとに写真を追加するため、写真へのアクセスを許可しますか？<br>
+      <span style="font-size:0.72rem;color:#888">※写真は端末内にのみ保存され、外部には送信されません。</span>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-secondary" id="photo-perm-cancel">キャンセル</button>
+      <button class="btn-primary" id="photo-perm-allow">許可する</button>
+    </div>
+  </div>
+</div>
+
 <!-- 自分で入力（カスタム会場）モーダル -->
 <div class="cv-overlay hidden" id="cv-overlay">
   <div class="cv-modal">
@@ -810,7 +842,7 @@ if (stored !== APP_VERSION) {
     <div class="visit-list" id="visit-list"></div>
 
     <div style="margin-top:18px;padding-top:16px;border-top:1px solid #2a2a3a">
-      <div style="font-size:0.8rem;font-weight:700;color:#888;margin-bottom:12px">➕ 新しいイベントを追加</div>
+      <div id="visit-form-title" style="font-size:0.8rem;font-weight:700;color:#888;margin-bottom:12px">➕ 新しいイベントを追加</div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">訪問日</label>
@@ -831,7 +863,7 @@ if (stored !== APP_VERSION) {
           <button class="weather-btn" data-weather="sunny">☀️<small>晴れ</small></button>
           <button class="weather-btn" data-weather="cloudy">☁️<small>曇り</small></button>
           <button class="weather-btn" data-weather="rain">🌧️<small>雨</small></button>
-          <button class="weather-btn" data-weather="heavy">⛈️<small>大雨</small></button>
+          <button class="weather-btn" data-weather="snow">❄️<small>雪</small></button>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:14px">
@@ -862,6 +894,20 @@ if (stored !== APP_VERSION) {
       <button class="btn-secondary" id="modal-cancel">閉じる</button>
       <button class="btn-primary" id="modal-save">✓ 記録</button>
     </div>
+  </div>
+</div>
+
+<!-- 削除の取り消しトースト -->
+<div class="undo-toast hidden" id="undo-toast">
+  <span>🗑 削除しました</span>
+  <button id="undo-btn">↩️ 元に戻す</button>
+</div>
+
+<!-- 登録完了ポップアップ -->
+<div class="save-toast hidden" id="save-toast">
+  <div class="save-toast-card">
+    <div class="save-toast-heart">💜</div>
+    <div class="save-toast-text">登録完了！</div>
   </div>
 </div>
 
@@ -1157,7 +1203,7 @@ const VENUES_CLEAN = [
   {id:442, name:'Axisバードスタジアム', lat:35.5030, lng:134.2180, pref:'鳥取県', type:'outdoor', cap:16000, seat:'https://www.gainare.co.jp/stadiums/'},
   {id:443, name:'維新みらいふスタジアム', lat:34.1660, lng:131.4540, pref:'山口県', type:'outdoor', cap:20000, seat:'https://www.ishin100.com/main/guide/gu-stadium/'},
   {id:444, name:'四国化成MEGLIOスタジアム（丸亀）', lat:34.2900, lng:133.7850, pref:'香川県', type:'outdoor', cap:30000, seat:'https://www.marukyou.jp/'},
-  {id:445, name:'東大阪市花園ラグビー場', lat:34.6620, lng:135.6260, pref:'大阪府', type:'outdoor', cap:27000, seat:'https://hanazono-rugby-hos.com/'},
+  {id:445, name:'東大阪市花園ラグビー場', lat:34.6689, lng:135.6262, pref:'大阪府', type:'outdoor', cap:27000, seat:'https://hanazono-rugby-hos.com/'},
   {id:446, name:'ニンジニアスタジアム', lat:33.8250, lng:132.7870, pref:'愛媛県', type:'outdoor', cap:20000, seat:'https://tobemori-seeds.com/park/facility/ningineerstadium'},
   {id:447, name:'GIKENスタジアム（春野）', lat:33.5240, lng:133.4690, pref:'高知県', type:'outdoor', cap:15000, seat:'https://www.kochi-haruno.org/faci/rikujyou'},
   {id:448, name:'ミクニワールドスタジアム北九州', lat:33.8870, lng:130.8800, pref:'福岡県', type:'outdoor', cap:15000, seat:'https://www.kitakyushu-stadium.jp/'},
@@ -2106,8 +2152,8 @@ document.getElementById('setlist-add-btn').addEventListener('click', ()=>{
   }, 50);
 });
 
-const WEATHER_ICON = {sunny:'☀️', cloudy:'☁️', rain:'🌧️', heavy:'⛈️'};
-const WEATHER_LABEL = {sunny:'晴れ', cloudy:'曇り', rain:'雨', heavy:'大雨'};
+const WEATHER_ICON = {sunny:'☀️', cloudy:'☁️', rain:'🌧️', snow:'❄️', heavy:'⛈️'};
+const WEATHER_LABEL = {sunny:'晴れ', cloudy:'曇り', rain:'雨', snow:'雪', heavy:'大雨'};
 
 function openModal(id){
   modalVenueId = id;
@@ -2117,6 +2163,7 @@ function openModal(id){
   document.getElementById('modal-title').textContent = `📝 ${venue.name}`;
   document.getElementById('modal-venue').textContent = `${venue.pref} · ${TYPE_LABEL[venue.type]}`;
   document.getElementById('form-date').value = '';   // 「新しいイベントを追加」欄は空欄に
+  document.getElementById('visit-form-title').style.display = '';   // 新規は見出しを表示
   document.getElementById('form-artist').value = '';
   document.getElementById('form-tour').value = '';
   document.getElementById('form-memo').value = '';
@@ -2175,27 +2222,49 @@ function renderPhotoRow(){
   });
 
   if(pendingPhotos.length < MAX_PHOTOS){
-    const addLabel = document.createElement('label');
-    addLabel.className = 'photo-add';
-    addLabel.innerHTML = `<span>📷</span><input class="photo-input" type="file" accept="image/*" multiple>`;
-    addLabel.querySelector('input').addEventListener('change', e=>{
-      const files = Array.from(e.target.files).slice(0, MAX_PHOTOS - pendingPhotos.length);
-      let loaded = 0;
-      if(!files.length){ e.target.value=''; return; }
-      files.forEach(f=>{
-        const reader = new FileReader();
-        reader.onload = ev=>{
-          pendingPhotos.push(ev.target.result);
-          loaded++;
-          if(loaded===files.length) renderPhotoRow();
-        };
-        reader.readAsDataURL(f);
-      });
-      e.target.value='';
-    });
-    row.appendChild(addLabel);
+    const addBtn = document.createElement('div');
+    addBtn.className = 'photo-add';
+    addBtn.innerHTML = `<span>📷</span>`;
+    addBtn.addEventListener('click', handlePhotoAddClick);
+    row.appendChild(addBtn);
   }
 }
+
+// 写真追加ボタン：初回のみ「写真へのアクセス許可」を挟む
+function handlePhotoAddClick(){
+  if(localStorage.getItem('photo_access_ok')){
+    document.getElementById('visit-photo-input').click();
+  } else {
+    document.getElementById('photo-perm-modal').classList.remove('hidden');
+  }
+}
+
+// 永続の写真入力（一度だけ処理を登録）
+document.getElementById('visit-photo-input').addEventListener('change', e=>{
+  const files = Array.from(e.target.files).slice(0, MAX_PHOTOS - pendingPhotos.length);
+  if(!files.length){ e.target.value=''; return; }
+  let loaded = 0;
+  files.forEach(f=>{
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      pendingPhotos.push(ev.target.result);
+      loaded++;
+      if(loaded===files.length) renderPhotoRow();
+    };
+    reader.readAsDataURL(f);
+  });
+  e.target.value='';
+});
+
+// 許可モーダルのボタン
+document.getElementById('photo-perm-allow').addEventListener('click', ()=>{
+  localStorage.setItem('photo_access_ok','1');
+  document.getElementById('photo-perm-modal').classList.add('hidden');
+  document.getElementById('visit-photo-input').click();   // 同じタップ操作内で写真ピッカーを開く
+});
+document.getElementById('photo-perm-cancel').addEventListener('click', ()=>{
+  document.getElementById('photo-perm-modal').classList.add('hidden');
+});
 
 let editingVisitIdx = null; // 編集中の記録インデックス（nullなら新規）
 
@@ -2225,6 +2294,8 @@ function startEditVisit(idx){
     pendingSeatImg = null; pendingSeatX = null; pendingSeatY = null;
   }
   renderSeatArea();
+  // 編集中は「＋新しいイベントを追加」の見出しを消す
+  document.getElementById('visit-form-title').style.display = 'none';
   // ボタン表示を「更新」に
   document.getElementById('modal-save').textContent = '✓ 更新';
   // フォームまでスクロール
@@ -2246,6 +2317,7 @@ function cancelEditVisit(){
   pendingSeatNo=''; pendingSeatImg=null; pendingSeatX=null; pendingSeatY=null;
   document.getElementById('form-seat').value='';
   renderSeatArea();
+  document.getElementById('visit-form-title').style.display = '';   // 新規に戻す＝見出しを再表示
   document.getElementById('modal-save').textContent = '✓ 記録';
 }
 
@@ -2315,6 +2387,7 @@ function renderVisitList(id){
 
 document.getElementById('modal-save').addEventListener('click', ()=>{
   if(!modalVenueId) return;
+  const wasNew = editingVisitIdx === null;   // 新規登録かどうか
   const rec = {
     uid: editingVisitIdx !== null
       ? ((visited[modalVenueId]||[])[editingVisitIdx]?.uid || Date.now()+'_'+Math.random().toString(36).slice(2))
@@ -2365,11 +2438,26 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
   document.getElementById('ranking-overlay').classList.add('hidden');
   const zc = document.querySelector('.leaflet-control-container');
   if(zc) zc.style.display = 'none';
+  // 保存した記録が必ず表示されるよう、年度フィルターを「すべて」に戻す
+  recordsSelectedYear = 'all';
   // 先に足あとパネルを表示してからモーダルを閉じる（マップが見えないように）
   renderRecordsPanel();
   document.getElementById('records-overlay').classList.remove('hidden');
   closeModal();
+  if(wasNew) showSaveToast();   // 新規登録時は「登録完了！」ポップアップ
 });
+
+// 「登録完了！」ポップアップ（薄紫ハート）
+function showSaveToast(){
+  const t = document.getElementById('save-toast');
+  if(!t) return;
+  t.classList.remove('hidden');
+  // リフローを挟んでアニメ開始
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(()=>{ t.classList.remove('show'); }, 1300);
+  setTimeout(()=>{ t.classList.add('hidden'); }, 1650);
+}
 
 document.getElementById('modal-cancel').addEventListener('click', closeModal);
 document.getElementById('modal-overlay').addEventListener('click', e=>{
@@ -2605,21 +2693,20 @@ function renderRecordsPanel(){
       const uid = btn.dataset.uid;
       const aidx = +btn.dataset.aidx;
       const recs = visited[vid]||[];
-      const rec = uid ? recs.find(r=>r.uid===uid) : recs[aidx];
-      const label = rec ? `${rec.date||''}${rec.artist?' '+rec.artist:''}`.trim() || 'この記録' : 'この記録';
-      if(!confirm(`「${label}」の足あとを削除しますか？\nこの操作は取り消せません。`)) return;
-      if(uid){
-        visited[vid] = recs.filter(r=> r.uid!==uid);
-      } else {
-        recs.splice(aidx, 1);
-        visited[vid] = recs;
-      }
+      const idx = uid ? recs.findIndex(r=> r.uid===uid) : aidx;
+      if(idx < 0 || !recs[idx]) return;
+      const rec = recs[idx];
+      // 即削除（確認ダイアログなし）→ あとで「元に戻す」で取り消せる
+      recs.splice(idx, 1);
+      visited[vid] = recs;
       if(!visited[vid].length) delete visited[vid];
       saveVisited();
       refreshMarker(vid);
       renderSidebar();
       updateStats();
       renderRecordsPanel();
+      lastDeletedRecord = { vid, rec, idx };
+      showUndoToast();
     });
   });
 
@@ -2631,6 +2718,37 @@ function renderRecordsPanel(){
     });
   });
 }
+
+// ===== 足あと削除の取り消し（Undo） =====
+let lastDeletedRecord = null;
+function showUndoToast(){
+  const t = document.getElementById('undo-toast');
+  if(!t) return;
+  clearTimeout(showUndoToast._t);
+  t.classList.remove('hidden');
+  void t.offsetWidth;
+  t.classList.add('show');
+  showUndoToast._t = setTimeout(hideUndoToast, 4000);
+}
+function hideUndoToast(){
+  const t = document.getElementById('undo-toast');
+  if(!t) return;
+  t.classList.remove('show');
+  setTimeout(()=>t.classList.add('hidden'), 300);
+}
+document.getElementById('undo-btn').addEventListener('click', ()=>{
+  if(!lastDeletedRecord) return;
+  const {vid, rec, idx} = lastDeletedRecord;
+  if(!visited[vid]) visited[vid] = [];
+  visited[vid].splice(Math.min(idx, visited[vid].length), 0, rec);
+  saveVisited();
+  refreshMarker(vid);
+  renderSidebar();
+  updateStats();
+  renderRecordsPanel();
+  lastDeletedRecord = null;
+  hideUndoToast();
+});
 
 function closeRecordsPanel(){
   document.getElementById('records-overlay').classList.add('hidden');
