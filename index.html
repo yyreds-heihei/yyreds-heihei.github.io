@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-062';
+const APP_VERSION = '20260531-063';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -445,6 +445,12 @@ if (stored !== APP_VERSION) {
   .home-footer-btn{flex:1;padding:12px;border-radius:12px;border:1px solid #2a2a3a;background:#1a1a2e;color:#888;font-size:0.8rem;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
   .home-footer-btn:active{background:#2a2a4a;color:#a78bfa}
   /* SETLIST */
+  /* セットリストコピー一覧 */
+  .slc-item{background:#fff;border:1px solid #e0e0ea;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+  .slc-item:active{background:#f0ecff;border-color:#c9b8f0}
+  .slc-head{font-size:0.9rem;font-weight:800;color:#1a1a2a}
+  .slc-sub{font-size:0.72rem;color:#888;margin-top:2px}
+  .slc-songs{font-size:0.72rem;color:#6d28d9;margin-top:6px;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .setlist-add-btn{background:#1a1a3a;border:1px solid #3a2a5a;color:#a78bfa;font-size:0.75rem;font-weight:700;padding:5px 12px;border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.15s}
   .setlist-add-btn:active{background:#4c1d95}
   .setlist-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
@@ -745,6 +751,16 @@ if (stored !== APP_VERSION) {
 </div>
 <input type="file" id="oshi-photo-input" accept="image/*" style="display:none">
 
+<!-- セットリストをコピー モーダル -->
+<div class="cv-overlay hidden" id="setlist-copy-modal">
+  <div class="cv-modal" style="max-height:82vh;display:flex;flex-direction:column">
+    <div class="cv-title">📋 セットリストをコピー</div>
+    <div class="cv-desc">過去の記録から選ぶと、今の入力にまとめて追加されます。</div>
+    <div id="setlist-copy-list" style="overflow-y:auto;flex:1"></div>
+    <button class="btn-secondary" id="setlist-copy-cancel" type="button" style="width:100%;margin-top:14px">閉じる</button>
+  </div>
+</div>
+
 <!-- 足あと用 写真入力（永続）＋ 初回アクセス許可モーダル -->
 <input type="file" id="visit-photo-input" accept="image/*" multiple style="display:none">
 <div class="oshi-name-modal hidden" id="photo-perm-modal">
@@ -873,7 +889,10 @@ if (stored !== APP_VERSION) {
       <div style="margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <label class="form-label">🎵 セットリスト <span id="setlist-count-label" style="color:#666;font-weight:400">（0/30曲）</span></label>
-          <button class="setlist-add-btn" id="setlist-add-btn" type="button">＋ 曲を追加</button>
+          <div style="display:flex;gap:6px">
+            <button class="setlist-add-btn" id="setlist-copy-btn" type="button">📋 コピー</button>
+            <button class="setlist-add-btn" id="setlist-add-btn" type="button">＋ 曲を追加</button>
+          </div>
         </div>
         <div id="setlist-rows"></div>
       </div>
@@ -2151,6 +2170,50 @@ document.getElementById('setlist-add-btn').addEventListener('click', ()=>{
     const inputs = document.querySelectorAll('.setlist-input');
     if(inputs.length) inputs[inputs.length-1].focus();
   }, 50);
+});
+
+// 過去のセットリストをコピー
+function openSetlistCopyModal(){
+  const items = [];
+  Object.entries(visited).forEach(([vid, recs])=>{
+    (recs||[]).forEach(r=>{
+      const songs = (r.setlist||[]).filter(s=>s && s.trim());
+      if(songs.length){
+        const venue = VENUES_CLEAN.find(v=>v.id===+vid);
+        items.push({ vname: venue?venue.name:'会場', date:r.date||'', artist:r.artist||'', tour:r.tour||'', songs });
+      }
+    });
+  });
+  items.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  const listEl = document.getElementById('setlist-copy-list');
+  if(!items.length){
+    listEl.innerHTML = '<div style="text-align:center;color:#999;font-size:0.85rem;padding:24px 0">セットリスト付きの記録がまだありません</div>';
+  } else {
+    listEl.innerHTML = items.map((it,i)=>`
+      <div class="slc-item" data-i="${i}">
+        <div class="slc-head">🎤 ${it.artist||'（アーティスト未記録）'}${it.tour?' / '+it.tour:''}</div>
+        <div class="slc-sub">${it.date||'日付未記録'} ・ ${it.vname} ・ ${it.songs.length}曲</div>
+        <div class="slc-songs">${it.songs.slice(0,3).map((s,j)=>`${j+1}.${s}`).join('　')}${it.songs.length>3?' …':''}</div>
+      </div>`).join('');
+    listEl.querySelectorAll('.slc-item').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const it = items[+el.dataset.i];
+        const space = MAX_SETLIST - pendingSetlist.length;
+        if(space <= 0){ alert(`セットリストは${MAX_SETLIST}曲までです`); return; }
+        pendingSetlist.push(...it.songs.slice(0, space));
+        renderSetlistRows();
+        document.getElementById('setlist-copy-modal').classList.add('hidden');
+      });
+    });
+  }
+  document.getElementById('setlist-copy-modal').classList.remove('hidden');
+}
+document.getElementById('setlist-copy-btn').addEventListener('click', openSetlistCopyModal);
+document.getElementById('setlist-copy-cancel').addEventListener('click', ()=>{
+  document.getElementById('setlist-copy-modal').classList.add('hidden');
+});
+document.getElementById('setlist-copy-modal').addEventListener('click', e=>{
+  if(e.target===document.getElementById('setlist-copy-modal')) document.getElementById('setlist-copy-modal').classList.add('hidden');
 });
 
 const WEATHER_ICON = {sunny:'☀️', cloudy:'☁️', rain:'🌧️', snow:'❄️', heavy:'⛈️'};
