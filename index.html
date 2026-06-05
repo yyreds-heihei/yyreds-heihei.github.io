@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-060';
+const APP_VERSION = '20260531-061';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -1483,12 +1483,13 @@ document.getElementById('os-save').addEventListener('click', ()=>{
 function formatOshiSince(startDate){
   const start = new Date(startDate+'T00:00:00');
   const now = new Date(); now.setHours(0,0,0,0);
-  if(isNaN(start.getTime()) || start > now) return '<b>0</b>年 <b>0</b>日';
+  if(isNaN(start.getTime()) || start > now) return '<b>0</b>年 <b>0</b>日（<b>0</b>日）';
   let years = now.getFullYear() - start.getFullYear();
   const anniv = new Date(start); anniv.setFullYear(start.getFullYear() + years);
   if(anniv > now){ years--; anniv.setFullYear(start.getFullYear() + years); }
   const days = Math.floor((now - anniv) / 86400000);
-  return `<b>${years}</b>年 <b>${days}</b>日`;
+  const totalDays = Math.floor((now - start) / 86400000);
+  return `<b>${years}</b>年 <b>${days}</b>日（<b>${totalDays.toLocaleString()}</b>日）`;
 }
 
 // ===== ライブ予定カレンダー =====
