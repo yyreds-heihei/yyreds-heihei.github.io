@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-066';
+const APP_VERSION = '20260531-071';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -38,7 +38,7 @@ if (stored !== APP_VERSION) {
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;font-family:'Hiragino Sans','Yu Gothic UI','Meiryo',sans-serif;background:#0f0f13;color:#e2e2e8;overflow:hidden}
-  :root{--accent:#7c3aed;--accent2:#a78bfa;--bg:#0f0f13;--bg2:#1a1a24;--bg3:#13131e;--border:#2a2a3a;--text:#e2e2e8;--muted:#888}
+  :root{--accent:#7c3aed;--accent-light:#ff6ec4;--accent2:#a78bfa;--bg:#0f0f13;--bg2:#1a1a24;--bg3:#13131e;--border:#2a2a3a;--text:#e2e2e8;--muted:#888}
 
   /* HEADER */
   header{background:#ffffff;border-bottom:1px solid #e0e0ea;flex-shrink:0}
@@ -223,7 +223,7 @@ if (stored !== APP_VERSION) {
   .undo-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(84px + env(safe-area-inset-bottom,0));z-index:21000;display:flex;align-items:center;gap:14px;background:#2a2440;color:#fff;padding:11px 14px 11px 18px;border-radius:30px;box-shadow:0 8px 28px rgba(0,0,0,0.4);font-size:0.85rem;font-weight:600;opacity:0;transition:opacity 0.3s ease,transform 0.3s ease;white-space:nowrap}
   .undo-toast.hidden{display:none}
   .undo-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .undo-toast button{background:linear-gradient(135deg,#ff6ec4,#7c3aed);border:none;color:#fff;font-weight:800;font-size:0.8rem;padding:7px 14px;border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .undo-toast button{background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-weight:800;font-size:0.8rem;padding:7px 14px;border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 
   /* 登録完了ポップアップ */
   .save-toast{position:fixed;inset:0;z-index:21000;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(124,58,237,0.12);opacity:0;transition:opacity 0.25s ease}
@@ -231,7 +231,8 @@ if (stored !== APP_VERSION) {
   .save-toast.show{opacity:1}
   .save-toast-card{background:linear-gradient(160deg,#fff 0%,#f6efff 100%);border:2px solid #e3d4fb;border-radius:24px;padding:26px 34px;text-align:center;box-shadow:0 16px 50px rgba(124,58,237,0.35);transform:scale(0.7);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1)}
   .save-toast.show .save-toast-card{transform:scale(1)}
-  .save-toast-heart{font-size:3rem;line-height:1;animation:toastHeart 0.9s ease-in-out infinite}
+  .save-toast-heart{line-height:0;color:var(--accent);animation:toastHeart 0.9s ease-in-out infinite}
+  .save-toast-heart svg{width:54px;height:54px;display:block;fill:currentColor;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.25))}
   .save-toast-text{margin-top:8px;font-size:1.1rem;font-weight:800;color:#7c3aed;letter-spacing:0.04em}
   @keyframes toastHeart{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 
@@ -254,7 +255,7 @@ if (stored !== APP_VERSION) {
   .lb-edit-row input[type=range]{flex:1;accent-color:#ff6ec4;height:24px}
   .lb-edit-actions{display:flex;gap:10px;margin-top:4px}
   .lb-reset{flex:1;background:rgba(255,255,255,0.12);border:none;color:#fff;padding:11px;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
-  .lb-save{flex:2;background:linear-gradient(135deg,#ff6ec4,#7c3aed);border:none;color:#fff;padding:11px;border-radius:10px;font-size:0.9rem;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .lb-save{flex:2;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;padding:11px;border-radius:10px;font-size:0.9rem;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent}
 
   /* RECORDS PANEL */
   .records-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:900;display:flex;align-items:center;justify-content:flex-end}
@@ -336,6 +337,28 @@ if (stored !== APP_VERSION) {
   .backup-overlay.hidden{display:none}
   .backup-modal{background:#ffffff;border:1px solid #e0e0ea;border-radius:18px;width:100%;max-width:400px;padding:24px 22px;box-shadow:0 12px 60px rgba(0,0,0,0.4);color:#1a1a2a}
   .backup-title{font-size:1.05rem;font-weight:800;color:#7c3aed;margin-bottom:6px}
+  .theme-section{background:#faf8ff;border:1px solid #ece7fb;border-radius:14px;padding:14px 14px 16px;margin-bottom:20px}
+  .theme-title{font-size:0.92rem;font-weight:800;color:#1a1a2a;margin-bottom:4px}
+  .theme-sub{font-size:0.72rem;color:#888;margin-bottom:12px;line-height:1.6}
+  .theme-swatches{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+  .theme-swatch{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 6px rgba(0,0,0,0.15);transition:transform 0.1s}
+  .theme-swatch:active{transform:scale(0.9)}
+  .theme-swatch.active{border-color:#1a1a2a;box-shadow:0 0 0 2px #fff inset,0 2px 8px rgba(0,0,0,0.25)}
+  .theme-custom{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:0.82rem;font-weight:700;color:#444;background:#fff;border:1px solid #ece7fb;border-radius:10px;padding:8px 12px;cursor:pointer}
+  .theme-custom input[type=color]{width:46px;height:32px;border:none;background:none;padding:0;cursor:pointer}
+  .auto-bk-section{background:#f3fbf6;border:1px solid #d7efe1;border-radius:14px;padding:14px 14px 12px;margin-bottom:8px}
+  .auto-bk-title{font-size:0.92rem;font-weight:800;color:#1a1a2a;margin-bottom:4px}
+  .auto-bk-desc{font-size:0.72rem;color:#888;margin-bottom:10px;line-height:1.6}
+  .auto-bk-item{width:100%;text-align:left;background:#fff;border:1px solid #d7efe1;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:0.82rem;font-weight:700;color:#176c43;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;-webkit-tap-highlight-color:transparent}
+  .auto-bk-item:active{background:#eafaf1}
+  .auto-bk-item .go{font-size:0.78rem;color:#2bb673;font-weight:800;white-space:nowrap}
+  .auto-bk-empty{font-size:0.78rem;color:#aaa;text-align:center;padding:6px 0}
+  .bk-reminder{position:fixed;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom,0));z-index:4000;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #ece7fb;border-radius:14px;padding:11px 12px;box-shadow:0 8px 30px rgba(0,0,0,0.25);animation:bkrUp 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+  .bk-reminder.hidden{display:none}
+  .bk-reminder-text{flex:1;font-size:0.8rem;font-weight:700;color:#444;line-height:1.4}
+  .bk-reminder-go{flex-shrink:0;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-weight:800;font-size:0.8rem;padding:8px 14px;border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .bk-reminder-close{flex-shrink:0;background:none;border:none;color:#bbb;font-size:0.9rem;cursor:pointer;padding:2px 4px;-webkit-tap-highlight-color:transparent}
+  @keyframes bkrUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
   .backup-desc{font-size:0.8rem;color:#666;margin-bottom:20px;line-height:1.7}
   .backup-btn{width:100%;padding:15px;border-radius:12px;border:none;font-size:0.95rem;font-weight:700;cursor:pointer;margin-bottom:10px;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent}
   .backup-btn-export{background:#7c3aed;color:#fff}
@@ -389,13 +412,13 @@ if (stored !== APP_VERSION) {
   .oshi-name-edit{display:inline-block;font-size:0.7rem;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;background:rgba(0,0,0,0.4);padding:3px 10px;border-radius:12px;backdrop-filter:blur(4px)}
   /* 推し始めて〜年〜日 */
   .oshi-since-row{margin-top:10px}
-  .oshi-since{display:inline-block;font-size:0.78rem;font-weight:800;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;background:linear-gradient(135deg,rgba(255,110,196,0.9),rgba(124,58,237,0.9));padding:6px 16px;border-radius:16px;box-shadow:0 3px 12px rgba(124,58,237,0.4)}
+  .oshi-since{display:inline-block;font-size:0.78rem;font-weight:800;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;background:linear-gradient(135deg,var(--accent-light),var(--accent));padding:6px 16px;border-radius:16px;box-shadow:0 3px 12px rgba(0,0,0,0.25)}
   .oshi-since b{font-size:1.05rem;margin:0 2px}
   .oshi-since.add{background:rgba(0,0,0,0.4);font-weight:600;font-size:0.72rem}
   .oshi-since-wrap{position:relative;display:inline-block}
   .oshi-since-input{position:absolute;left:0;top:0;width:100%;height:100%;margin:0;padding:0;opacity:0;border:none;background:transparent;cursor:pointer;-webkit-appearance:none;appearance:none;font-size:16px}
   /* 次のライブ カウントダウン バナー */
-  .next-live-banner{display:none;align-items:center;gap:10px;background:linear-gradient(135deg,#ff6ec4 0%,#7c3aed 100%);border-radius:18px;padding:12px 18px;box-shadow:0 6px 24px rgba(124,58,237,0.5);margin-bottom:6px;animation:nlbPop 0.5s cubic-bezier(0.34,1.56,0.64,1)}
+  .next-live-banner{display:none;align-items:center;gap:10px;background:linear-gradient(135deg,var(--accent-light) 0%,var(--accent) 100%);border-radius:18px;padding:12px 18px;box-shadow:0 6px 24px rgba(124,58,237,0.5);margin-bottom:6px;animation:nlbPop 0.5s cubic-bezier(0.34,1.56,0.64,1)}
   .next-live-banner.show{display:flex}
   .next-live-emoji{font-size:1.8rem;line-height:1;animation:nlbWiggle 1.6s ease-in-out infinite}
   .next-live-text{flex:1;min-width:0;color:#fff;text-align:left}
@@ -406,7 +429,7 @@ if (stored !== APP_VERSION) {
   @keyframes nlbWiggle{0%,100%{transform:rotate(-10deg) scale(1)}50%{transform:rotate(10deg) scale(1.12)}}
 
   /* ホーム カレンダーボタン（右下） */
-  .home-cal-btn{position:absolute;right:16px;bottom:24px;z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#ff6ec4,#7c3aed);border:none;color:#fff;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 18px rgba(124,58,237,0.6);-webkit-tap-highlight-color:transparent;transition:transform 0.15s}
+  .home-cal-btn{position:absolute;right:16px;bottom:24px;z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 18px rgba(124,58,237,0.6);-webkit-tap-highlight-color:transparent;transition:transform 0.15s}
   .home-cal-btn:active{transform:scale(0.92)}
   .home-cal-btn span{font-size:0.5rem;font-weight:700;letter-spacing:0.02em}
 
@@ -477,7 +500,7 @@ if (stored !== APP_VERSION) {
   .home-settings-btn:active{background:rgba(124,58,237,0.6)}
   /* 背景変更ボタン */
   .home-bg-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:10;cursor:pointer;-webkit-tap-highlight-color:transparent}
-  .home-bg-btn{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#ff6ec4,#7c3aed);border:none;color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(124,58,237,0.5);transition:all 0.15s}
+  .home-bg-btn{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(124,58,237,0.5);transition:all 0.15s}
   .home-bg-btn:active{transform:scale(0.92)}
   .home-bg-label{font-size:0.55rem;color:#fff;font-weight:600;letter-spacing:0.02em;white-space:nowrap;background:rgba(0,0,0,0.45);padding:2px 6px;border-radius:6px;backdrop-filter:blur(4px)}
 
@@ -538,7 +561,7 @@ if (stored !== APP_VERSION) {
     .venue-list{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
     .bottom-nav{
       display:flex;position:fixed;bottom:0;left:0;right:0;
-      height:72px;background:linear-gradient(135deg,#ff6ec4,#7c3aed);border-top:none;
+      height:72px;background:linear-gradient(135deg,var(--accent-light),var(--accent));border-top:none;
       z-index:1000;padding-bottom:env(safe-area-inset-bottom,0);
       align-items:flex-start;padding-top:8px;
       box-shadow:0 -2px 12px rgba(124,58,237,0.3);
@@ -628,6 +651,7 @@ if (stored !== APP_VERSION) {
           <button class="filter-btn" data-type="outdoor">野外</button>
           <button class="filter-btn" data-type="concert">コンサートホール</button>
           <button class="filter-btn" data-type="theater">劇場</button>
+          <button class="filter-btn" data-type="park">テーマパーク</button>
           <button class="filter-btn" data-type="visited">訪問済み</button>
           <button class="filter-btn" data-type="unvisited">未訪問</button>
           <button class="filter-btn filter-btn-add" id="add-custom-venue" type="button">➕ 自分で入力</button>
@@ -806,6 +830,15 @@ if (stored !== APP_VERSION) {
     <div class="backup-title">📱 機種変更・データ引き継ぎ</div>
     <div class="backup-desc">足あと記録・推し写真・背景・名前をまるごと引き継げます。</div>
 
+    <div class="theme-section">
+      <div class="theme-title">🎨 テーマカラー</div>
+      <div class="theme-sub">下のタブ・ホームのボタン・登録完了ハートの色が一括で変わります。</div>
+      <div class="theme-swatches" id="theme-swatches"></div>
+      <label class="theme-custom">好きな色をえらぶ
+        <input type="color" id="theme-color-input" value="#7c3aed">
+      </label>
+    </div>
+
     <div class="backup-step">
       <div class="backup-step-label">① 旧スマホでやること</div>
       <button class="backup-btn backup-btn-export" id="backup-export">📤 エクスポート（ファイルを保存）</button>
@@ -817,6 +850,12 @@ if (stored !== APP_VERSION) {
       <div class="backup-step-desc" style="margin-bottom:8px"><b>LINEの「自分」のトーク</b>からファイルを保存後↓</div>
       <button class="backup-btn backup-btn-import" id="backup-import-btn">📥 インポート（データを復元）</button>
       <input type="file" id="backup-import-input" accept=".json" style="display:none">
+    </div>
+
+    <div class="auto-bk-section" id="auto-bk-section" style="display:none">
+      <div class="auto-bk-title">🛟 自動バックアップから復元</div>
+      <div class="auto-bk-desc">アプリを開くと1日1回、この端末内に自動で控えを取っています。記録が消えた時はここから戻せます（今ある記録は消さず、足りない分だけ復元します）。</div>
+      <div id="auto-bk-list"></div>
     </div>
 
     <button class="backup-close" id="backup-close">閉じる</button>
@@ -932,10 +971,17 @@ if (stored !== APP_VERSION) {
   <button id="undo-btn">↩️ 元に戻す</button>
 </div>
 
+<!-- バックアップ催促バナー -->
+<div class="bk-reminder hidden" id="bk-reminder">
+  <div class="bk-reminder-text" id="bk-reminder-text">📦 念のためバックアップを残しておきましょう</div>
+  <button class="bk-reminder-go" id="bk-reminder-go">バックアップ</button>
+  <button class="bk-reminder-close" id="bk-reminder-close" title="閉じる">✕</button>
+</div>
+
 <!-- 登録完了ポップアップ -->
 <div class="save-toast hidden" id="save-toast">
   <div class="save-toast-card">
-    <div class="save-toast-heart">💜</div>
+    <div class="save-toast-heart"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
     <div class="save-toast-text">登録完了！</div>
   </div>
 </div>
@@ -1239,17 +1285,75 @@ const VENUES_CLEAN = [
   {id:449, name:'えがお健康スタジアム', lat:32.8290, lng:130.7880, pref:'熊本県', type:'outdoor', cap:32000, seat:'https://www.kspa.or.jp/rikujo/'},
   {id:450, name:'白波スタジアム', lat:31.5660, lng:130.5450, pref:'鹿児島県', type:'outdoor', cap:19000, seat:'https://ppp.seika-spc.co.jp/kamoike-undo/'},
   {id:451, name:'沖縄県総合運動公園陸上競技場', lat:26.3000, lng:127.8330, pref:'沖縄県', type:'outdoor', cap:25000, seat:'https://okinawa-kenso.com/?page_id=213'},
+
+  // 劇団四季 専用劇場ほか
+  {id:220, name:'JR東日本四季劇場［春］', lat:35.6556, lng:139.7573, pref:'東京都', type:'theater', cap:1200, seat:'https://www.shiki.jp/theatres/'},
+  {id:221, name:'JR東日本四季劇場［秋］', lat:35.6557, lng:139.7576, pref:'東京都', type:'theater', cap:1200, seat:'https://www.shiki.jp/theatres/'},
+  {id:222, name:'自由劇場（四季）', lat:35.6553, lng:139.7579, pref:'東京都', type:'theater', cap:500, seat:'https://www.shiki.jp/theatres/'},
+  {id:223, name:'有明四季劇場', lat:35.6357, lng:139.7935, pref:'東京都', type:'theater', cap:1200, seat:'https://www.shiki.jp/theatres/'},
+  {id:224, name:'大阪四季劇場', lat:34.6998, lng:135.4940, pref:'大阪府', type:'theater', cap:1450, seat:'https://www.shiki.jp/theatres/'},
+  {id:225, name:'MTG名古屋四季劇場［熱田］', lat:35.1220, lng:136.9050, pref:'愛知県', type:'theater', cap:1200, seat:'https://www.shiki.jp/theatres/'},
+  {id:226, name:'京都劇場', lat:34.9858, lng:135.7600, pref:'京都府', type:'theater', cap:980, seat:'https://www.kyoto-gekijo.com/'},
+
+  // テーマパーク
+  {id:500, name:'ユニバーサル・スタジオ・ジャパン（USJ）', lat:34.6657, lng:135.4323, pref:'大阪府', type:'park', cap:0, seat:'https://www.usj.co.jp/'},
+  {id:501, name:'東京ディズニーランド', lat:35.6329, lng:139.8804, pref:'千葉県', type:'park', cap:0, seat:'https://www.tokyodisneyresort.jp/tdl/'},
+  {id:502, name:'東京ディズニーシー', lat:35.6267, lng:139.8850, pref:'千葉県', type:'park', cap:0, seat:'https://www.tokyodisneyresort.jp/tds/'},
 ];
 
-const TYPE_ICON = {dome:'🏟️', arena:'🎪', hall:'🎭', zepp:'⚡', civic:'🏛️', live:'🎸', outdoor:'🌿', concert:'🎶', theater:'🎟️', custom:'📍'};
-const TYPE_COLOR = {dome:'#ef4444', arena:'#f97316', hall:'#3b82f6', zepp:'#8b5cf6', civic:'#06b6d4', live:'#22c55e', outdoor:'#84cc16', concert:'#ec4899', theater:'#d946ef', custom:'#64748b'};
-const TYPE_LABEL = {dome:'ドーム', arena:'アリーナ', hall:'ホール', zepp:'Zepp', civic:'市民会館', live:'ライブハウス', outdoor:'野外', concert:'コンサートホール', theater:'劇場', custom:'その他'};
+const TYPE_ICON = {dome:'🏟️', arena:'🎪', hall:'🎭', zepp:'⚡', civic:'🏛️', live:'🎸', outdoor:'🌿', concert:'🎶', theater:'🎟️', park:'🎡', custom:'📍'};
+const TYPE_COLOR = {dome:'#ef4444', arena:'#f97316', hall:'#3b82f6', zepp:'#8b5cf6', civic:'#06b6d4', live:'#22c55e', outdoor:'#84cc16', concert:'#ec4899', theater:'#d946ef', park:'#0ea5e9', custom:'#64748b'};
+const TYPE_LABEL = {dome:'ドーム', arena:'アリーナ', hall:'ホール', zepp:'Zepp', civic:'市民会館', live:'ライブハウス', outdoor:'野外', concert:'コンサートホール', theater:'劇場', park:'テーマパーク', custom:'その他'};
 
 let visited = {};
 function loadVisited(){
   try{ visited = JSON.parse(localStorage.getItem('live_visited')||'{}'); }catch{ visited={}; }
 }
-function saveVisited(){ localStorage.setItem('live_visited', JSON.stringify(visited)); }
+// 例外（容量オーバー等）を投げず、成功/失敗を返す（保存失敗で画面遷移が止まらないように）
+function saveVisited(){
+  try{ localStorage.setItem('live_visited', JSON.stringify(visited)); return true; }
+  catch(err){ console.warn('saveVisited failed:', err); return false; }
+}
+// データURLをCanvasで再圧縮（容量オーバー時の縮小用）
+function recompressDataUrl(dataUrl, maxDim, quality){
+  return new Promise(resolve=>{
+    if(typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')){ resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      if(w > maxDim || h > maxDim){
+        if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = ()=> resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+// 全記録の写真・座席画像を縮小して保存し直す（容量オーバー時のフォールバック）
+async function recompressAllAndSave(){
+  for(const vid in visited){
+    for(const rec of (visited[vid]||[])){
+      if(rec.photos && rec.photos.length){
+        const out = [];
+        for(const p of rec.photos){ out.push(await recompressDataUrl(p, 900, 0.6)); }
+        rec.photos = out;
+      }
+      if(rec.seatMark && rec.seatMark.img){
+        rec.seatMark.img = await recompressDataUrl(rec.seatMark.img, 900, 0.6);
+      }
+    }
+  }
+  if(saveVisited()){
+    renderRecordsPanel();
+  } else {
+    alert('写真の容量が大きく、すべて保存しきれませんでした。\nお手数ですが、写真の枚数を少し減らして再度お試しください。');
+  }
+}
 loadVisited();
 
 // SPLASH
@@ -2255,6 +2359,9 @@ const WEATHER_LABEL = {sunny:'晴れ', cloudy:'曇り', rain:'雨', snow:'雪', 
 
 function openModal(id){
   modalVenueId = id;
+  // 必ず「新規モード」で開く（編集中インデックスが残っていると既存記録を上書きして消えるバグの修正）
+  editingVisitIdx = null;
+  document.getElementById('modal-save').textContent = '✓ 記録';
   pendingPhotos = [];
   selectedWeather = '';
   const venue = VENUES_CLEAN.find(v=>v.id===id);
@@ -2515,15 +2622,18 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
     seatMark: pendingSeatImg ? {img: pendingSeatImg, x: pendingSeatX, y: pendingSeatY} : null
   };
   if(!visited[modalVenueId]) visited[modalVenueId]=[];
-  if(editingVisitIdx !== null){
-    // 既存レコードを上書き
+  if(editingVisitIdx !== null && visited[modalVenueId][editingVisitIdx]){
+    // 既存レコードを上書き（対象が実在する時だけ）
     visited[modalVenueId][editingVisitIdx] = rec;
     editingVisitIdx = null;
     document.getElementById('modal-save').textContent = '✓ 記録';
   } else {
+    // 新規追加（編集対象が見つからない場合も、誤って上書きせず追加扱いにする）
+    editingVisitIdx = null;
+    document.getElementById('modal-save').textContent = '✓ 記録';
     visited[modalVenueId].push(rec);
   }
-  saveVisited();
+  const saveOk = saveVisited();   // 失敗してもここで止めず、下の画面遷移は必ず実行する
   refreshMarker(modalVenueId);
   renderSidebar();
   updateStats();
@@ -2557,6 +2667,8 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
   document.getElementById('records-overlay').classList.remove('hidden');
   closeModal();
   if(wasNew) showSaveToast();   // 新規登録時は「登録完了！」ポップアップ
+  // 容量オーバーで保存に失敗していたら、写真を縮小して保存し直す
+  if(!saveOk) recompressAllAndSave();
 });
 
 // 「登録完了！」ポップアップ（薄紫ハート）
@@ -3126,8 +3238,64 @@ document.getElementById('gps-btn').addEventListener('click', ()=>{
 });
 
 // BACKUP
+/* ===== テーマカラー ===== */
+const THEME_PRESETS = ['#7c3aed','#e0408a','#ff5ea8','#ff7a59','#f5a623','#2bb673','#19c3b1','#2196f3','#3f51b5','#0f172a'];
+const THEME_DEFAULT = '#7c3aed';
+function lightenHex(hex, amt){
+  const n = parseInt(hex.replace('#',''),16);
+  let r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+  r=Math.round(r+(255-r)*amt); g=Math.round(g+(255-g)*amt); b=Math.round(b+(255-b)*amt);
+  return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+function applyThemeColor(hex){
+  const root = document.documentElement;
+  if(hex === THEME_DEFAULT){
+    // デフォルトは元のピンク→紫グラデを維持
+    root.style.setProperty('--accent', '#7c3aed');
+    root.style.setProperty('--accent-light', '#ff6ec4');
+  } else {
+    root.style.setProperty('--accent', hex);
+    root.style.setProperty('--accent-light', lightenHex(hex, 0.40));
+  }
+}
+function getThemeColor(){
+  return localStorage.getItem('theme_color') || THEME_DEFAULT;
+}
+function setThemeColor(hex){
+  localStorage.setItem('theme_color', hex);
+  applyThemeColor(hex);
+  renderThemeSwatches();
+  const ci = document.getElementById('theme-color-input');
+  if(ci) ci.value = hex;
+}
+function renderThemeSwatches(){
+  const wrap = document.getElementById('theme-swatches');
+  if(!wrap) return;
+  const cur = getThemeColor();
+  wrap.innerHTML = THEME_PRESETS.map(c=>
+    `<div class="theme-swatch${c.toLowerCase()===cur.toLowerCase()?' active':''}" data-color="${c}" style="background:${c}"></div>`
+  ).join('');
+  wrap.querySelectorAll('.theme-swatch').forEach(el=>{
+    el.addEventListener('click', ()=> setThemeColor(el.dataset.color));
+  });
+}
+// 起動時に適用（このスクリプトはbody末尾なので要素は存在する）
+applyThemeColor(getThemeColor());
+renderThemeSwatches();
+(function(){
+  const ci = document.getElementById('theme-color-input');
+  if(ci){
+    ci.value = getThemeColor();
+    ci.addEventListener('input', e=> setThemeColor(e.target.value));
+  }
+})();
+
 document.getElementById('btn-settings').addEventListener('click', ()=>{
   document.getElementById('backup-overlay').classList.remove('hidden');
+  renderThemeSwatches();
+  renderAutoBackupList();
+  const ci = document.getElementById('theme-color-input');
+  if(ci) ci.value = getThemeColor();
 });
 document.getElementById('backup-close').addEventListener('click', ()=>{
   document.getElementById('backup-overlay').classList.add('hidden');
@@ -3136,7 +3304,145 @@ document.getElementById('backup-overlay').addEventListener('click', e=>{
   if(e.target===document.getElementById('backup-overlay'))
     document.getElementById('backup-overlay').classList.add('hidden');
 });
+/* ===== 自動バックアップ（案A）＆ 催促リマインド（案B） ===== */
+const AUTO_BK_KEEP = 2;     // 直近2日分を保持
+const REMIND_DAYS  = 7;     // この日数バックアップしていなければ催促
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function loadAutoBackups(){ try{ return JSON.parse(localStorage.getItem('auto_backups')||'[]'); }catch{ return []; } }
+function saveAutoBackups(arr){ try{ localStorage.setItem('auto_backups', JSON.stringify(arr)); return true; }catch{ return false; } }
+
+// 写真・背景など大きい画像を除いた軽い控え（容量オーバー時のフォールバック）
+function stripSnapshotImages(snap){
+  const v = {};
+  for(const [id, recs] of Object.entries(snap.visited||{})){
+    v[id] = (recs||[]).map(r=>({ ...r, photos:[], seatMark: r.seatMark ? {...r.seatMark, img:null} : null }));
+  }
+  const oshi = { ...(snap.oshi||{}) };
+  delete oshi.photo; delete oshi.bg;
+  return { ...snap, visited:v, oshi, images:false };
+}
+
+// 1日1回・自動でスナップショットを取る
+function maybeAutoBackup(){
+  // 守るデータが無ければ取らない
+  if(!Object.keys(visited).length && !loadSchedule().length) return;
+  const today = todayStr();
+  let snaps = loadAutoBackups();
+  if(snaps.some(s=>s.date===today)) return;   // 今日はもう取得済み
+  const snap = {
+    date: today, ts: Date.now(), images: true,
+    visited: JSON.parse(JSON.stringify(visited)),
+    oshi: loadOshiData(),
+    schedule: loadSchedule(),
+    customVenues: loadCustomVenues()
+  };
+  snaps.unshift(snap);
+  snaps = snaps.slice(0, AUTO_BK_KEEP);
+  if(!saveAutoBackups(snaps)){
+    // 容量オーバー → 画像を外して再挑戦
+    snaps = snaps.map(stripSnapshotImages);
+    if(!saveAutoBackups(snaps)){
+      // それでもダメ → 最新1件のみ（画像なし）
+      saveAutoBackups(snaps.slice(0,1));
+    }
+  }
+}
+
+// 控え／インポートデータを「今あるものは消さず、足りない分だけ」マージ復元
+function mergeRestore(d){
+  // 足あと記録（uidで重複判定）
+  for(const [id, recs] of Object.entries(d.visited||{})){
+    if(!visited[id]){ visited[id] = recs; }
+    else if(Array.isArray(recs) && recs.length){
+      const ex = new Set((visited[id]||[]).map(r=>r.uid));
+      visited[id] = [...(visited[id]||[]), ...recs.filter(r=> r && !ex.has(r.uid))];
+    }
+  }
+  saveVisited();
+  // 推しデータ（空の項目だけ埋める）
+  const io = d.oshi||{};
+  if(io.photo||io.bg||io.name||io.startDate){
+    const cur = loadOshiData();
+    if(!cur.photo && io.photo) cur.photo = io.photo;
+    if(!cur.bg && io.bg) cur.bg = io.bg;
+    if(!cur.name && io.name) cur.name = io.name;
+    if(!cur.startDate && io.startDate) cur.startDate = io.startDate;
+    saveOshiData(cur); applyHomeBg(); renderHome();
+  }
+  // 予定カレンダー
+  if(Array.isArray(d.schedule) && d.schedule.length){
+    const cur = loadSchedule(); const uids = new Set(cur.map(e=>e.uid));
+    saveSchedule([...cur, ...d.schedule.filter(e=> e && e.uid && !uids.has(e.uid))]);
+    renderNextLiveBanner();
+  }
+  // 自分で入力した会場
+  if(Array.isArray(d.customVenues) && d.customVenues.length){
+    const cur = loadCustomVenues(); const ids = new Set(cur.map(v=>v.id));
+    const add = d.customVenues.filter(v=> v && v.id!=null && !ids.has(v.id));
+    if(add.length){ saveCustomVenues([...cur, ...add]); add.forEach(v=>{ if(!VENUES_CLEAN.some(x=>x.id===v.id)) VENUES_CLEAN.push(v); }); }
+  }
+  VENUES_CLEAN.forEach(v=>refreshMarker(v.id));
+  renderSidebar(); updateStats(); renderRecordsPanel();
+}
+
+function restoreSnapshot(date){
+  const snap = loadAutoBackups().find(s=>s.date===date);
+  if(!snap) return;
+  const note = snap.images===false ? '\n（この控えは写真を含みません。文字の記録のみ戻ります）' : '';
+  if(!confirm(`${date} の控えから復元します。\n今ある記録は消さず、足りない記録だけを戻します。${note}\n\nよろしいですか？`)) return;
+  mergeRestore(snap);
+  renderAutoBackupList();
+  alert('復元しました！\n足あと一覧をご確認ください。');
+}
+
+function renderAutoBackupList(){
+  const sec = document.getElementById('auto-bk-section');
+  const list = document.getElementById('auto-bk-list');
+  if(!sec || !list) return;
+  const snaps = loadAutoBackups();
+  if(!snaps.length){ sec.style.display='none'; return; }
+  sec.style.display='';
+  list.innerHTML = snaps.map(s=>{
+    const venues = Object.keys(s.visited||{}).length;
+    const recs = Object.values(s.visited||{}).reduce((n,a)=>n+(a?a.length:0),0);
+    const img = s.images===false ? '（写真なし）' : '';
+    return `<button class="auto-bk-item" data-date="${s.date}">
+      <span>📅 ${s.date} の控え<br><span style="font-weight:500;color:#888;font-size:0.74rem">${venues}会場 ・ ${recs}記録 ${img}</span></span>
+      <span class="go">復元 →</span>
+    </button>`;
+  }).join('');
+  list.querySelectorAll('.auto-bk-item').forEach(b=>{
+    b.addEventListener('click', ()=> restoreSnapshot(b.dataset.date));
+  });
+}
+
+// 案B：バックアップ催促
+function checkBackupReminder(){
+  if(!Object.keys(visited).length) return;   // 守るデータが無ければ催促しない
+  const today = todayStr();
+  let baseline = localStorage.getItem('first_use_at');
+  if(!baseline){ localStorage.setItem('first_use_at', today); baseline = today; }
+  const ref = localStorage.getItem('last_export_at') || baseline;
+  const days = Math.floor((new Date(today) - new Date(ref)) / 86400000);
+  if(days >= REMIND_DAYS){
+    const t = document.getElementById('bk-reminder-text');
+    if(t) t.textContent = `📦 ${days}日間バックアップしていません。念のため残しておきましょう`;
+    document.getElementById('bk-reminder')?.classList.remove('hidden');
+  }
+}
+document.getElementById('bk-reminder-go')?.addEventListener('click', ()=>{
+  document.getElementById('bk-reminder').classList.add('hidden');
+  document.getElementById('backup-overlay').classList.remove('hidden');
+  renderThemeSwatches(); renderAutoBackupList();
+});
+document.getElementById('bk-reminder-close')?.addEventListener('click', ()=>{
+  document.getElementById('bk-reminder').classList.add('hidden');
+});
+
 document.getElementById('backup-export').addEventListener('click', ()=>{
+  localStorage.setItem('last_export_at', todayStr());   // 催促リマインドの基準を更新
+  document.getElementById('bk-reminder')?.classList.add('hidden');
   const oshiData = loadOshiData();
   const data = {
     version: 2,
@@ -3237,6 +3543,8 @@ if('serviceWorker' in navigator){
 // Init
 renderSidebar();
 updateStats();
+maybeAutoBackup();     // 1日1回・自動でこの端末内に控えを取る（案A）
+checkBackupReminder(); // しばらくバックアップしていなければ催促（案B）
 </script>
 </body>
 </html>
