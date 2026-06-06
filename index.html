@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-071';
+const APP_VERSION = '20260531-073';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -1305,14 +1305,76 @@ const TYPE_ICON = {dome:'🏟️', arena:'🎪', hall:'🎭', zepp:'⚡', civic:
 const TYPE_COLOR = {dome:'#ef4444', arena:'#f97316', hall:'#3b82f6', zepp:'#8b5cf6', civic:'#06b6d4', live:'#22c55e', outdoor:'#84cc16', concert:'#ec4899', theater:'#d946ef', park:'#0ea5e9', custom:'#64748b'};
 const TYPE_LABEL = {dome:'ドーム', arena:'アリーナ', hall:'ホール', zepp:'Zepp', civic:'市民会館', live:'ライブハウス', outdoor:'野外', concert:'コンサートホール', theater:'劇場', park:'テーマパーク', custom:'その他'};
 
+/* ===== IndexedDB（写真など大容量データの保存先：数百MB〜GB） ===== */
+const IDB_NAME='ricorlive', IDB_STORE='kv';
+let _idbPromise=null;
+function idbOpen(){
+  if(_idbPromise) return _idbPromise;
+  _idbPromise = new Promise((resolve,reject)=>{
+    if(!('indexedDB' in window)){ reject(new Error('no indexedDB')); return; }
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = ()=>{ if(!req.result.objectStoreNames.contains(IDB_STORE)) req.result.createObjectStore(IDB_STORE); };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror   = ()=> reject(req.error);
+  });
+  return _idbPromise;
+}
+function idbSet(key, val){
+  return idbOpen().then(db=> new Promise((resolve,reject)=>{
+    const tx = db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).put(val, key);
+    tx.oncomplete = ()=> resolve(true);
+    tx.onerror    = ()=> reject(tx.error);
+    tx.onabort    = ()=> reject(tx.error);
+  }));
+}
+function idbGet(key){
+  return idbOpen().then(db=> new Promise((resolve,reject)=>{
+    const tx = db.transaction(IDB_STORE,'readonly');
+    const r = tx.objectStore(IDB_STORE).get(key);
+    r.onsuccess = ()=> resolve(r.result);
+    r.onerror   = ()=> reject(r.error);
+  }));
+}
+
 let visited = {};
 function loadVisited(){
   try{ visited = JSON.parse(localStorage.getItem('live_visited')||'{}'); }catch{ visited={}; }
 }
-// 例外（容量オーバー等）を投げず、成功/失敗を返す（保存失敗で画面遷移が止まらないように）
+// 画像を除いた軽量コピー（localStorageミラー用：容量を圧迫しない）
+function stripVisitedImages(v){
+  const out = {};
+  for(const [id, recs] of Object.entries(v||{})){
+    out[id] = (recs||[]).map(r=>({ ...r, photos:[], seatMark: r.seatMark ? {...r.seatMark, img:null} : null }));
+  }
+  return out;
+}
+let saveFailNotified = false;
+function notifySaveFailed(){
+  // 「黙ってデータが消える」のを防ぐため、保存失敗をユーザーに知らせる
+  if(!saveFailNotified){
+    saveFailNotified = true;
+    alert('⚠️ 端末にデータを保存できませんでした。\n\nこのままだと、追加した写真やセトリがアプリを閉じた時に消えてしまう可能性があります。\n\nお手数ですが、⚙️設定からエクスポートでバックアップを取ってください。');
+  } else if(typeof showMiniToast==='function'){
+    showMiniToast('⚠️ データを保存できませんでした');
+  }
+}
+// IndexedDBを正本として保存。localStorageは高速表示用のミラー（best-effort）。
 function saveVisited(){
-  try{ localStorage.setItem('live_visited', JSON.stringify(visited)); return true; }
-  catch(err){ console.warn('saveVisited failed:', err); return false; }
+  let fullLsOk = false;
+  try{
+    // まずは写真込みで（小容量ユーザーはこれで即復元できる）
+    localStorage.setItem('live_visited', JSON.stringify(visited));
+    fullLsOk = true;
+  }catch(e){
+    // 容量オーバー時は画像なしの軽量ミラーに切替（写真の本体はIndexedDBが保持）
+    try{ localStorage.setItem('live_visited', JSON.stringify(stripVisitedImages(visited))); }catch(e2){}
+  }
+  idbSet('live_visited', visited).catch(err=>{
+    console.warn('idb saveVisited failed:', err);
+    if(!fullLsOk) notifySaveFailed();   // localStorageにも写真を保存できていない時だけ警告
+  });
+  return true;
 }
 // データURLをCanvasで再圧縮（容量オーバー時の縮小用）
 function recompressDataUrl(dataUrl, maxDim, quality){
@@ -1492,7 +1554,10 @@ function loadOshiData(){
   }catch{ return {}; }
 }
 function saveOshiData(data){
-  localStorage.setItem('oshi_data', JSON.stringify(data));
+  // IndexedDBを正本に（推し写真・背景も大きいため）。localStorageはミラー（best-effort）。
+  let lsOk = false;
+  try{ localStorage.setItem('oshi_data', JSON.stringify(data)); lsOk = true; }catch(e){ /* 容量オーバーはIDBが正本なので無視 */ }
+  idbSet('oshi_data', data).catch(err=>{ console.warn('idb saveOshiData failed:', err); if(!lsOk) notifySaveFailed(); });
 }
 
 function applyHomeBg(){
@@ -3330,22 +3395,20 @@ function maybeAutoBackup(){
   const today = todayStr();
   let snaps = loadAutoBackups();
   if(snaps.some(s=>s.date===today)) return;   // 今日はもう取得済み
-  const snap = {
+  // localStorageの空き容量を圧迫しないよう、自動控えは「画像なし（文字データのみ）」で保存する。
+  // ※写真は容量が大きいため、写真の保護はエクスポート（手動バックアップ）に任せる方針。
+  const snap = stripSnapshotImages({
     date: today, ts: Date.now(), images: true,
     visited: JSON.parse(JSON.stringify(visited)),
     oshi: loadOshiData(),
     schedule: loadSchedule(),
     customVenues: loadCustomVenues()
-  };
+  });
   snaps.unshift(snap);
   snaps = snaps.slice(0, AUTO_BK_KEEP);
   if(!saveAutoBackups(snaps)){
-    // 容量オーバー → 画像を外して再挑戦
-    snaps = snaps.map(stripSnapshotImages);
-    if(!saveAutoBackups(snaps)){
-      // それでもダメ → 最新1件のみ（画像なし）
-      saveAutoBackups(snaps.slice(0,1));
-    }
+    // それでも入らなければ最新1件のみ
+    saveAutoBackups(snaps.slice(0,1));
   }
 }
 
@@ -3540,11 +3603,44 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 
+// IndexedDBから最新データを読み戻して再描画（容量の大きい写真はこちらが正本）
+async function hydrateFromIDB(){
+  try{
+    // 足あと記録（写真含む）
+    const v = await idbGet('live_visited');
+    if(v && typeof v==='object' && Object.keys(v).length){
+      visited = v;
+    } else {
+      // 初回：今localStorageにあるデータをIndexedDBへ移行
+      try{ await idbSet('live_visited', visited); }catch(e){}
+    }
+    // 推しデータ（写真・背景）→ loadOshiDataはlocalStorageを読むので書き戻す
+    const o = await idbGet('oshi_data');
+    if(o && typeof o==='object' && Object.keys(o).length){
+      try{ localStorage.setItem('oshi_data', JSON.stringify(o)); }catch(e){}
+    } else {
+      try{ await idbSet('oshi_data', loadOshiData()); }catch(e){}
+    }
+    // localStorageミラーを最新化（容量に応じて自動で軽量版に）
+    saveVisited();
+    // 再描画
+    VENUES_CLEAN.forEach(vn=>refreshMarker(vn.id));
+    renderSidebar(); updateStats();
+    const ro = document.getElementById('records-overlay');
+    if(ro && !ro.classList.contains('hidden')) renderRecordsPanel();
+    applyHomeBg(); renderHome();
+  }catch(err){
+    console.warn('IndexedDB hydrate failed (localStorageのまま動作):', err);
+  }
+  // データが確定してから控え取得・催促
+  maybeAutoBackup();     // 1日1回・自動でこの端末内に控えを取る（案A）
+  checkBackupReminder(); // しばらくバックアップしていなければ催促（案B）
+}
+
 // Init
 renderSidebar();
 updateStats();
-maybeAutoBackup();     // 1日1回・自動でこの端末内に控えを取る（案A）
-checkBackupReminder(); // しばらくバックアップしていなければ催促（案B）
+hydrateFromIDB();   // ← IndexedDBから読み戻し（非同期）。完了後に自動バックアップ等も実行
 </script>
 </body>
 </html>
