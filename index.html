@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-077';
+const APP_VERSION = '20260531-078';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -375,7 +375,7 @@ if (stored !== APP_VERSION) {
   .backup-step-sub{font-size:0.68rem;color:#999;display:block;margin-top:2px;letter-spacing:0.01em}
 
   /* SPLASH SCREEN */
-  .splash{position:fixed;inset:0;z-index:99999;overflow:hidden;background:#000;transition:opacity 0.5s ease}
+  .splash{position:fixed;inset:0;z-index:99999;overflow:hidden;background:linear-gradient(180deg,#cdb6f0 0%,#eaa6d2 50%,#ff6fbf 100%);transition:opacity 0.5s ease}
   .splash.fade-out{opacity:0;pointer-events:none}
   .splash-bg{
     position:absolute;inset:0;
