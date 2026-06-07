@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-076';
+const APP_VERSION = '20260531-077';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -1549,12 +1549,17 @@ function getOshiMessage(){
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// 推しデータはメモリキャッシュを正とする（IndexedDBから読み戻した最新を保持）。
+// これによりエクスポート等が常に「写真・背景込みの完全なデータ」を取得できる。
+let oshiCache = null;
 function loadOshiData(){
-  try{
-    return JSON.parse(localStorage.getItem('oshi_data')||'{}');
-  }catch{ return {}; }
+  if(oshiCache) return oshiCache;
+  try{ oshiCache = JSON.parse(localStorage.getItem('oshi_data')||'{}'); }
+  catch{ oshiCache = {}; }
+  return oshiCache;
 }
 function saveOshiData(data){
+  oshiCache = data;   // メモリの正本を更新
   // IndexedDBを正本に（推し写真・背景も大きいため）。localStorageはミラー（best-effort）。
   let lsOk = false;
   try{ localStorage.setItem('oshi_data', JSON.stringify(data)); lsOk = true; }catch(e){ /* 容量オーバーはIDBが正本なので無視 */ }
@@ -3559,13 +3564,13 @@ document.getElementById('backup-import-input').addEventListener('change', e=>{
       }
       saveVisited();
 
-      // 推しデータを復元（既存データがない項目だけ上書き）
+      // 推しデータを復元（移行用：インポート側に値がある項目は反映する）
       if(hasOshi){
         const current = loadOshiData();
-        if(!current.photo && importedOshi.photo) current.photo = importedOshi.photo;
-        if(!current.bg    && importedOshi.bg)    current.bg    = importedOshi.bg;
-        if(!current.name  && importedOshi.name)  current.name  = importedOshi.name;
-        if(!current.startDate && importedOshi.startDate) current.startDate = importedOshi.startDate;
+        if(importedOshi.photo)     current.photo     = importedOshi.photo;
+        if(importedOshi.bg)        current.bg        = importedOshi.bg;
+        if(importedOshi.name)      current.name      = importedOshi.name;
+        if(importedOshi.startDate) current.startDate = importedOshi.startDate;
         saveOshiData(current);
         applyHomeBg();
         renderHome();
@@ -3620,9 +3625,10 @@ async function hydrateFromIDB(){
       // 初回：今localStorageにあるデータをIndexedDBへ移行
       try{ await idbSet('live_visited', visited); }catch(e){}
     }
-    // 推しデータ（写真・背景）→ loadOshiDataはlocalStorageを読むので書き戻す
+    // 推しデータ（写真・背景）→ IndexedDBの内容をメモリ正本（oshiCache）に反映
     const o = await idbGet('oshi_data');
     if(o && typeof o==='object' && Object.keys(o).length){
+      oshiCache = o;   // ← エクスポートやホーム表示がこの完全データを使う
       try{ localStorage.setItem('oshi_data', JSON.stringify(o)); }catch(e){}
     } else {
       try{ await idbSet('oshi_data', loadOshiData()); }catch(e){}
