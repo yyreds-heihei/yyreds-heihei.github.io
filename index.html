@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-090';
+const APP_VERSION = '20260531-092';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -402,7 +402,7 @@ if (stored !== APP_VERSION) {
   /* HOME PANEL */
   .home-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:900;display:flex;flex-direction:column;background-image:linear-gradient(160deg,#0d0d1a 0%,#1a0a2e 50%,#0d1a1a 100%);background-size:cover;background-position:center}
   .home-overlay.hidden{display:none}
-  .home-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0)) 20px calc(92px + env(safe-area-inset-bottom,0));gap:24px}
+  .home-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0)) 20px calc(74px + env(safe-area-inset-bottom,0));gap:24px}
   /* 推し写真エリア */
   .oshi-scene{display:flex;align-items:center;gap:0;width:100%;max-width:380px;justify-content:center}
   .oshi-photo-wrap{flex-shrink:0;position:relative}
@@ -439,7 +439,7 @@ if (stored !== APP_VERSION) {
   @keyframes nlbWiggle{0%,100%{transform:rotate(-10deg) scale(1)}50%{transform:rotate(10deg) scale(1.12)}}
 
   /* ホーム カレンダーボタン（右下） */
-  .home-cal-btn{position:absolute;right:16px;bottom:calc(88px + env(safe-area-inset-bottom,0));z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 18px rgba(124,58,237,0.6);-webkit-tap-highlight-color:transparent;transition:transform 0.15s}
+  .home-cal-btn{position:absolute;right:16px;bottom:calc(70px + env(safe-area-inset-bottom,0));z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 18px rgba(124,58,237,0.6);-webkit-tap-highlight-color:transparent;transition:transform 0.15s}
   .home-cal-btn:active{transform:scale(0.92)}
   .home-cal-btn span{font-size:0.5rem;font-weight:700;letter-spacing:0.02em}
 
@@ -558,9 +558,9 @@ if (stored !== APP_VERSION) {
     .genre-bar-item{padding:2px 5px;font-size:0.6rem}
     .genre-bar-track{width:28px}
     .btn-records,.btn-ranking{display:none}
-    .main{position:relative;padding-bottom:calc(72px + env(safe-area-inset-bottom,0))}
+    .main{position:relative;padding-bottom:calc(54px + env(safe-area-inset-bottom,0))}
     #map{width:100%;height:100%}
-    .gps-btn{bottom:calc(84px + env(safe-area-inset-bottom,0))}
+    .gps-btn{bottom:calc(66px + env(safe-area-inset-bottom,0))}
     .sidebar{
       position:fixed;
       top:var(--header-h, 88px);bottom:0;
@@ -577,17 +577,17 @@ if (stored !== APP_VERSION) {
     .venue-list{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
     .bottom-nav{
       display:flex;position:fixed;bottom:0;left:0;right:0;
-      height:calc(72px + env(safe-area-inset-bottom,0));background:linear-gradient(135deg,var(--accent-light),var(--accent));border-top:none;
+      height:calc(54px + env(safe-area-inset-bottom,0));background:linear-gradient(135deg,var(--accent-light),var(--accent));border-top:none;
       z-index:1000;padding-bottom:env(safe-area-inset-bottom,0);
-      align-items:flex-start;padding-top:8px;
+      align-items:flex-start;padding-top:5px;
       box-shadow:0 -2px 12px rgba(124,58,237,0.3);
     }
     .nav-tab{
       flex:1;display:flex;flex-direction:column;
       align-items:center;justify-content:flex-start;
       background:none;border:none;color:rgba(255,255,255,0.7);
-      gap:2px;cursor:pointer;padding:4px 0 0;
-      transition:color 0.15s;min-height:44px;
+      gap:1px;cursor:pointer;padding:2px 0 0;
+      transition:color 0.15s;min-height:0;
       -webkit-tap-highlight-color:transparent;
     }
     .nav-tab.active{color:#ffffff}
@@ -600,8 +600,8 @@ if (stored !== APP_VERSION) {
     .ranking-overlay,.records-overlay,.home-overlay{bottom:0}
     .ranking-overlay,.records-overlay{align-items:stretch}
     /* ナビ分の余白を中身に足して、ボトムナビに隠れないようにする */
-    .records-content,.ranking-content{padding-bottom:calc(90px + env(safe-area-inset-bottom,0))}
-    .venue-list{padding-bottom:calc(90px + env(safe-area-inset-bottom,0))}
+    .records-content,.ranking-content{padding-bottom:calc(72px + env(safe-area-inset-bottom,0))}
+    .venue-list{padding-bottom:calc(72px + env(safe-area-inset-bottom,0))}
     .ranking-panel-header,.records-panel-header{padding:calc(18px + env(safe-area-inset-top,0)) 16px 18px}
     .leaflet-top{top:env(safe-area-inset-top,0)}
     /* モバイルでは×ボタンを非表示（タブで切り替えるため） */
@@ -3172,7 +3172,7 @@ function renderRecordsPanel(){
       : allRecs.filter(r=> r.date && r.date.startsWith(recordsSelectedYear));
     const photos = recs.flatMap(r=>r.photos||[]);
     const artists = [...new Set(recs.map(r=>(r.artist||'').trim()).filter(Boolean))];
-    const artistText = artists.length ? `<span class="record-venue-artist">${artists.join(' / ')}</span>` : '';
+    const artistText = artists.length ? `<span class="record-venue-artist">${artists.map(a=>`【${a}】`).join('')}</span>` : '';
     return `<div class="record-card">
       <div class="record-venue-name">${TYPE_ICON[v.type]} ${v.name}${artistText}</div>
       <div class="record-venue-meta">${v.pref} · ${TYPE_LABEL[v.type]}</div>
