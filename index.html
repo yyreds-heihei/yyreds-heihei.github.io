@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-089';
+const APP_VERSION = '20260531-090';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -81,7 +81,7 @@ if (stored !== APP_VERSION) {
   .filter-btn-add{background:#fff;border:1px dashed #7c3aed;color:#7c3aed;font-weight:700}
   .filter-btn-add:active{background:#f0ecff}
   /* 自分で入力モーダル */
-  .cv-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10016;display:flex;align-items:center;justify-content:center;padding:18px}
+  .cv-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10016;display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0)) 16px calc(16px + env(safe-area-inset-bottom,0))}
   .cv-overlay.hidden{display:none}
   .cv-modal{background:#fff;border-radius:20px;width:100%;max-width:380px;padding:22px;color:#1a1a2a;box-shadow:0 16px 60px rgba(0,0,0,0.5)}
   .cv-title{font-size:1.05rem;font-weight:800;color:#7c3aed;margin-bottom:4px}
@@ -339,9 +339,9 @@ if (stored !== APP_VERSION) {
   .bottom-nav{display:none}
 
   /* Backup modal */
-  .backup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10002;display:flex;align-items:center;justify-content:center;padding:20px}
+  .backup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10002;display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0)) 16px calc(16px + env(safe-area-inset-bottom,0))}
   .backup-overlay.hidden{display:none}
-  .backup-modal{position:relative;background:#ffffff;border:1px solid #e0e0ea;border-radius:18px;width:100%;max-width:400px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 22px;box-shadow:0 12px 60px rgba(0,0,0,0.4);color:#1a1a2a}
+  .backup-modal{position:relative;background:#ffffff;border:1px solid #e0e0ea;border-radius:18px;width:100%;max-width:400px;max-height:calc(100dvh - 32px - env(safe-area-inset-top,0) - env(safe-area-inset-bottom,0));overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 22px;box-shadow:0 12px 60px rgba(0,0,0,0.4);color:#1a1a2a}
   .backup-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:none;background:#f0eef5;color:#888;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3;-webkit-tap-highlight-color:transparent}
   .backup-x:active{background:#e4e0ee}
   .backup-title{font-size:1.05rem;font-weight:800;color:#7c3aed;margin-bottom:6px}
