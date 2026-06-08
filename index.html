@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-088';
+const APP_VERSION = '20260531-089';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -402,7 +402,7 @@ if (stored !== APP_VERSION) {
   /* HOME PANEL */
   .home-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:900;display:flex;flex-direction:column;background-image:linear-gradient(160deg,#0d0d1a 0%,#1a0a2e 50%,#0d1a1a 100%);background-size:cover;background-position:center}
   .home-overlay.hidden{display:none}
-  .home-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0)) 20px 20px;gap:24px}
+  .home-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0)) 20px calc(92px + env(safe-area-inset-bottom,0));gap:24px}
   /* 推し写真エリア */
   .oshi-scene{display:flex;align-items:center;gap:0;width:100%;max-width:380px;justify-content:center}
   .oshi-photo-wrap{flex-shrink:0;position:relative}
@@ -439,7 +439,7 @@ if (stored !== APP_VERSION) {
   @keyframes nlbWiggle{0%,100%{transform:rotate(-10deg) scale(1)}50%{transform:rotate(10deg) scale(1.12)}}
 
   /* ホーム カレンダーボタン（右下） */
-  .home-cal-btn{position:absolute;right:16px;bottom:24px;z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 18px rgba(124,58,237,0.6);-webkit-tap-highlight-color:transparent;transition:transform 0.15s}
+  .home-cal-btn{position:absolute;right:16px;bottom:calc(88px + env(safe-area-inset-bottom,0));z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 18px rgba(124,58,237,0.6);-webkit-tap-highlight-color:transparent;transition:transform 0.15s}
   .home-cal-btn:active{transform:scale(0.92)}
   .home-cal-btn span{font-size:0.5rem;font-weight:700;letter-spacing:0.02em}
 
@@ -563,7 +563,7 @@ if (stored !== APP_VERSION) {
     .gps-btn{bottom:calc(84px + env(safe-area-inset-bottom,0))}
     .sidebar{
       position:fixed;
-      top:var(--header-h, 88px);bottom:calc(72px + env(safe-area-inset-bottom,0));
+      top:var(--header-h, 88px);bottom:0;
       left:0;right:0;width:100%;height:auto;
       border-left:none;border-top:none;border-radius:0;
       z-index:600;
@@ -597,8 +597,11 @@ if (stored !== APP_VERSION) {
     .venue-check{width:26px;height:26px}
     .venue-item{padding:11px 10px}
     .ranking-panel,.records-panel{width:100vw;border-radius:0}
-    .ranking-overlay,.records-overlay,.home-overlay{bottom:calc(72px + env(safe-area-inset-bottom,0))}
+    .ranking-overlay,.records-overlay,.home-overlay{bottom:0}
     .ranking-overlay,.records-overlay{align-items:stretch}
+    /* ナビ分の余白を中身に足して、ボトムナビに隠れないようにする */
+    .records-content,.ranking-content{padding-bottom:calc(90px + env(safe-area-inset-bottom,0))}
+    .venue-list{padding-bottom:calc(90px + env(safe-area-inset-bottom,0))}
     .ranking-panel-header,.records-panel-header{padding:calc(18px + env(safe-area-inset-top,0)) 16px 18px}
     .leaflet-top{top:env(safe-area-inset-top,0)}
     /* モバイルでは×ボタンを非表示（タブで切り替えるため） */
