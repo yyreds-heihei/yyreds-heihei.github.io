@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-078';
+const APP_VERSION = '20260531-082';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -232,7 +232,7 @@ if (stored !== APP_VERSION) {
   .save-toast.show{opacity:1}
   .save-toast-card{background:linear-gradient(160deg,#fff 0%,#f6efff 100%);border:2px solid #e3d4fb;border-radius:24px;padding:26px 34px;text-align:center;box-shadow:0 16px 50px rgba(124,58,237,0.35);transform:scale(0.7);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1)}
   .save-toast.show .save-toast-card{transform:scale(1)}
-  .save-toast-heart{line-height:0;color:var(--accent);animation:toastHeart 0.9s ease-in-out infinite}
+  .save-toast-heart{line-height:0;color:var(--accent);display:flex;justify-content:center;animation:toastHeart 0.9s ease-in-out infinite}
   .save-toast-heart svg{width:54px;height:54px;display:block;fill:currentColor;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.25))}
   .save-toast-text{margin-top:8px;font-size:1.1rem;font-weight:800;color:#7c3aed;letter-spacing:0.04em}
   @keyframes toastHeart{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
@@ -336,7 +336,9 @@ if (stored !== APP_VERSION) {
   /* Backup modal */
   .backup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10002;display:flex;align-items:center;justify-content:center;padding:20px}
   .backup-overlay.hidden{display:none}
-  .backup-modal{background:#ffffff;border:1px solid #e0e0ea;border-radius:18px;width:100%;max-width:400px;padding:24px 22px;box-shadow:0 12px 60px rgba(0,0,0,0.4);color:#1a1a2a}
+  .backup-modal{position:relative;background:#ffffff;border:1px solid #e0e0ea;border-radius:18px;width:100%;max-width:400px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 22px;box-shadow:0 12px 60px rgba(0,0,0,0.4);color:#1a1a2a}
+  .backup-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:none;background:#f0eef5;color:#888;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3;-webkit-tap-highlight-color:transparent}
+  .backup-x:active{background:#e4e0ee}
   .backup-title{font-size:1.05rem;font-weight:800;color:#7c3aed;margin-bottom:6px}
   .theme-section{background:#faf8ff;border:1px solid #ece7fb;border-radius:14px;padding:14px 14px 16px;margin-bottom:20px}
   .theme-title{font-size:0.92rem;font-weight:800;color:#1a1a2a;margin-bottom:4px}
@@ -530,6 +532,12 @@ if (stored !== APP_VERSION) {
   .weather-btn small{display:block;font-size:0.55rem;color:#555;margin-top:2px;font-weight:600}
   .weather-btn.selected{border-color:#7c3aed;background:#1a0a3a;color:#e2e2e8}
   .weather-btn.selected small{color:#a78bfa}
+  .pin-row{display:flex;flex-wrap:wrap;gap:8px}
+  .pin-btn{width:42px;height:42px;border-radius:10px;border:2px solid #d0d0d8;background:#f3f3f8;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;-webkit-tap-highlight-color:transparent;transition:all 0.12s}
+  .pin-btn.selected{border-color:#7c3aed;background:#f0ecff}
+  .pin-btn .pin-heart{color:var(--accent);font-size:1.55rem;line-height:1}
+  .marker-emoji{font-size:24px;line-height:1;text-align:center;cursor:pointer;transition:transform 0.15s;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))}
+  .marker-emoji:hover{transform:scale(1.3)}
 
   /* Mobile styles */
   @media (max-width:640px){
@@ -828,6 +836,7 @@ if (stored !== APP_VERSION) {
 <!-- Backup Modal -->
 <div class="backup-overlay hidden" id="backup-overlay">
   <div class="backup-modal">
+    <button class="backup-x" id="backup-x" aria-label="閉じる">✕</button>
     <div class="backup-title">📱 機種変更・データ引き継ぎ</div>
     <div class="backup-desc">足あと記録・推し写真・背景・名前をまるごと引き継げます。</div>
 
@@ -927,6 +936,38 @@ if (stored !== APP_VERSION) {
           <button class="weather-btn" data-weather="cloudy">☁️<small>曇り</small></button>
           <button class="weather-btn" data-weather="rain">🌧️<small>雨</small></button>
           <button class="weather-btn" data-weather="snow">❄️<small>雪</small></button>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">📍 マップのピン <span style="color:#888;font-weight:400;font-size:0.72rem">（未選択は推しカラーのハート）</span></label>
+        <div class="pin-row" id="pin-row">
+          <button class="pin-btn pin-default selected" data-emoji="" type="button" title="推しカラーのハート"><span class="pin-heart">&#9829;</span></button>
+          <button class="pin-btn" data-emoji="⭐" type="button">⭐</button>
+          <button class="pin-btn" data-emoji="✨" type="button">✨</button>
+          <button class="pin-btn" data-emoji="🔥" type="button">🔥</button>
+          <button class="pin-btn" data-emoji="🎤" type="button">🎤</button>
+          <button class="pin-btn" data-emoji="🎸" type="button">🎸</button>
+          <button class="pin-btn" data-emoji="🎶" type="button">🎶</button>
+          <button class="pin-btn" data-emoji="👑" type="button">👑</button>
+          <button class="pin-btn" data-emoji="💎" type="button">💎</button>
+          <button class="pin-btn" data-emoji="🌸" type="button">🌸</button>
+          <button class="pin-btn" data-emoji="🎀" type="button">🎀</button>
+          <button class="pin-btn" data-emoji="🐰" type="button">🐰</button>
+          <button class="pin-btn" data-emoji="🐻" type="button">🐻</button>
+          <button class="pin-btn" data-emoji="🐱" type="button">🐱</button>
+          <button class="pin-btn" data-emoji="🦄" type="button">🦄</button>
+          <button class="pin-btn" data-emoji="🌈" type="button">🌈</button>
+          <button class="pin-btn" data-emoji="⚾" type="button">⚾</button>
+          <button class="pin-btn" data-emoji="⚽" type="button">⚽</button>
+          <button class="pin-btn" data-emoji="🏟️" type="button">🏟️</button>
+          <button class="pin-btn" data-emoji="🎫" type="button">🎫</button>
+          <button class="pin-btn" data-emoji="❤️" type="button">❤️</button>
+          <button class="pin-btn" data-emoji="🧡" type="button">🧡</button>
+          <button class="pin-btn" data-emoji="💛" type="button">💛</button>
+          <button class="pin-btn" data-emoji="💚" type="button">💚</button>
+          <button class="pin-btn" data-emoji="💙" type="button">💙</button>
+          <button class="pin-btn" data-emoji="💜" type="button">💜</button>
+          <button class="pin-btn" data-emoji="🤍" type="button">🤍</button>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:14px">
@@ -2055,9 +2096,29 @@ const markers = {};
 
 function getVisitCount(id){ return (visited[id]||[]).length; }
 
+// その会場の記録の中から、選ばれた絵文字を取得（最新の記録のものを優先・無ければ''）
+function getVenuePinEmoji(id){
+  const recs = visited[id] || [];
+  let emoji = '', latest = '';
+  for(const r of recs){
+    if(r && r.pinEmoji){
+      const d = r.date || '';
+      if(d >= latest){ latest = d; emoji = r.pinEmoji; }
+    }
+  }
+  return emoji;
+}
 function makeMarkerIcon(venue){
-  // ピンを立てるのは「行った会場」だけ。テーマカラーに追従するハート（SVG）。
-  const h = 28;
+  // ピンを立てるのは「行った会場」だけ。選んだ絵文字 or 推しカラーのハート（SVG）。
+  const h = 30;
+  const emoji = getVenuePinEmoji(venue.id);
+  if(emoji){
+    return L.divIcon({
+      className:'',
+      html:`<div class="marker-emoji">${emoji}</div>`,
+      iconSize:[h,h], iconAnchor:[h/2, h-3]
+    });
+  }
   return L.divIcon({
     className:'',
     html:`<div class="marker-heart"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>`,
@@ -2090,9 +2151,12 @@ function refreshMarker(id){
   if(!venue) return;
   const isVisited = getVisitCount(id) > 0;
   if(isVisited){
-    // 行った会場：ピンが無ければ立て、あればポップアップを更新
+    // 行った会場：ピンが無ければ立て、あればアイコン（絵文字）とポップアップを更新
     if(!markers[id]) addVenueMarker(venue);
-    else markers[id].getPopup()?.setContent(makePopupHtml(venue));
+    else {
+      markers[id].setIcon(makeMarkerIcon(venue));
+      markers[id].getPopup()?.setContent(makePopupHtml(venue));
+    }
   } else {
     // 記録が無くなった会場：ピンを消す
     if(markers[id]){ map.removeLayer(markers[id]); delete markers[id]; }
@@ -2237,6 +2301,13 @@ document.getElementById('search-box').addEventListener('input', e=>{
 let modalVenueId = null;
 let pendingPhotos = [];
 let selectedWeather = '';
+let selectedPinEmoji = '';   // マップに立てる絵文字（''＝推しカラーのハート）
+function setPinSelected(emoji){
+  selectedPinEmoji = emoji || '';
+  document.querySelectorAll('#pin-row .pin-btn').forEach(b=>{
+    b.classList.toggle('selected', (b.dataset.emoji||'') === selectedPinEmoji);
+  });
+}
 let pendingSetlist = []; // セットリスト（文字列の配列）
 let copiedSetlist = null; // コピーしたセットリスト（貼り付け用クリップボード）
 function showMiniToast(msg){
@@ -2434,6 +2505,7 @@ function openModal(id){
   document.getElementById('modal-save').textContent = '✓ 記録';
   pendingPhotos = [];
   selectedWeather = '';
+  setPinSelected('');   // デフォルト（推しカラーのハート）に戻す
   const venue = VENUES_CLEAN.find(v=>v.id===id);
   document.getElementById('modal-title').textContent = `📝 ${venue.name}`;
   document.getElementById('modal-venue').textContent = `${venue.pref} · ${TYPE_LABEL[venue.type]}`;
@@ -2462,6 +2534,11 @@ document.getElementById('weather-row').addEventListener('click', e=>{
   if(!btn) return;
   selectedWeather = btn.dataset.weather;
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.toggle('selected', b===btn));
+});
+document.getElementById('pin-row').addEventListener('click', e=>{
+  const btn = e.target.closest('.pin-btn');
+  if(!btn) return;
+  setPinSelected(btn.dataset.emoji || '');
 });
 
 function closeModal(){
@@ -2568,6 +2645,7 @@ function startEditVisit(idx){
   document.getElementById('form-memo').value = r.memo || '';
   selectedWeather = r.weather || '';
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.toggle('selected', b.dataset.weather===selectedWeather));
+  setPinSelected(r.pinEmoji || '');
   pendingSetlist = [...(r.setlist||[])];
   renderSetlistRows();
   pendingPhotos = [...(r.photos||[])];
@@ -2599,6 +2677,7 @@ function cancelEditVisit(){
   document.getElementById('form-memo').value = '';
   selectedWeather = '';
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
+  setPinSelected('');
   pendingSetlist = [];
   renderSetlistRows();
   pendingPhotos = [];
@@ -2685,6 +2764,7 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
     artist: document.getElementById('form-artist').value.trim(),
     tour: document.getElementById('form-tour').value.trim(),
     weather: selectedWeather,
+    pinEmoji: selectedPinEmoji,
     memo: document.getElementById('form-memo').value.trim(),
     setlist: pendingSetlist.filter(s=>s.trim()),
     photos: [...pendingPhotos],
@@ -3110,9 +3190,16 @@ function renderRankingPanel(){
     return;
   }
 
-  // 会場別（訪問回数）ランキング
-  const ranked = VENUES_CLEAN
-    .map(v=>({...v, count: getVisitCount(v.id)}))
+  // 会場別（訪問回数）ランキング — 記録(visited)を基準にし、手入力会場も必ず拾う
+  const venueById = {};
+  VENUES_CLEAN.forEach(v=>{ venueById[v.id] = v; });
+  loadCustomVenues().forEach(v=>{ if(!venueById[v.id]) venueById[v.id] = v; });
+  const ranked = Object.keys(visited)
+    .map(id=>{
+      const recs = visited[id] || [];
+      const v = venueById[id] || { id, name:'(不明な会場)', pref:'その他', type:'custom' };
+      return { ...v, count: recs.length };
+    })
     .filter(v=>v.count>0)
     .sort((a,b)=>b.count-a.count);
   if(!ranked.length){
@@ -3374,6 +3461,9 @@ document.getElementById('btn-settings').addEventListener('click', ()=>{
   if(ci) ci.value = getThemeColor();
 });
 document.getElementById('backup-close').addEventListener('click', ()=>{
+  document.getElementById('backup-overlay').classList.add('hidden');
+});
+document.getElementById('backup-x').addEventListener('click', ()=>{
   document.getElementById('backup-overlay').classList.add('hidden');
 });
 document.getElementById('backup-overlay').addEventListener('click', e=>{
