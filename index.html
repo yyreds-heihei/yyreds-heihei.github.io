@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-083';
+const APP_VERSION = '20260531-088';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -92,6 +92,10 @@ if (stored !== APP_VERSION) {
   .cv-actions{display:flex;gap:10px;margin-top:20px}
   .cv-actions .btn-secondary{flex:1;border:1px solid #c8c8d8;color:#666}
   .cv-actions .btn-primary{flex:2}
+  .cv-loc-btn{width:100%;margin-top:12px;padding:11px;border-radius:10px;border:1px solid #b9a3f0;background:#f4f0ff;color:#6d28d9;font-size:0.85rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .cv-loc-btn:active{background:#ebe3ff}
+  .cv-loc-status{font-size:0.74rem;color:#999;margin-top:6px;line-height:1.5}
+  #cv-map{width:100%;height:340px;max-height:52vh;border-radius:12px;overflow:hidden;border:1px solid #d0d0d8}
   .search-box{width:100%;padding:8px 12px;background:#fff;border:1px solid #c8c8d8;border-radius:10px;color:#1a1a2a;font-size:0.85rem;margin-bottom:8px;outline:none}
   .search-box:focus{border-color:#7c3aed}
   .venue-list{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
@@ -276,6 +280,7 @@ if (stored !== APP_VERSION) {
   .records-empty{color:#999;font-size:0.85rem;padding:30px 0;text-align:center}
   .record-card{background:#fff;border:1px solid #d8d8e8;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
   .record-venue-name{font-size:0.9rem;font-weight:700;margin-bottom:4px;color:#1a1a2a}
+  .record-venue-artist{font-weight:800;color:#1a1a2a;margin-left:8px}
   .record-venue-meta{font-size:0.7rem;color:#888;margin-bottom:8px}
   .record-visits{display:flex;flex-direction:column;gap:6px}
   .record-visit-row{display:flex;align-items:center;gap:8px}
@@ -553,12 +558,12 @@ if (stored !== APP_VERSION) {
     .genre-bar-item{padding:2px 5px;font-size:0.6rem}
     .genre-bar-track{width:28px}
     .btn-records,.btn-ranking{display:none}
-    .main{position:relative;padding-bottom:60px}
+    .main{position:relative;padding-bottom:calc(72px + env(safe-area-inset-bottom,0))}
     #map{width:100%;height:100%}
-    .gps-btn{bottom:76px}
+    .gps-btn{bottom:calc(84px + env(safe-area-inset-bottom,0))}
     .sidebar{
       position:fixed;
-      top:var(--header-h, 88px);bottom:60px;
+      top:var(--header-h, 88px);bottom:calc(72px + env(safe-area-inset-bottom,0));
       left:0;right:0;width:100%;height:auto;
       border-left:none;border-top:none;border-radius:0;
       z-index:600;
@@ -572,7 +577,7 @@ if (stored !== APP_VERSION) {
     .venue-list{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
     .bottom-nav{
       display:flex;position:fixed;bottom:0;left:0;right:0;
-      height:72px;background:linear-gradient(135deg,var(--accent-light),var(--accent));border-top:none;
+      height:calc(72px + env(safe-area-inset-bottom,0));background:linear-gradient(135deg,var(--accent-light),var(--accent));border-top:none;
       z-index:1000;padding-bottom:env(safe-area-inset-bottom,0);
       align-items:flex-start;padding-top:8px;
       box-shadow:0 -2px 12px rgba(124,58,237,0.3);
@@ -831,9 +836,27 @@ if (stored !== APP_VERSION) {
     <input class="cv-input" type="text" id="cv-name" placeholder="例：〇〇市民ホール" maxlength="40">
     <label class="cv-label">都道府県（任意）</label>
     <input class="cv-input" type="text" id="cv-pref" placeholder="例：東京都" maxlength="12">
+    <label class="cv-label">市区町村（任意）</label>
+    <input class="cv-input" type="text" id="cv-city" placeholder="例：渋谷区 / 横浜市" maxlength="20">
+    <div class="cv-hint" style="font-size:0.72rem;color:#999;margin:-4px 0 10px;line-height:1.5">市区町村を入れると、その街の中心にマップのピンが立ちます。</div>
+    <button class="cv-loc-btn" id="cv-map-pick-btn" type="button">🗺️ マップ上で位置を指定する</button>
+    <div class="cv-loc-status" id="cv-loc-status">未指定（市区町村から自動で取得します）</div>
     <div class="cv-actions">
       <button class="btn-secondary" id="cv-cancel" type="button">キャンセル</button>
       <button class="btn-primary" id="cv-save" type="button">追加して記録する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 手入力会場：マップで位置を指定 -->
+<div class="cv-overlay hidden" id="cv-map-overlay" style="z-index:10018">
+  <div class="cv-modal" style="max-width:540px;display:flex;flex-direction:column;gap:8px">
+    <div class="cv-title">🗺️ マップで位置を指定</div>
+    <div class="cv-desc" style="margin-bottom:4px">地図をタップして、会場の位置にピンを立ててください。ピンはドラッグでも動かせます。</div>
+    <div id="cv-map"></div>
+    <div class="cv-actions" style="margin-top:12px">
+      <button class="btn-secondary" id="cv-map-cancel" type="button">キャンセル</button>
+      <button class="btn-primary" id="cv-map-confirm" type="button">この位置にする</button>
     </div>
   </div>
 </div>
@@ -2142,7 +2165,7 @@ function makePopupHtml(venue){
   return `<div class="popup-body">
     <div class="popup-type">${TYPE_ICON[venue.type]} ${TYPE_LABEL[venue.type]}</div>
     <div class="popup-name">${venue.name}</div>
-    <div class="popup-pref">📍 ${venue.pref}</div>
+    <div class="popup-pref">📍 ${venue.pref}${venue.city?' '+venue.city:''}</div>
     ${cap ? `<div class="popup-cap">👥 ${cap}</div>` : ''}
     <div class="popup-visits">${visitText}</div>
     <button class="popup-btn ${count>0?'visited-btn':''}" onclick="openModal(${venue.id})">${count>0?'📝 記録を見る・追加':'📝 新規登録'}</button>
@@ -2177,26 +2200,134 @@ function nextCustomId(){
   const ids = VENUES_CLEAN.map(v=>v.id).filter(i=>i>=9001);
   return ids.length ? Math.max(...ids)+1 : 9001;
 }
+// 47都道府県の中心（ジオコーディング失敗時のフォールバック）
+const PREF_CENTER = {
+  '北海道':[43.0642,141.3469],'青森':[40.8244,140.7400],'岩手':[39.7036,141.1527],'宮城':[38.2688,140.8721],
+  '秋田':[39.7186,140.1024],'山形':[38.2404,140.3633],'福島':[37.7503,140.4676],'茨城':[36.3418,140.4468],
+  '栃木':[36.5657,139.8836],'群馬':[36.3907,139.0604],'埼玉':[35.8569,139.6489],'千葉':[35.6074,140.1065],
+  '東京':[35.6895,139.6917],'神奈川':[35.4478,139.6425],'新潟':[37.9024,139.0232],'富山':[36.6953,137.2114],
+  '石川':[36.5947,136.6256],'福井':[36.0652,136.2216],'山梨':[35.6642,138.5684],'長野':[36.6513,138.1810],
+  '岐阜':[35.3912,136.7223],'静岡':[34.9769,138.3831],'愛知':[35.1802,136.9066],'三重':[34.7303,136.5086],
+  '滋賀':[35.0045,135.8686],'京都':[35.0212,135.7556],'大阪':[34.6863,135.5200],'兵庫':[34.6913,135.1830],
+  '奈良':[34.6851,135.8050],'和歌山':[34.2261,135.1675],'鳥取':[35.5039,134.2377],'島根':[35.4723,133.0505],
+  '岡山':[34.6618,133.9344],'広島':[34.3966,132.4596],'山口':[34.1859,131.4714],'徳島':[34.0658,134.5593],
+  '香川':[34.3401,134.0434],'愛媛':[33.8416,132.7657],'高知':[33.5597,133.5311],'福岡':[33.6064,130.4181],
+  '佐賀':[33.2494,130.2988],'長崎':[32.7448,129.8737],'熊本':[32.7898,130.7417],'大分':[33.2382,131.6126],
+  '宮崎':[31.9111,131.4239],'鹿児島':[31.5602,130.5581],'沖縄':[26.2124,127.6809]
+};
+function normPref(p){ p=(p||'').trim(); if(p==='北海道') return '北海道'; return p.replace(/[都府県]$/,''); }
+// 都道府県＋市区町村から中心座標を取得（OpenStreetMap）。失敗時は都道府県中心にフォールバック。
+async function geocodeJP(pref, city){
+  const q = [city, pref, 'Japan'].filter(Boolean).join(', ');
+  if(q){
+    try{
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&accept-language=ja&q=${encodeURIComponent(q)}`;
+      const res = await fetch(url, {headers:{'Accept':'application/json'}});
+      if(res.ok){
+        const data = await res.json();
+        if(data && data.length){
+          const lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
+          if(!isNaN(lat) && !isNaN(lng)) return [lat, lng];
+        }
+      }
+    }catch(e){ console.warn('geocode failed:', e); }
+  }
+  // フォールバック：都道府県の中心
+  const c = PREF_CENTER[normPref(pref)];
+  return c ? [c[0], c[1]] : null;
+}
 // 起動時：保存済みのカスタム会場を会場リストへ統合
 loadCustomVenues().forEach(v=>{ if(!VENUES_CLEAN.some(x=>x.id===v.id)) VENUES_CLEAN.push(v); });
 
 function openCustomVenueModal(){
   document.getElementById('cv-name').value='';
   document.getElementById('cv-pref').value='';
+  document.getElementById('cv-city').value='';
+  cvPickedCoord = null; cvPickTemp = null;
+  updateCvLocStatus();
   document.getElementById('cv-overlay').classList.remove('hidden');
   setTimeout(()=>document.getElementById('cv-name').focus(), 100);
 }
+
+// ===== マップで位置を指定 =====
+let cvPickedCoord = null;       // 確定した手動座標 [lat,lng]
+let cvPickMap = null, cvPickMarker = null, cvPickTemp = null;
+const CV_PICK_ICON = L.divIcon({ className:'', html:'<div style="font-size:30px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5))">📍</div>', iconSize:[30,30], iconAnchor:[15,28] });
+
+function updateCvLocStatus(){
+  const el = document.getElementById('cv-loc-status');
+  if(!el) return;
+  if(cvPickedCoord){
+    el.textContent = `✓ マップで指定済み（${cvPickedCoord[0].toFixed(4)}, ${cvPickedCoord[1].toFixed(4)}）`;
+    el.style.color = '#2bb673';
+  } else {
+    el.textContent = '未指定（市区町村から自動で取得します）';
+    el.style.color = '#999';
+  }
+}
+function setCvPickMarker(lat, lng){
+  cvPickTemp = [lat, lng];
+  if(!cvPickMarker){
+    cvPickMarker = L.marker([lat,lng], {draggable:true, icon:CV_PICK_ICON}).addTo(cvPickMap);
+    cvPickMarker.on('dragend', ()=>{ const p = cvPickMarker.getLatLng(); cvPickTemp = [p.lat, p.lng]; });
+  } else {
+    cvPickMarker.setLatLng([lat,lng]);
+  }
+}
+function openCvMapPicker(){
+  document.getElementById('cv-map-overlay').classList.remove('hidden');
+  if(!cvPickMap){
+    cvPickMap = L.map('cv-map', {zoomControl:true});
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {attribution:'© Esri © OpenStreetMap contributors', maxZoom:19}).addTo(cvPickMap);
+    cvPickMap.on('click', e=> setCvPickMarker(e.latlng.lat, e.latlng.lng));
+  }
+  // 初期表示位置：指定済み＞都道府県中心＞日本全体
+  let center, zoom;
+  if(cvPickedCoord){ center = cvPickedCoord; zoom = 15; }
+  else {
+    const c = PREF_CENTER[normPref(document.getElementById('cv-pref').value.trim())];
+    if(c){ center = c; zoom = 11; } else { center = [36.5, 136.5]; zoom = 5; }
+  }
+  cvPickMap.setView(center, zoom);
+  // 既存ピンの反映
+  if(cvPickedCoord){ setCvPickMarker(cvPickedCoord[0], cvPickedCoord[1]); }
+  else if(cvPickMarker){ cvPickMap.removeLayer(cvPickMarker); cvPickMarker = null; cvPickTemp = null; }
+  setTimeout(()=> cvPickMap.invalidateSize(), 200);
+}
+document.getElementById('cv-map-pick-btn').addEventListener('click', openCvMapPicker);
+document.getElementById('cv-map-cancel').addEventListener('click', ()=>{
+  document.getElementById('cv-map-overlay').classList.add('hidden');
+});
+document.getElementById('cv-map-confirm').addEventListener('click', ()=>{
+  if(!cvPickTemp){ alert('地図をタップして、会場の位置にピンを立ててください'); return; }
+  cvPickedCoord = [cvPickTemp[0], cvPickTemp[1]];
+  updateCvLocStatus();
+  document.getElementById('cv-map-overlay').classList.add('hidden');
+});
 document.getElementById('cv-cancel').addEventListener('click', ()=>{
   document.getElementById('cv-overlay').classList.add('hidden');
 });
 document.getElementById('cv-overlay').addEventListener('click', e=>{
   if(e.target===document.getElementById('cv-overlay')) document.getElementById('cv-overlay').classList.add('hidden');
 });
-document.getElementById('cv-save').addEventListener('click', ()=>{
+document.getElementById('cv-save').addEventListener('click', async ()=>{
   const name = document.getElementById('cv-name').value.trim();
-  const pref = document.getElementById('cv-pref').value.trim() || 'その他';
+  const prefIn = document.getElementById('cv-pref').value.trim();
+  const city = document.getElementById('cv-city').value.trim();
   if(!name){ alert('会場名を入力してください'); return; }
-  const venue = { id: nextCustomId(), name, pref, type:'custom', custom:true };
+  const venue = { id: nextCustomId(), name, pref: prefIn || 'その他', city, type:'custom', custom:true };
+  // 位置：①マップで手動指定が最優先 ②なければ市区町村/都道府県から自動取得
+  const saveBtn = document.getElementById('cv-save');
+  let coord = null;
+  if(cvPickedCoord){
+    coord = cvPickedCoord;
+  } else if(prefIn || city){
+    const orig = saveBtn.textContent;
+    saveBtn.textContent = '位置を取得中…'; saveBtn.disabled = true;
+    coord = await geocodeJP(prefIn, city);
+    saveBtn.textContent = orig; saveBtn.disabled = false;
+  }
+  if(coord){ venue.lat = coord[0]; venue.lng = coord[1]; }
   VENUES_CLEAN.push(venue);
   const list = loadCustomVenues(); list.push(venue); saveCustomVenues(list);
   document.getElementById('cv-overlay').classList.add('hidden');
@@ -3037,8 +3168,10 @@ function renderRecordsPanel(){
       ? allRecs
       : allRecs.filter(r=> r.date && r.date.startsWith(recordsSelectedYear));
     const photos = recs.flatMap(r=>r.photos||[]);
+    const artists = [...new Set(recs.map(r=>(r.artist||'').trim()).filter(Boolean))];
+    const artistText = artists.length ? `<span class="record-venue-artist">${artists.join(' / ')}</span>` : '';
     return `<div class="record-card">
-      <div class="record-venue-name">${TYPE_ICON[v.type]} ${v.name}</div>
+      <div class="record-venue-name">${TYPE_ICON[v.type]} ${v.name}${artistText}</div>
       <div class="record-venue-meta">${v.pref} · ${TYPE_LABEL[v.type]}</div>
       <div class="record-visits">${recs.map(r=>`
         <div class="record-visit-row">
