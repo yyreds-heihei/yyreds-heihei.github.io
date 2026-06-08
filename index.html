@@ -2,13 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-082';
+const APP_VERSION = '20260531-083';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -377,6 +377,8 @@ if (stored !== APP_VERSION) {
   .backup-step-sub{font-size:0.68rem;color:#999;display:block;margin-top:2px;letter-spacing:0.01em}
 
   /* SPLASH SCREEN */
+  /* 最上部セーフエリア（iPhoneのステータスバー領域）を推しカラーで塗る・テーマ変更に追従 */
+  #safe-top{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0);background:var(--accent);z-index:99990;pointer-events:none}
   .splash{position:fixed;inset:0;z-index:99999;overflow:hidden;background:linear-gradient(180deg,#cdb6f0 0%,#eaa6d2 50%,#ff6fbf 100%);transition:opacity 0.5s ease}
   .splash.fade-out{opacity:0;pointer-events:none}
   .splash-bg{
@@ -395,7 +397,7 @@ if (stored !== APP_VERSION) {
   /* HOME PANEL */
   .home-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:900;display:flex;flex-direction:column;background-image:linear-gradient(160deg,#0d0d1a 0%,#1a0a2e 50%,#0d1a1a 100%);background-size:cover;background-position:center}
   .home-overlay.hidden{display:none}
-  .home-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:24px}
+  .home-content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0)) 20px 20px;gap:24px}
   /* 推し写真エリア */
   .oshi-scene{display:flex;align-items:center;gap:0;width:100%;max-width:380px;justify-content:center}
   .oshi-photo-wrap{flex-shrink:0;position:relative}
@@ -499,10 +501,10 @@ if (stored !== APP_VERSION) {
   .visit-setlist-item span{color:#555;font-weight:700;flex-shrink:0;width:20px;text-align:right}
 
   /* 設定ボタン（ホーム左上） */
-  .home-settings-btn{position:absolute;top:12px;left:12px;z-index:11;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.45);border:1.5px solid rgba(255,255,255,0.25);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+  .home-settings-btn{position:absolute;top:calc(12px + env(safe-area-inset-top,0));left:12px;z-index:11;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.45);border:1.5px solid rgba(255,255,255,0.25);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent;transition:all 0.15s}
   .home-settings-btn:active{background:rgba(124,58,237,0.6)}
   /* 背景変更ボタン */
-  .home-bg-wrap{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:10;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .home-bg-wrap{position:absolute;top:calc(12px + env(safe-area-inset-top,0));right:12px;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:10;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .home-bg-btn{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(124,58,237,0.5);transition:all 0.15s}
   .home-bg-btn:active{transform:scale(0.92)}
   .home-bg-label{font-size:0.55rem;color:#fff;font-weight:600;letter-spacing:0.02em;white-space:nowrap;background:rgba(0,0,0,0.45);padding:2px 6px;border-radius:6px;backdrop-filter:blur(4px)}
@@ -592,7 +594,8 @@ if (stored !== APP_VERSION) {
     .ranking-panel,.records-panel{width:100vw;border-radius:0}
     .ranking-overlay,.records-overlay,.home-overlay{bottom:calc(72px + env(safe-area-inset-bottom,0))}
     .ranking-overlay,.records-overlay{align-items:stretch}
-    .ranking-panel-header,.records-panel-header{padding:18px 16px}
+    .ranking-panel-header,.records-panel-header{padding:calc(18px + env(safe-area-inset-top,0)) 16px 18px}
+    .leaflet-top{top:env(safe-area-inset-top,0)}
     /* モバイルでは×ボタンを非表示（タブで切り替えるため） */
     .ranking-panel-close,.records-panel-close{display:none}
     /* ホームのフッターボタンはタブがあるので非表示 */
@@ -612,6 +615,8 @@ if (stored !== APP_VERSION) {
 </style>
 </head>
 <body>
+<!-- 最上部セーフエリアを推しカラーで塗るバー -->
+<div id="safe-top"></div>
 
 <!-- Splash Screen -->
 <div class="splash" id="splash">
