@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-098';
+const APP_VERSION = '20260531-099';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -115,6 +115,9 @@ if (stored !== APP_VERSION) {
   .venue-meta{font-size:0.68rem;color:#777;margin-top:2px}
   .venue-cap{font-size:0.65rem;color:#999;margin-top:1px}
   .venue-visits{font-size:0.7rem;color:#a78bfa;margin-left:auto;flex-shrink:0}
+  .venue-del-custom{margin-left:auto;flex-shrink:0;background:#fdecef;border:1px solid #f3c5cf;color:#d6336c;font-size:0.95rem;width:34px;height:34px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;padding:0}
+  .venue-del-custom:active{background:#f9d6dd}
+  .venue-visits + .venue-del-custom{margin-left:8px}
 
   /* MAP MARKERS */
   .marker-dot{width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(255,255,255,0.6);box-shadow:0 0 8px rgba(0,0,0,0.5);cursor:pointer;transition:transform 0.15s}
@@ -2544,7 +2547,10 @@ function renderSidebar(){
         ${venue.cap ? `<div class="venue-cap">👥 ${venue.cap.toLocaleString()}人</div>` : ''}
       </div>
       ${count>0 ? `<div class="venue-visits">${count}回</div>` : ''}
+      ${venue.custom ? `<button class="venue-del-custom" data-id="${venue.id}" title="この手入力会場を削除">🗑</button>` : ''}
     `;
+    const delBtn = item.querySelector('.venue-del-custom');
+    if(delBtn){ delBtn.addEventListener('click', e=>{ e.stopPropagation(); deleteCustomVenue(venue.id); }); }
     item.addEventListener('click', ()=>{
       // 座標が無い会場（自分で入力）は、マップではなく直接記録画面を開く
       if(venue.lat==null || venue.lng==null || !markers[venue.id]){
@@ -2565,6 +2571,31 @@ function renderSidebar(){
     });
     list.appendChild(item);
   });
+}
+
+// 手入力会場をリストから削除（間違えて入力した時用）
+function deleteCustomVenue(id){
+  const v = VENUES_CLEAN.find(x=>x.id===id);
+  if(!v || !v.custom) return;
+  const recCount = getVisitCount(id);
+  const msg = recCount > 0
+    ? `「${v.name}」を削除します。\nこの会場の足あと記録（${recCount}件）も一緒に削除されます。\nよろしいですか？`
+    : `手入力した会場「${v.name}」を削除します。よろしいですか？`;
+  if(!confirm(msg)) return;
+  // 記録を削除
+  if(visited[id]){ delete visited[id]; saveVisited(); }
+  // カスタム会場リストから削除
+  saveCustomVenues(loadCustomVenues().filter(x=>x.id!==id));
+  // 座標の上書き設定も削除
+  const o = loadVenueCoords(); if(o[id]!=null){ delete o[id]; saveVenueCoords(o); }
+  // VENUES_CLEAN とマーカーから削除
+  const idx = VENUES_CLEAN.findIndex(x=>x.id===id);
+  if(idx>=0) VENUES_CLEAN.splice(idx,1);
+  if(markers[id]){ map.removeLayer(markers[id]); delete markers[id]; }
+  renderSidebar();
+  updateStats();
+  if(typeof renderRecordsPanel==='function') renderRecordsPanel();
+  if(typeof showMiniToast==='function') showMiniToast('🗑 会場を削除しました');
 }
 
 function highlightSidebarItem(id){
