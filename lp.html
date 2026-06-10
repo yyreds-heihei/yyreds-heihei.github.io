@@ -82,6 +82,25 @@
   .feat h3{font-size:1.02rem;font-weight:800;margin-bottom:6px;color:#6b4a82}
   .feat p{font-size:0.86rem;color:var(--muted)}
 
+  /* ===== スクリーンショット ===== */
+  .screens{background:linear-gradient(160deg,#f6efff,var(--bg))}
+  .shots{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .shot{margin:0;text-align:center}
+  .shot-frame{background:linear-gradient(160deg,#3a2a52,#241338);border-radius:24px;padding:8px;box-shadow:0 14px 34px rgba(160,110,200,0.32);border:1px solid rgba(255,255,255,0.25)}
+  .shot-frame img{width:100%;display:block;border-radius:18px;aspect-ratio:9/19.5;object-fit:cover;background:#170a2b}
+  .shot-ph{width:100%;aspect-ratio:9/19.5;border-radius:18px;background:linear-gradient(180deg,#231042,#120a22);display:flex;align-items:center;justify-content:center;color:#9a86bf;font-size:0.78rem;font-weight:700;text-align:center;padding:10px}
+  .shot figcaption{font-size:0.8rem;color:#7a6b86;font-weight:600;margin-top:12px;line-height:1.5}
+
+  /* ===== 信頼 ===== */
+  .trust{background:#fff}
+  .trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+  .trust-card{background:linear-gradient(160deg,#fff,#faf5fd);border:1px solid var(--line);border-radius:20px;padding:24px 18px;text-align:center}
+  .trust-card .emo{font-size:1.8rem;display:block;margin-bottom:10px}
+  .trust-card h3{font-size:0.95rem;font-weight:800;color:#6b4a82;margin-bottom:6px}
+  .trust-card p{font-size:0.8rem;color:var(--muted);line-height:1.6}
+  .trust-note{max-width:700px;margin:0 auto;background:linear-gradient(160deg,#fff6fb,#f6efff);border:1px solid var(--line);border-radius:18px;padding:22px 24px;font-size:0.9rem;color:#6e5f7a;line-height:1.85;text-align:center}
+  .trust-note b{color:#6b4a82}
+
   /* ===== 料金 ===== */
   .price{background:linear-gradient(160deg,#fbe9f4,var(--bg))}
   .price-table{max-width:560px;margin:0 auto;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 14px 40px rgba(255,140,192,0.18);border:1px solid var(--line)}
@@ -148,6 +167,8 @@
     .hero-actions{justify-content:center}
     .hero h1{font-size:2.1rem}
     .pain-list,.feat-grid,.steps{grid-template-columns:1fr}
+    .shots{grid-template-columns:repeat(2,1fr);gap:14px}
+    .trust-grid{grid-template-columns:repeat(2,1fr)}
     .feat-grid{gap:14px}
     h2.sec-title{font-size:1.4rem}
     .phone{width:220px}
@@ -254,6 +275,58 @@
   </div>
 </section>
 
+<!-- スクリーンショット -->
+<section id="screens" class="screens">
+  <div class="wrap">
+    <h2 class="sec-title">実際の画面</h2>
+    <p class="sec-sub">スマホで、こんなふうに使えます。</p>
+    <div class="shots">
+      <figure class="shot">
+        <div class="shot-frame">
+          <img src="screen1.png" alt="会場マップ画面" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'shot-ph',textContent:'スクショ準備中'}))">
+        </div>
+        <figcaption>会場マップ<br>行った会場にハートが灯る</figcaption>
+      </figure>
+      <figure class="shot">
+        <div class="shot-frame">
+          <img src="screen2.png" alt="足あと画面" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'shot-ph',textContent:'スクショ準備中'}))">
+        </div>
+        <figcaption>足あと<br>参戦の記録が一覧に</figcaption>
+      </figure>
+      <figure class="shot">
+        <div class="shot-frame">
+          <img src="screen3.png" alt="セットリスト・座席画面" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'shot-ph',textContent:'スクショ準備中'}))">
+        </div>
+        <figcaption>セットリスト・座席<br>その日の全部を記録</figcaption>
+      </figure>
+      <figure class="shot">
+        <div class="shot-frame">
+          <img src="screen4.png" alt="推しホーム画面" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'shot-ph',textContent:'スクショ準備中'}))">
+        </div>
+        <figcaption>推しホーム画面<br>次のライブまであと◯日</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- 信頼 -->
+<section class="trust">
+  <div class="wrap">
+    <h2 class="sec-title">大切な思い出だから、安心して。</h2>
+    <p class="sec-sub">記録が消えない・引き継げる仕組みを、しっかり用意しています。</p>
+    <div class="trust-grid">
+      <div class="trust-card"><span class="emo">🔒</span><h3>データは端末の中だけ</h3><p>記録や写真はあなたのスマホ内に保存。運営サーバーには送られません。</p></div>
+      <div class="trust-card"><span class="emo">💾</span><h3>消えにくい保存設計</h3><p>大容量保存＋1日1回の自動バックアップで、写真もセトリもしっかり残ります。</p></div>
+      <div class="trust-card"><span class="emo">🔁</span><h3>機種変更もOK</h3><p>かんたん引き継ぎ機能つき。iPhone⇔Android の移行も確認済みです。</p></div>
+      <div class="trust-card"><span class="emo">💝</span><h3>買い切りで安心</h3><p>プレミアムは一度きりの300円。月額や追加課金はありません。</p></div>
+    </div>
+    <div class="trust-note">
+      “推し活の記憶”は、あとから絶対に取り戻せない大切なもの。<br>
+      だから Ricor Live は、<b>「楽しく記録できること」</b>と同じくらい、<b>「記録が失われないこと」</b>を大事に作っています。
+    </div>
+  </div>
+</section>
+
 <!-- 料金 -->
 <section id="price" class="price">
   <div class="wrap">
@@ -303,7 +376,7 @@
     <p class="sec-sub"></p>
     <div class="faq-item">
       <button class="faq-q">機種変更してもデータは引き継げますか？<span class="mk">＋</span></button>
-      <div class="faq-a"><div>はい。データのエクスポート／インポート機能があり、LINEで自分宛に送るなどして新しいスマホへ引き継げます。</div></div>
+      <div class="faq-a"><div>はい。データのエクスポート／インポート機能があり、LINE・Gmail・Googleドライブなどで自分宛に送れば、新しいスマホへ引き継げます。iPhone⇔Android の移行にも対応しています。</div></div>
     </div>
     <div class="faq-item">
       <button class="faq-q">課金は月額ですか？<span class="mk">＋</span></button>
