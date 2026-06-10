@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-100';
+const APP_VERSION = '20260531-104';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -40,7 +40,8 @@ if (stored !== APP_VERSION) {
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;font-family:'Hiragino Sans','Yu Gothic UI','Meiryo',sans-serif;background:#0f0f13;color:#e2e2e8;overflow:hidden}
+  html,body{height:100%;font-family:var(--app-font,'Hiragino Sans','Yu Gothic UI','Meiryo',sans-serif);background:#0f0f13;color:#e2e2e8;overflow:hidden}
+  button,input,textarea,select{font-family:inherit}
   :root{--accent:#7c3aed;--accent-light:#ff6ec4;--accent2:#a78bfa;--bg:#0f0f13;--bg2:#1a1a24;--bg3:#13131e;--border:#2a2a3a;--text:#e2e2e8;--muted:#888}
 
   /* HEADER */
@@ -366,6 +367,9 @@ if (stored !== APP_VERSION) {
   .theme-swatch.active{border-color:#1a1a2a;box-shadow:0 0 0 2px #fff inset,0 2px 8px rgba(0,0,0,0.25)}
   .theme-custom{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:0.82rem;font-weight:700;color:#444;background:#fff;border:1px solid #ece7fb;border-radius:10px;padding:8px 12px;cursor:pointer}
   .theme-custom input[type=color]{width:46px;height:32px;border:none;background:none;padding:0;cursor:pointer}
+  .font-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .font-chip{padding:9px 14px;border-radius:12px;border:2px solid #d0d0d8;background:#fff;color:#333;font-size:0.92rem;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.12s}
+  .font-chip.active{border-color:#7c3aed;background:#f0ecff;color:#4c1d95;font-weight:700}
   .auto-bk-section{background:#f3fbf6;border:1px solid #d7efe1;border-radius:14px;padding:14px 14px 12px;margin-bottom:8px}
   .auto-bk-title{font-size:0.92rem;font-weight:800;color:#1a1a2a;margin-bottom:4px}
   .auto-bk-desc{font-size:0.72rem;color:#888;margin-bottom:10px;line-height:1.6}
@@ -791,7 +795,7 @@ if (stored !== APP_VERSION) {
 <!-- 推し名前入力モーダル -->
 <div class="oshi-name-modal hidden" id="oshi-name-modal">
   <div class="oshi-name-modal-inner">
-    <div class="oshi-name-modal-title">✏️ 推しの名前を入力</div>
+    <div class="oshi-name-modal-title">名前を入力</div>
     <input class="form-input" type="text" id="oshi-name-input" placeholder="例：〇〇ちゃん" maxlength="20" style="margin-bottom:14px;font-size:16px">
     <div style="display:flex;gap:10px">
       <button class="btn-secondary" onclick="document.getElementById('oshi-name-modal').classList.add('hidden')">キャンセル</button>
@@ -922,6 +926,12 @@ if (stored !== APP_VERSION) {
       <label class="theme-custom">好きな色をえらぶ
         <input type="color" id="theme-color-input" value="#7c3aed">
       </label>
+    </div>
+
+    <div class="theme-section">
+      <div class="theme-title">🔤 フォント（書体）</div>
+      <div class="theme-sub">アプリ全体の文字の書体を変えられます。</div>
+      <div class="font-chips" id="font-chips"></div>
     </div>
 
     <div class="backup-step">
@@ -3056,7 +3066,6 @@ function renderVisitList(id){
       <div class="visit-header">
         <div class="visit-date">📅 ${r.date||'日付未記録'}${r.artist?' · '+r.artist:''}${r.weather?' '+WEATHER_ICON[r.weather]:''}</div>
         <div class="visit-actions">
-          <button class="visit-edit" data-idx="${i}">✏️ 編集</button>
           <button class="visit-del" data-idx="${i}">🗑</button>
         </div>
       </div>
@@ -3114,63 +3123,65 @@ function renderVisitList(id){
 document.getElementById('modal-save').addEventListener('click', ()=>{
   if(!modalVenueId) return;
   const wasNew = editingVisitIdx === null;   // 新規登録かどうか
-  const rec = {
-    uid: editingVisitIdx !== null
-      ? ((visited[modalVenueId]||[])[editingVisitIdx]?.uid || Date.now()+'_'+Math.random().toString(36).slice(2))
-      : Date.now()+'_'+Math.random().toString(36).slice(2),
-    date: document.getElementById('form-date').value,
-    artist: document.getElementById('form-artist').value.trim(),
-    tour: document.getElementById('form-tour').value.trim(),
-    weather: selectedWeather,
-    pinEmoji: selectedPinEmoji,
-    memo: document.getElementById('form-memo').value.trim(),
-    setlist: pendingSetlist.filter(s=>s.trim()),
-    photos: [...pendingPhotos],
-    seatNo: (document.getElementById('form-seat').value||'').trim(),
-    seatMark: pendingSeatImg ? {img: pendingSeatImg, x: pendingSeatX, y: pendingSeatY} : null
-  };
-  if(!visited[modalVenueId]) visited[modalVenueId]=[];
-  const fromVenue = modalVenueId;
-  const reassigning = (editingVisitIdx !== null && reassignTargetId != null && reassignTargetId !== modalVenueId);
-  if(reassigning){
-    // 別の会場へ付け替え：元の会場から削除し、選んだ会場へ移す
-    if(visited[modalVenueId][editingVisitIdx]) visited[modalVenueId].splice(editingVisitIdx, 1);
-    if(!visited[modalVenueId].length) delete visited[modalVenueId];
-    if(!visited[reassignTargetId]) visited[reassignTargetId]=[];
-    visited[reassignTargetId].push(rec);
-    editingVisitIdx = null;
-    document.getElementById('modal-save').textContent = '✓ 記録';
-  } else if(editingVisitIdx !== null && visited[modalVenueId][editingVisitIdx]){
-    // 既存レコードを上書き（対象が実在する時だけ）
-    visited[modalVenueId][editingVisitIdx] = rec;
-    editingVisitIdx = null;
-    document.getElementById('modal-save').textContent = '✓ 記録';
-  } else {
-    // 新規追加（編集対象が見つからない場合も、誤って上書きせず追加扱いにする）
-    editingVisitIdx = null;
-    document.getElementById('modal-save').textContent = '✓ 記録';
-    visited[modalVenueId].push(rec);
+  let saveOk = true;
+  // --- データ保存（万一エラーが出ても、下の画面遷移は必ず実行する）---
+  try {
+    const rec = {
+      uid: editingVisitIdx !== null
+        ? ((visited[modalVenueId]||[])[editingVisitIdx]?.uid || Date.now()+'_'+Math.random().toString(36).slice(2))
+        : Date.now()+'_'+Math.random().toString(36).slice(2),
+      date: document.getElementById('form-date').value,
+      artist: document.getElementById('form-artist').value.trim(),
+      tour: document.getElementById('form-tour').value.trim(),
+      weather: selectedWeather,
+      pinEmoji: selectedPinEmoji,
+      memo: document.getElementById('form-memo').value.trim(),
+      setlist: pendingSetlist.filter(s=>s.trim()),
+      photos: [...pendingPhotos],
+      seatNo: (document.getElementById('form-seat').value||'').trim(),
+      seatMark: pendingSeatImg ? {img: pendingSeatImg, x: pendingSeatX, y: pendingSeatY} : null
+    };
+    if(!visited[modalVenueId]) visited[modalVenueId]=[];
+    const fromVenue = modalVenueId;
+    const reassigning = (editingVisitIdx !== null && reassignTargetId != null && reassignTargetId !== modalVenueId);
+    if(reassigning){
+      // 別の会場へ付け替え：元の会場から削除し、選んだ会場へ移す
+      if(visited[modalVenueId][editingVisitIdx]) visited[modalVenueId].splice(editingVisitIdx, 1);
+      if(!visited[modalVenueId].length) delete visited[modalVenueId];
+      if(!visited[reassignTargetId]) visited[reassignTargetId]=[];
+      visited[reassignTargetId].push(rec);
+    } else if(editingVisitIdx !== null && visited[modalVenueId][editingVisitIdx]){
+      // 既存レコードを上書き（対象が実在する時だけ）
+      visited[modalVenueId][editingVisitIdx] = rec;
+    } else {
+      // 新規追加（編集対象が見つからない場合も、誤って上書きせず追加扱いにする）
+      visited[modalVenueId].push(rec);
+    }
+    saveOk = saveVisited();
+    refreshMarker(fromVenue);
+    if(reassigning){ refreshMarker(reassignTargetId); if(typeof showMiniToast==='function') showMiniToast('🔁 会場を変更しました'); }
+    renderSidebar();
+    updateStats();
+    renderVisitList(modalVenueId);
+  } catch(err){
+    console.warn('記録の保存中にエラー:', err);
   }
-  const saveOk = saveVisited();   // 失敗してもここで止めず、下の画面遷移は必ず実行する
-  refreshMarker(fromVenue);
-  if(reassigning){ refreshMarker(reassignTargetId); if(typeof showMiniToast==='function') showMiniToast('🔁 会場を変更しました'); }
+
+  // ===== ここから下は何があっても必ず実行（編集・更新後に「足あと」へ戻す）=====
   reassignTargetId = null;
-  renderSidebar();
-  updateStats();
-  renderVisitList(modalVenueId);
-  pendingPhotos = [];
-  selectedWeather = '';
-  pendingSetlist = [];
+  editingVisitIdx = null;
+  document.getElementById('modal-save').textContent = '✓ 記録';
+  // フォームの初期化
+  pendingPhotos = []; selectedWeather = ''; pendingSetlist = [];
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
-  renderSetlistRows();
-  renderPhotoRow();
+  try { renderSetlistRows(); renderPhotoRow(); } catch(e){}
   pendingSeatNo=''; pendingSeatImg=null; pendingSeatX=null; pendingSeatY=null;
   document.getElementById('form-seat').value='';
-  renderSeatArea();
+  try { renderSeatArea(); } catch(e){}
   document.getElementById('form-artist').value='';
   document.getElementById('form-tour').value='';
   document.getElementById('form-memo').value='';
-  // 保存後に「足あと」タブへ必ず移動（マップを挟まず即表示）
+  // 「足あと」タブへ移動
   activeTab = 'records';
   tabSwitching = true;
   setTimeout(()=>{ tabSwitching = false; }, 400);
@@ -3180,15 +3191,12 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
   document.getElementById('ranking-overlay').classList.add('hidden');
   const zc = document.querySelector('.leaflet-control-container');
   if(zc) zc.style.display = 'none';
-  // 保存した記録が必ず表示されるよう、年度フィルターを「すべて」に戻す
-  recordsSelectedYear = 'all';
-  // 先に足あとパネルを表示してからモーダルを閉じる（マップが見えないように）
-  renderRecordsPanel();
-  document.getElementById('records-overlay').classList.remove('hidden');
+  recordsSelectedYear = 'all';   // 保存した記録が必ず表示されるよう年度フィルターを戻す
+  try { renderRecordsPanel(); } catch(e){ console.warn('足あと描画エラー:', e); }
+  document.getElementById('records-overlay').classList.remove('hidden');  // 足あとパネルを必ず表示
   closeModal();
   if(wasNew) showSaveToast();   // 新規登録時は「登録完了！」ポップアップ
-  // 容量オーバーで保存に失敗していたら、写真を縮小して保存し直す
-  if(!saveOk) recompressAllAndSave();
+  if(!saveOk) recompressAllAndSave();   // 容量オーバー時は写真を縮小して保存し直す
 });
 
 // 「登録完了！」ポップアップ（薄紫ハート）
@@ -3814,7 +3822,53 @@ function renderThemeSwatches(){
     el.addEventListener('click', ()=> setThemeColor(el.dataset.color));
   });
 }
+/* ===== フォント（書体）選択 ===== */
+const FONT_OPTIONS = [
+  {key:'default', label:'標準',          stack:"'Hiragino Sans','Yu Gothic UI','Meiryo',sans-serif", google:null},
+  {key:'maru',    label:'丸ゴシック',     stack:"'Zen Maru Gothic',sans-serif",  google:'Zen+Maru+Gothic:wght@400;700'},
+  {key:'yomogi',  label:'やわらか手書き', stack:"'Yomogi',sans-serif",           google:'Yomogi'},
+  {key:'hachi',   label:'まるポップ',     stack:"'Hachi Maru Pop',sans-serif",   google:'Hachi+Maru+Pop'},
+  {key:'klee',    label:'えんぴつ',       stack:"'Klee One',sans-serif",         google:'Klee+One:wght@400;600'},
+  {key:'mincho',  label:'明朝',          stack:"'Zen Old Mincho',serif",        google:'Zen+Old+Mincho:wght@400;700'},
+  {key:'pop',     label:'ポップ',        stack:"'Mochiy Pop One',sans-serif",   google:'Mochiy+Pop+One'}
+];
+const _loadedFonts = new Set(['Yomogi']);   // Yomogiは<head>で読込済み
+function loadFontLink(googleParam){
+  if(!googleParam) return;
+  const fam = googleParam.split(':')[0];
+  if(_loadedFonts.has(fam)) return;
+  _loadedFonts.add(fam);
+  const l = document.createElement('link'); l.rel='stylesheet';
+  l.href = `https://fonts.googleapis.com/css2?family=${googleParam}&display=swap`;
+  document.head.appendChild(l);
+}
+function getAppFont(){ return localStorage.getItem('app_font') || 'default'; }
+function applyAppFont(key){
+  const opt = FONT_OPTIONS.find(o=>o.key===key) || FONT_OPTIONS[0];
+  loadFontLink(opt.google);
+  document.documentElement.style.setProperty('--app-font', opt.stack);
+}
+function setAppFont(key){
+  localStorage.setItem('app_font', key);
+  applyAppFont(key);
+  renderFontChips();
+}
+function renderFontChips(){
+  const wrap = document.getElementById('font-chips');
+  if(!wrap) return;
+  const cur = getAppFont();
+  // プレビュー用に各フォントを読み込む
+  FONT_OPTIONS.forEach(o=> loadFontLink(o.google));
+  wrap.innerHTML = FONT_OPTIONS.map(o=>
+    `<button type="button" class="font-chip${o.key===cur?' active':''}" data-font="${o.key}" style="font-family:${o.stack.replace(/"/g,'&quot;')}">${o.label}</button>`
+  ).join('');
+  wrap.querySelectorAll('.font-chip').forEach(el=>{
+    el.addEventListener('click', ()=> setAppFont(el.dataset.font));
+  });
+}
+
 // 起動時に適用（このスクリプトはbody末尾なので要素は存在する）
+applyAppFont(getAppFont());
 applyThemeColor(getThemeColor());
 renderThemeSwatches();
 (function(){
@@ -3828,6 +3882,7 @@ renderThemeSwatches();
 document.getElementById('btn-settings').addEventListener('click', ()=>{
   document.getElementById('backup-overlay').classList.remove('hidden');
   renderThemeSwatches();
+  renderFontChips();
   renderAutoBackupList();
   const ci = document.getElementById('theme-color-input');
   if(ci) ci.value = getThemeColor();
