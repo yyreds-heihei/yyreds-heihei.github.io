@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ricor Live | 推し活・ライブ参戦の記録アプリ</title>
-<meta name="description" content="推し活の全てが、この中に。あの日の記憶を、残さず刻む。全国のライブ会場マップ・足あと記録・セットリスト・座席・カレンダー。買い切り300円。">
+<title>Ricor Live | イベント・ライブ参戦の記録アプリ</title>
+<meta name="description" content="イベントの記録全てが、この中に。あの日の記憶を、残さず刻む。全国のライブ会場マップ・足あと記録・セットリスト・座席・カレンダー。買い切り150円。">
 <meta name="theme-color" content="#f7c6dd">
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 <!-- OGP -->
 <meta property="og:title" content="Ricor Live">
-<meta property="og:description" content="推し活の全てが、この中に。あの日の記憶を、残さず刻む。">
+<meta property="og:description" content="イベントの記録全てが、この中に。あの日の記憶を、残さず刻む。">
 <meta property="og:image" content="icon.png">
 <meta property="og:type" content="website">
 <style>
@@ -37,25 +37,35 @@
   .brand small{display:block;font-size:0.6rem;color:var(--muted);font-weight:600;letter-spacing:0.08em}
   .nav-cta{background:var(--grad);color:#fff;text-decoration:none;font-size:0.82rem;font-weight:700;padding:9px 16px;border-radius:24px;white-space:nowrap;box-shadow:0 4px 14px rgba(255,110,168,0.4)}
 
-  /* ===== HERO ===== */
-  .hero{padding:64px 0 54px;background:linear-gradient(180deg,#e7d8ff 0%,#ffd9ec 58%,var(--bg) 100%);position:relative;overflow:hidden}
-  .hero::after{content:'';position:absolute;inset:0;background:radial-gradient(60% 40% at 80% 10%,rgba(255,255,255,0.5),transparent 70%);pointer-events:none}
+  /* ===== HERO（夜のライブ会場）===== */
+  .hero{padding:76px 0 70px;position:relative;overflow:hidden;
+    background:
+      radial-gradient(85% 60% at 75% 15%,rgba(155,123,240,0.35),transparent 65%),
+      radial-gradient(70% 55% at 15% 85%,rgba(255,94,168,0.28),transparent 60%),
+      linear-gradient(168deg,#140a28 0%,#221140 48%,#37195f 100%)}
+  .hero::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:110px;background:linear-gradient(180deg,transparent,#fff);pointer-events:none;z-index:2}
+  .hero-lights{position:absolute;inset:0;pointer-events:none;z-index:0}
+  .hero-lights .pl{box-shadow:0 0 10px 3px currentColor}
+  .hero-glow{position:absolute;border-radius:50%;filter:blur(60px);opacity:0.5;pointer-events:none}
   .hero-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:center;position:relative;z-index:1}
-  .hero-badge{display:inline-block;background:rgba(255,255,255,0.75);color:#a14b86;font-size:0.75rem;font-weight:700;padding:6px 14px;border-radius:20px;margin-bottom:18px;box-shadow:0 2px 8px rgba(255,140,192,0.25)}
-  .hero h1{font-size:2.6rem;font-weight:900;line-height:1.25;letter-spacing:0.01em;margin-bottom:8px;color:#5a3d6e}
-  .hero-tagline{font-size:1.15rem;font-weight:700;color:#6e5f7a;margin:2px 0 14px;letter-spacing:0.02em}
-  .hero .en{font-size:0.92rem;color:#a98fc4;letter-spacing:0.12em;font-weight:700;margin-bottom:6px}
-  .hero-origin{font-size:0.8rem;color:#9a86bf;margin-bottom:20px;letter-spacing:0.01em}
-  .hero-origin em{font-style:italic;color:#8b6df0;font-weight:700}
-  .hero p.lead{font-size:1.05rem;color:#6e5f7a;margin-bottom:28px}
-  .hero-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-  .btn-primary{background:var(--grad);color:#fff;text-decoration:none;font-weight:800;font-size:1rem;padding:15px 30px;border-radius:30px;box-shadow:0 10px 26px rgba(255,110,168,0.45);transition:transform .15s}
-  .btn-primary:hover{transform:translateY(-2px)}
+  .hero-badge{display:inline-block;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.22);color:#ffd9ec;font-size:0.75rem;font-weight:700;padding:6px 14px;border-radius:20px;margin-bottom:18px;backdrop-filter:blur(6px)}
+  .hero h1{font-size:2.7rem;font-weight:900;line-height:1.22;letter-spacing:0.01em;margin-bottom:10px;color:#fff;text-shadow:0 2px 24px rgba(155,123,240,0.35)}
+  .hero h1 .grad-text{background:linear-gradient(120deg,#ff8cc0,#c9a8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero-tagline{font-size:1.15rem;font-weight:700;color:#e9defc;margin:2px 0 14px;letter-spacing:0.02em}
+  .hero .en{font-size:0.9rem;color:#a98fd9;letter-spacing:0.12em;font-weight:700;margin-bottom:6px}
+  .hero-origin{font-size:0.8rem;color:#8f7bb8;margin-bottom:20px;letter-spacing:0.01em}
+  .hero-origin em{font-style:italic;color:#c9b3ff;font-weight:700}
+  .hero p.lead{font-size:1.02rem;color:#cfc2e8;margin-bottom:28px}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .btn-primary{background:var(--grad);color:#fff;text-decoration:none;font-weight:800;font-size:1rem;padding:15px 30px;border-radius:30px;box-shadow:0 10px 30px rgba(255,110,168,0.5);transition:transform .15s,box-shadow .15s}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(255,110,168,0.6)}
+  .hero .btn-ghost{color:#d9c7ff}
   .btn-ghost{color:var(--purple);text-decoration:none;font-weight:700;font-size:0.9rem}
-  .hero-note{font-size:0.78rem;color:var(--muted);margin-top:14px}
+  .hero-note{font-size:0.78rem;color:#9d8ac4;margin-top:14px}
 
   /* phone mockup */
-  .phone{justify-self:center;width:250px;aspect-ratio:9/19;border-radius:34px;background:linear-gradient(160deg,#3a2a52,#241338);padding:12px;box-shadow:0 24px 60px rgba(160,110,200,0.5);border:1px solid rgba(255,255,255,0.25)}
+  .phone{justify-self:center;width:250px;aspect-ratio:9/19;border-radius:34px;background:linear-gradient(160deg,#3a2a52,#241338);padding:12px;box-shadow:0 0 0 1px rgba(255,255,255,0.12),0 0 60px rgba(155,123,240,0.45),0 24px 70px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.25);animation:phoneFloat 5s ease-in-out infinite}
+  @keyframes phoneFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
   .phone-screen{position:relative;width:100%;height:100%;border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#1b0b30 0%,#0d0a1c 55%,#070510 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;padding:20px;text-align:center}
   .phone-screen::before{content:'';position:absolute;top:-12%;left:50%;transform:translateX(-50%);width:150%;height:55%;background:radial-gradient(ellipse at center,rgba(167,139,250,0.5),rgba(255,110,196,0.22) 42%,transparent 72%);filter:blur(8px);pointer-events:none}
   .venue{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -149,11 +159,37 @@
   .foot-brand{font-weight:800;color:#6b4a82;display:flex;align-items:center;gap:8px}
   .foot-brand img{width:26px;height:26px;border-radius:8px}
 
+  /* ===== スクロール出現アニメ ===== */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.22,.61,.36,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion: reduce){.reveal{opacity:1;transform:none;transition:none}.phone{animation:none}}
+  .feat,.pain-card,.trust-card{transition:transform .2s ease,box-shadow .2s ease}
+  .feat:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(255,140,192,0.15)}
+
+  /* ===== 数字・実績 ===== */
+  .stats{background:linear-gradient(120deg,#2a1450,#46217e);padding:54px 0}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;text-align:center}
+  .stat-num{font-size:2.6rem;font-weight:900;color:#fff;line-height:1.1;letter-spacing:0.01em}
+  .stat-num small{font-size:1.2rem;font-weight:800;color:#d9c7ff}
+  .stat-label{font-size:0.82rem;color:#c2aef0;font-weight:700;margin-top:6px}
+
+  /* ===== 追従CTA（スマホ）===== */
+  .sticky-cta{display:none}
+  @media(max-width:760px){
+    .sticky-cta{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0));z-index:90;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:18px;padding:10px 12px 10px 16px;box-shadow:0 10px 34px rgba(90,61,110,0.25);transform:translateY(120%);opacity:0;transition:transform .35s cubic-bezier(.22,.61,.36,1),opacity .35s}
+    .sticky-cta.show{transform:translateY(0);opacity:1}
+    .sc-txt{flex:1;font-size:0.78rem;color:#6e5f7a;font-weight:700;line-height:1.35}
+    .sc-txt b{color:#a14b86;font-size:0.95rem}
+    .sc-btn{flex-shrink:0;background:var(--grad);color:#fff;text-decoration:none;font-weight:800;font-size:0.88rem;padding:12px 18px;border-radius:24px;box-shadow:0 6px 18px rgba(255,110,168,0.4)}
+  }
+
   /* ===== 印刷・PDF用 ===== */
   @media print{
     *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
     header{position:static;box-shadow:none}
-    .nav-cta{display:none}
+    .nav-cta,.sticky-cta{display:none !important}
+    .reveal{opacity:1 !important;transform:none !important}
+    .phone{animation:none}
     section{padding:30px 0;break-inside:avoid}
     .feat,.pain-card,.step,.faq-item,.price-table,.final{break-inside:avoid}
     .hero-actions .btn-primary,.btn-white{box-shadow:none}
@@ -169,6 +205,8 @@
     .pain-list,.feat-grid,.steps{grid-template-columns:1fr}
     .shots{grid-template-columns:repeat(2,1fr);gap:14px}
     .trust-grid{grid-template-columns:repeat(2,1fr)}
+    .stats-grid{grid-template-columns:repeat(2,1fr);gap:26px 12px}
+    .stat-num{font-size:2.1rem}
     .feat-grid{gap:14px}
     h2.sec-title{font-size:1.4rem}
     .phone{width:220px}
@@ -184,7 +222,7 @@
   <div class="wrap nav">
     <div class="brand">
       <img src="icon.png" alt="Ricor Live">
-      <div>Ricor Live<small>推し活・ライブ記録</small></div>
+      <div>Ricor Live<small>イベント・ライブ記録</small></div>
     </div>
     <a class="nav-cta" href="https://ricorlive.app/">無料で使ってみる</a>
   </div>
@@ -192,14 +230,28 @@
 
 <!-- HERO -->
 <section class="hero">
+  <div class="hero-lights">
+    <div class="hero-glow" style="width:300px;height:300px;background:#9b7bf0;top:-80px;right:-60px"></div>
+    <div class="hero-glow" style="width:260px;height:260px;background:#ff5ea8;bottom:-60px;left:-70px;opacity:0.35"></div>
+    <i class="pl" style="left:6%;top:18%;color:#ff5ea8;animation-delay:.2s"></i>
+    <i class="pl" style="left:13%;top:64%;color:#5ec8ff;width:5px;height:5px;animation-delay:.8s"></i>
+    <i class="pl" style="left:22%;top:30%;color:#ffd24a;width:5px;height:5px;animation-delay:1.1s"></i>
+    <i class="pl" style="left:31%;top:78%;color:#c084fc;animation-delay:.4s"></i>
+    <i class="pl" style="left:44%;top:14%;color:#7dffb0;width:5px;height:5px;animation-delay:1.4s"></i>
+    <i class="pl" style="left:55%;top:70%;color:#fff;width:5px;height:5px;animation-delay:.6s"></i>
+    <i class="pl" style="left:66%;top:24%;color:#ff8cc0;animation-delay:1.0s"></i>
+    <i class="pl" style="left:78%;top:60%;color:#5ec8ff;width:5px;height:5px;animation-delay:.3s"></i>
+    <i class="pl" style="left:88%;top:34%;color:#ffd24a;animation-delay:1.2s"></i>
+    <i class="pl" style="left:94%;top:74%;color:#c084fc;width:5px;height:5px;animation-delay:.5s"></i>
+  </div>
   <div class="wrap hero-grid">
     <div>
-      <span class="hero-badge">🎤 推し活・ライブ参戦の記録アプリ</span>
-      <h1>推し活の全てが、<br><span class="grad-text">この中に。</span></h1>
+      <span class="hero-badge">イベント・ライブ参戦の記録アプリ</span>
+      <h1>イベントの記録全てが、<br><span class="grad-text">この中に。</span></h1>
       <p class="hero-tagline">あの日の記憶を、残さず刻む。</p>
       <div class="en">RICOR LIVE（リコルライブ） ｜ 記憶を記録するアプリ</div>
       <p class="hero-origin">“RICOR” は、ラテン語に由来する <em>Ricordi（＝記憶）</em> から。</p>
-      <p class="lead">行った会場（音楽ライブから舞台、スポーツまで網羅）、セットリスト、座席、次のイベントまでのカウントダウンカレンダー。<br>推しとの記憶を、記録にしていつまでも残せるアプリ。</p>
+      <p class="lead">行った会場（音楽ライブから舞台、スポーツまで網羅）、セットリスト、座席、次のイベントまでのカウントダウンカレンダー。<br>イベントの記憶を、記録にしていつまでも残せるアプリ。</p>
       <div class="hero-actions">
         <a class="btn-primary" href="https://ricorlive.app/">無料で使ってみる</a>
         <a class="btn-ghost" href="#price">料金を見る →</a>
@@ -249,8 +301,8 @@
 <!-- あるある -->
 <section class="pain">
   <div class="wrap">
-    <h2 class="sec-title">こんな“推し活あるある”、ありませんか？</h2>
-    <p class="sec-sub">記録がバラバラだと、せっかくの思い出も埋もれてしまう。</p>
+    <h2 class="sec-title">記録がバラバラだと、せっかくの思い出も埋もれてしまう。</h2>
+    <p class="sec-sub">こんなことを思ったこと、ありませんか？</p>
     <div class="pain-list">
       <div class="pain-card"><span class="emo">🤔</span><p>「あのセトリ、どこにメモしたっけ…」</p></div>
       <div class="pain-card"><span class="emo">🗺️</span><p>「この会場、前にも来たかな？」</p></div>
@@ -270,7 +322,19 @@
       <div class="feat"><div class="ico">🎵</div><h3>セットリスト</h3><p>その日歌われた曲を最大30曲まで記録。あとから何度でも見返せます。</p></div>
       <div class="feat"><div class="ico">🪑</div><h3>座席の記録</h3><p>座席番号に加え、座席表の画像に“自分の席”の印もつけられます。</p></div>
       <div class="feat"><div class="ico">📅</div><h3>ライブ予定カレンダー</h3><p>次の予定を登録すると「次のイベントまであと◯日」をホームに表示。</p></div>
-      <div class="feat"><div class="ico">💗</div><h3>推しホーム画面</h3><p>推しの写真を登録すると、時間帯で変わる吹き出しメッセージが届きます。（背景画像も変更可能）</p></div>
+      <div class="feat"><div class="ico">💗</div><h3>推しホーム画面</h3><p>お好きな写真を登録すると、時間帯で変わる吹き出しメッセージが届きます。（背景画像も変更可能）</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 数字・実績 -->
+<section class="stats">
+  <div class="wrap">
+    <div class="stats-grid">
+      <div class="stat reveal"><div class="stat-num"><span class="count" data-count="260">0</span><small>+</small></div><div class="stat-label">収録ライブ会場・劇場・スタジアム</div></div>
+      <div class="stat reveal"><div class="stat-num"><span class="count" data-count="30">0</span><small>曲</small></div><div class="stat-label">セットリスト記録</div></div>
+      <div class="stat reveal"><div class="stat-num"><span class="count" data-count="20">0</span><small>枚</small></div><div class="stat-label">1記録あたりの写真保存</div></div>
+      <div class="stat reveal"><div class="stat-num"><small>¥</small><span class="count" data-count="150">0</span></div><div class="stat-label">買い切り・追加課金なし</div></div>
     </div>
   </div>
 </section>
@@ -318,10 +382,10 @@
       <div class="trust-card"><span class="emo">🔒</span><h3>データは端末の中だけ</h3><p>記録や写真はあなたのスマホ内に保存。運営サーバーには送られません。</p></div>
       <div class="trust-card"><span class="emo">💾</span><h3>消えにくい保存設計</h3><p>大容量保存＋1日1回の自動バックアップで、写真もセトリもしっかり残ります。</p></div>
       <div class="trust-card"><span class="emo">🔁</span><h3>機種変更もOK</h3><p>かんたん引き継ぎ機能つき。iPhone⇔Android の移行も確認済みです。</p></div>
-      <div class="trust-card"><span class="emo">💝</span><h3>買い切りで安心</h3><p>プレミアムは一度きりの300円。月額や追加課金はありません。</p></div>
+      <div class="trust-card"><span class="emo">💝</span><h3>買い切りで安心</h3><p>プレミアムは一度きりの150円。月額や追加課金はありません。</p></div>
     </div>
     <div class="trust-note">
-      “推し活の記憶”は、あとから絶対に取り戻せない大切なもの。<br>
+      “イベントの記憶”は、あとから絶対に取り戻せない大切なもの。<br>
       だから Ricor Live は、<b>「楽しく記録できること」</b>と同じくらい、<b>「記録が失われないこと」</b>を大事に作っています。
     </div>
   </div>
@@ -331,12 +395,12 @@
 <section id="price" class="price">
   <div class="wrap">
     <h2 class="sec-title">料金プラン</h2>
-    <p class="sec-sub">まず無料でしっかり試せます。便利機能を全部使うなら買い切り300円。</p>
+    <p class="sec-sub">まず無料でしっかり試せます。便利機能を全部使うなら買い切り150円。</p>
     <div class="price-table">
       <div class="price-head">
         <div></div>
         <div class="free">無料</div>
-        <div class="paid">プレミアム<small>買い切り ¥300</small></div>
+        <div class="paid">プレミアム<small>買い切り ¥150</small></div>
       </div>
       <div class="price-row"><div class="lbl">足あと記録（日付・アーティスト）</div><div class="ok">○</div><div class="ok">○</div></div>
       <div class="price-row"><div class="lbl">天気の記録</div><div class="ok">○</div><div class="ok">○</div></div>
@@ -349,7 +413,7 @@
       <div class="price-row"><div class="lbl">ライブ予定カレンダー</div><div class="no">—</div><div class="ok">○</div></div>
     </div>
     <div class="price-cta">
-      <div class="price-amount">¥300 <small>買い切り（追加課金なし）</small></div>
+      <div class="price-amount">¥150 <small>買い切り（追加課金なし）</small></div>
       <p class="sec-sub" style="margin:6px 0 18px">一度の購入でOK。（機種変更もかんたん引き継ぎで安心）</p>
       <a class="btn-primary" href="https://ricorlive.app/">まずは無料で使ってみる</a>
     </div>
@@ -380,7 +444,7 @@
     </div>
     <div class="faq-item">
       <button class="faq-q">課金は月額ですか？<span class="mk">＋</span></button>
-      <div class="faq-a"><div>いいえ、買い切り300円です。一度ご購入いただければ追加の料金はかかりません。</div></div>
+      <div class="faq-a"><div>いいえ、買い切り150円です。一度ご購入いただければ追加の料金はかかりません。</div></div>
     </div>
     <div class="faq-item">
       <button class="faq-q">無料のままでも使えますか？<span class="mk">＋</span></button>
@@ -414,6 +478,12 @@
   <div class="wrap" style="margin-top:14px;opacity:0.7;font-size:0.74rem">© 2026 Ricor Live</div>
 </footer>
 
+<!-- 追従CTA（スマホ） -->
+<div class="sticky-cta" id="sticky-cta">
+  <div class="sc-txt"><b>¥150</b> 買い切り<br>まずは無料でOK</div>
+  <a class="sc-btn" href="https://ricorlive.app/">無料ではじめる</a>
+</div>
+
 <script>
   // FAQ アコーディオン
   document.querySelectorAll('.faq-q').forEach(q=>{
@@ -421,6 +491,46 @@
       q.parentElement.classList.toggle('open');
     });
   });
+
+  // スクロール出現アニメ（カード類に自動付与・少しずつ時間差）
+  const revealTargets = document.querySelectorAll('.pain-card,.feat,.shot,.trust-card,.step,.faq-item,.price-table,.stat,.sec-title,.sec-sub');
+  revealTargets.forEach(el=> el.classList.add('reveal'));
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        const el = en.target;
+        const sibs = Array.from(el.parentElement.children).filter(c=>c.classList.contains('reveal'));
+        el.style.transitionDelay = `${(sibs.indexOf(el)%8)*70}ms`;
+        el.classList.add('in');
+        io.unobserve(el);
+      }
+    });
+  },{threshold:0.12,rootMargin:'2000px 0px -8% 0px'});
+  document.querySelectorAll('.reveal').forEach(el=> io.observe(el));
+
+  // 数字カウントアップ
+  const cio = new IntersectionObserver(entries=>{
+    entries.forEach(en=>{
+      if(!en.isIntersecting) return;
+      const el = en.target; cio.unobserve(el);
+      const goal = +el.dataset.count, dur = 1100, t0 = performance.now();
+      (function tick(t){
+        const p = Math.min((t-t0)/dur, 1);
+        el.textContent = Math.round(goal * (1-Math.pow(1-p,3))).toLocaleString();
+        if(p<1) requestAnimationFrame(tick);
+      })(t0);
+    });
+  },{threshold:0.5});
+  document.querySelectorAll('.count').forEach(el=> cio.observe(el));
+
+  // 追従CTA：ヒーローを過ぎたら表示、最終CTA付近では隠す
+  const stickyCta = document.getElementById('sticky-cta');
+  const heroEl = document.querySelector('.hero');
+  const finalEl = document.querySelector('.final');
+  let heroVisible = true, finalVisible = false;
+  const updateSticky = ()=> stickyCta.classList.toggle('show', !heroVisible && !finalVisible);
+  new IntersectionObserver(e=>{ heroVisible = e[0].isIntersecting; updateSticky(); },{threshold:0.05}).observe(heroEl);
+  new IntersectionObserver(e=>{ finalVisible = e[0].isIntersecting; updateSticky(); },{threshold:0.1}).observe(finalEl);
 </script>
 </body>
 </html>

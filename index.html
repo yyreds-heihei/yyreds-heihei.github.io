@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-104';
+const APP_VERSION = '20260531-106';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -32,7 +32,7 @@ if (stored !== APP_VERSION) {
 <meta name="theme-color" content="#7c3aed">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ライブ記録">
+<meta name="apple-mobile-web-app-title" content="Ricor Live">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
@@ -244,6 +244,16 @@ if (stored !== APP_VERSION) {
   .undo-toast button{background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-weight:800;font-size:0.8rem;padding:7px 14px;border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 
   /* 登録完了ポップアップ */
+  /* 初回案内ポップアップ（ホーム画面に追加＋使い方ガイド） */
+  .guide-pop-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top,0)) 24px calc(24px + env(safe-area-inset-bottom,0))}
+  .guide-pop-overlay.hidden{display:none}
+  .guide-pop-card{position:relative;background:#fff;border-radius:22px;max-width:330px;width:100%;padding:28px 22px 22px;text-align:center;color:#1a1a2a;box-shadow:0 18px 60px rgba(0,0,0,0.45);cursor:pointer;animation:guidePop .45s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes guidePop{from{transform:scale(.82);opacity:0}to{transform:scale(1);opacity:1}}
+  .guide-pop-emoji{font-size:2.6rem;line-height:1;margin-bottom:10px}
+  .guide-pop-title{font-size:1.12rem;font-weight:800;color:#4c1d95;margin-bottom:8px}
+  .guide-pop-desc{font-size:0.84rem;color:#666;line-height:1.7;margin-bottom:16px}
+  .guide-pop-btn{display:inline-block;background:linear-gradient(135deg,var(--accent-light),var(--accent));color:#fff;font-weight:800;font-size:0.9rem;padding:12px 22px;border-radius:24px;box-shadow:0 6px 18px rgba(124,58,237,0.4)}
+  .guide-pop-x{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;border:none;background:#f0eef5;color:#888;font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
   .save-toast{position:fixed;inset:0;z-index:21000;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(124,58,237,0.12);opacity:0;transition:opacity 0.25s ease}
   .save-toast.hidden{display:none}
   .save-toast.show{opacity:1}
@@ -1116,6 +1126,17 @@ if (stored !== APP_VERSION) {
   <div class="bk-reminder-text" id="bk-reminder-text">📦 念のためバックアップを残しておきましょう</div>
   <button class="bk-reminder-go" id="bk-reminder-go">バックアップ</button>
   <button class="bk-reminder-close" id="bk-reminder-close" title="閉じる">✕</button>
+</div>
+
+<!-- 初回案内ポップアップ -->
+<div class="guide-pop-overlay hidden" id="guide-pop">
+  <div class="guide-pop-card" id="guide-pop-card">
+    <button class="guide-pop-x" id="guide-pop-close" aria-label="閉じる">✕</button>
+    <div class="guide-pop-emoji">📲</div>
+    <div class="guide-pop-title">まずはホーム画面に追加！</div>
+    <div class="guide-pop-desc">ホーム画面に追加すると、<br>アプリのように快適に使えます。</div>
+    <span class="guide-pop-btn">📖 使い方ガイドを見る</span>
+  </div>
 </div>
 
 <!-- 登録完了ポップアップ -->
@@ -4174,6 +4195,27 @@ async function hydrateFromIDB(){
   maybeAutoBackup();     // 1日1回・自動でこの端末内に控えを取る（案A）
   checkBackupReminder(); // しばらくバックアップしていなければ催促（案B）
 }
+
+// 初回案内ポップアップ：初めて開いた時だけ「ホーム画面に追加」を案内し、タップで使い方ガイド(PDF)を開く
+(function(){
+  const pop = document.getElementById('guide-pop');
+  const done = ()=>{ localStorage.setItem('guide_pop_done','1'); pop.classList.add('hidden'); };
+  // すでにホーム画面から起動している（standalone）なら案内不要
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if(localStorage.getItem('guide_pop_done') || standalone){
+    if(standalone) localStorage.setItem('guide_pop_done','1');
+    return;
+  }
+  // スプラッシュ（約2.5秒）が終わってから表示
+  setTimeout(()=> pop.classList.remove('hidden'), 2800);
+  document.getElementById('guide-pop-card').addEventListener('click', e=>{
+    if(e.target.closest('#guide-pop-close')) return;
+    done();
+    window.open('guide.pdf', '_blank');   // 使い方ガイドを開く
+  });
+  document.getElementById('guide-pop-close').addEventListener('click', done);
+  pop.addEventListener('click', e=>{ if(e.target === pop) done(); });
+})();
 
 // Init
 renderSidebar();
