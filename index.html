@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-110';
+const APP_VERSION = '20260531-112';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -244,6 +244,16 @@ if (stored !== APP_VERSION) {
   .undo-toast button{background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-weight:800;font-size:0.8rem;padding:7px 14px;border-radius:18px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 
   /* 登録完了ポップアップ */
+  /* アプリ内PDFビューアー（✕で必ず戻れる） */
+  .pdf-viewer-overlay{position:fixed;inset:0;z-index:21500;background:#2a2440;display:flex;flex-direction:column}
+  .pdf-viewer-overlay.hidden{display:none}
+  .pdf-viewer-head{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(10px + env(safe-area-inset-top,0)) 14px 10px;background:var(--accent);color:#fff}
+  .pdf-viewer-title{font-size:0.95rem;font-weight:800;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pdf-viewer-close{flex-shrink:0;background:rgba(255,255,255,0.22);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+  .pdf-viewer-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 8px calc(20px + env(safe-area-inset-bottom,0))}
+  .pdf-page{display:block;margin:0 auto 8px;background:#fff;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,0.3)}
+  .pdf-loading{color:#cbbfe8;padding:40px 16px;font-size:0.9rem;text-align:center;line-height:1.8}
+
   /* 初回案内ポップアップ（ホーム画面に追加＋使い方ガイド） */
   .guide-pop-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top,0)) 24px calc(24px + env(safe-area-inset-bottom,0))}
   .guide-pop-overlay.hidden{display:none}
@@ -465,9 +475,10 @@ if (stored !== APP_VERSION) {
   @keyframes nlbWiggle{0%,100%{transform:rotate(-10deg) scale(1)}50%{transform:rotate(10deg) scale(1.12)}}
 
   /* ホーム カレンダーボタン（右下） */
-  .home-cal-btn{position:absolute;right:16px;bottom:calc(52px + env(safe-area-inset-bottom,0));z-index:12;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 18px rgba(124,58,237,0.6);-webkit-tap-highlight-color:transparent;transition:transform 0.15s}
+  .home-cal-wrap{position:absolute;right:16px;bottom:calc(52px + env(safe-area-inset-bottom,0));z-index:12;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .home-cal-btn{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:#fff;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.35);-webkit-tap-highlight-color:transparent;transition:transform 0.15s}
   .home-cal-btn:active{transform:scale(0.92)}
-  .home-cal-btn span{font-size:0.5rem;font-weight:700;letter-spacing:0.02em}
+  .home-cal-label{font-size:0.6rem;font-weight:700;color:#fff;background:rgba(0,0,0,0.45);padding:3px 9px;border-radius:10px;backdrop-filter:blur(4px);white-space:nowrap}
 
   /* 使い方ガイド（🔰）ボタン：ホーム左下 */
   .home-guide-wrap{position:absolute;left:16px;bottom:calc(52px + env(safe-area-inset-bottom,0));z-index:12;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -770,7 +781,10 @@ if (stored !== APP_VERSION) {
     <div class="oshi-scene" id="oshi-scene"></div>
     <div class="oshi-name-area" id="oshi-name-area"></div>
   </div>
-  <button class="home-cal-btn" id="home-cal-btn">📅<span>予定</span></button>
+  <div class="home-cal-wrap" id="home-cal-wrap">
+    <button class="home-cal-btn" id="home-cal-btn" title="予定">📅</button>
+    <span class="home-cal-label">予定</span>
+  </div>
   <div class="home-guide-wrap" id="home-guide-wrap">
     <button class="home-guide-btn" id="home-guide-btn" title="使い方ガイド">🔰</button>
     <span class="home-guide-label">使い方ガイド</span>
@@ -1177,6 +1191,15 @@ if (stored !== APP_VERSION) {
   <div class="bk-reminder-text" id="bk-reminder-text">📦 念のためバックアップを残しておきましょう</div>
   <button class="bk-reminder-go" id="bk-reminder-go">バックアップ</button>
   <button class="bk-reminder-close" id="bk-reminder-close" title="閉じる">✕</button>
+</div>
+
+<!-- アプリ内PDFビューアー -->
+<div class="pdf-viewer-overlay hidden" id="pdf-viewer-overlay">
+  <div class="pdf-viewer-head">
+    <div class="pdf-viewer-title" id="pdf-viewer-title">使い方ガイド</div>
+    <button class="pdf-viewer-close" id="pdf-viewer-close" aria-label="閉じる">✕</button>
+  </div>
+  <div class="pdf-viewer-body" id="pdf-viewer-body"></div>
 </div>
 
 <!-- 使い方ガイド メニュー -->
@@ -2080,7 +2103,7 @@ function renderCalendarList(){
   });
 }
 
-document.getElementById('home-cal-btn').addEventListener('click', openCalendar);
+document.getElementById('home-cal-wrap').addEventListener('click', openCalendar);   // ラベル部分のタップでも開く
 document.getElementById('cal-close').addEventListener('click', ()=>{
   document.getElementById('cal-overlay').classList.add('hidden');
 });
@@ -4295,13 +4318,62 @@ async function hydrateFromIDB(){
   checkBackupReminder(); // しばらくバックアップしていなければ催促（案B）
 }
 
+// ===== アプリ内PDFビューアー（PWAでも✕で必ず戻れる）=====
+let _pdfjsPromise = null;
+function loadPdfJs(){
+  if(_pdfjsPromise) return _pdfjsPromise;
+  _pdfjsPromise = new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js';
+    s.onload = ()=>{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+      resolve(window.pdfjsLib);
+    };
+    s.onerror = ()=>{ _pdfjsPromise = null; reject(new Error('pdfjs load failed')); };
+    document.head.appendChild(s);
+  });
+  return _pdfjsPromise;
+}
+async function openPdfViewer(url, title){
+  const ov = document.getElementById('pdf-viewer-overlay');
+  const body = document.getElementById('pdf-viewer-body');
+  document.getElementById('pdf-viewer-title').textContent = title || '📖 使い方ガイド';
+  body.innerHTML = '<div class="pdf-loading">読み込み中…</div>';
+  ov.classList.remove('hidden');
+  try{
+    const pdfjs = await loadPdfJs();
+    const doc = await pdfjs.getDocument(url).promise;
+    body.innerHTML = '';
+    const cw = body.clientWidth - 16;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    for(let i=1; i<=doc.numPages; i++){
+      const page = await doc.getPage(i);
+      const v1 = page.getViewport({scale:1});
+      const vp = page.getViewport({scale: (cw / v1.width) * dpr});
+      const c = document.createElement('canvas');
+      c.width = vp.width; c.height = vp.height;
+      c.style.width = (vp.width/dpr)+'px'; c.style.height = (vp.height/dpr)+'px';
+      c.className = 'pdf-page';
+      body.appendChild(c);
+      await page.render({canvasContext: c.getContext('2d'), viewport: vp}).promise;
+    }
+  }catch(err){
+    console.warn('pdf viewer failed:', err);
+    body.innerHTML = `<div class="pdf-loading">表示に失敗しました。<br><a href="${url}" target="_blank" rel="noopener" style="color:#c9b3ff;font-weight:700;text-decoration:underline">ここをタップしてPDFを開く</a></div>`;
+  }
+}
+document.getElementById('pdf-viewer-close').addEventListener('click', ()=>{
+  document.getElementById('pdf-viewer-overlay').classList.add('hidden');
+  document.getElementById('pdf-viewer-body').innerHTML = '';   // メモリ解放
+});
+
 // 使い方ガイド（🔰）メニュー
 document.getElementById('home-guide-wrap').addEventListener('click', ()=>{
   document.getElementById('guide-menu-overlay').classList.remove('hidden');
 });
 document.getElementById('guide-howto-add').addEventListener('click', ()=>{
   document.getElementById('guide-menu-overlay').classList.add('hidden');
-  window.open('guide.pdf', '_blank');   // ホーム画面の追加方法（PDF）
+  openPdfViewer('guide.pdf', '📲 ホーム画面の追加方法');   // アプリ内でPDFを表示（✕で戻れる）
 });
 document.getElementById('guide-menu-close').addEventListener('click', ()=>{
   document.getElementById('guide-menu-overlay').classList.add('hidden');
@@ -4325,7 +4397,7 @@ document.getElementById('guide-menu-overlay').addEventListener('click', e=>{
   document.getElementById('guide-pop-card').addEventListener('click', e=>{
     if(e.target.closest('#guide-pop-close')) return;
     done();
-    window.open('guide.pdf', '_blank');   // 使い方ガイドを開く
+    openPdfViewer('guide.pdf', '📖 使い方ガイド');   // アプリ内でPDFを表示（✕で戻れる）
   });
   document.getElementById('guide-pop-close').addEventListener('click', done);
   pop.addEventListener('click', e=>{ if(e.target === pop) done(); });
