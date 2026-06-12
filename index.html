@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-108';
+const APP_VERSION = '20260531-110';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -469,6 +469,20 @@ if (stored !== APP_VERSION) {
   .home-cal-btn:active{transform:scale(0.92)}
   .home-cal-btn span{font-size:0.5rem;font-weight:700;letter-spacing:0.02em}
 
+  /* 使い方ガイド（🔰）ボタン：ホーム左下 */
+  .home-guide-wrap{position:absolute;left:16px;bottom:calc(52px + env(safe-area-inset-bottom,0));z-index:12;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .home-guide-btn{width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.35);-webkit-tap-highlight-color:transparent;transition:transform 0.15s}
+  .home-guide-btn:active{transform:scale(0.92)}
+  .home-guide-label{font-size:0.6rem;font-weight:700;color:#fff;background:rgba(0,0,0,0.45);padding:3px 9px;border-radius:10px;backdrop-filter:blur(4px);white-space:nowrap}
+
+  /* ガイドメニューの項目 */
+  .guide-menu-item{width:100%;display:flex;align-items:center;gap:12px;background:#faf8ff;border:1px solid #ece7fb;border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;transition:background 0.12s}
+  .guide-menu-item:active{background:#f0ecff}
+  .gm-ico{flex-shrink:0;width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent-light),var(--accent));display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+  .gm-txt{flex:1;font-size:0.92rem;font-weight:700;color:#1a1a2a;line-height:1.4}
+  .gm-txt small{display:block;font-size:0.72rem;font-weight:500;color:#999;margin-top:2px}
+  .gm-arrow{flex-shrink:0;color:#c0b4d8;font-size:1.3rem;font-weight:700}
+
   /* カレンダー モーダル */
   .cal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10015;display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0)) 16px calc(16px + env(safe-area-inset-bottom,0))}
   .cal-overlay.hidden{display:none}
@@ -757,6 +771,10 @@ if (stored !== APP_VERSION) {
     <div class="oshi-name-area" id="oshi-name-area"></div>
   </div>
   <button class="home-cal-btn" id="home-cal-btn">📅<span>予定</span></button>
+  <div class="home-guide-wrap" id="home-guide-wrap">
+    <button class="home-guide-btn" id="home-guide-btn" title="使い方ガイド">🔰</button>
+    <span class="home-guide-label">使い方ガイド</span>
+  </div>
   <div class="home-footer">
     <button class="home-footer-btn" onclick="switchTab('records')">👣 足あとを見る</button>
     <button class="home-footer-btn" onclick="switchTab('list')">📋 会場リスト</button>
@@ -1159,6 +1177,20 @@ if (stored !== APP_VERSION) {
   <div class="bk-reminder-text" id="bk-reminder-text">📦 念のためバックアップを残しておきましょう</div>
   <button class="bk-reminder-go" id="bk-reminder-go">バックアップ</button>
   <button class="bk-reminder-close" id="bk-reminder-close" title="閉じる">✕</button>
+</div>
+
+<!-- 使い方ガイド メニュー -->
+<div class="cv-overlay hidden" id="guide-menu-overlay" style="z-index:10017">
+  <div class="cv-modal">
+    <div class="cv-title">🔰 使い方ガイド</div>
+    <div class="cv-desc">見たい項目をタップしてください。</div>
+    <button class="guide-menu-item" id="guide-howto-add" type="button">
+      <span class="gm-ico">📲</span>
+      <span class="gm-txt">ホーム画面の追加方法<br><small>アプリのように快適に使えます</small></span>
+      <span class="gm-arrow">›</span>
+    </button>
+    <button class="backup-close" id="guide-menu-close" type="button">閉じる</button>
+  </div>
 </div>
 
 <!-- 初回案内ポップアップ -->
@@ -1921,15 +1953,15 @@ function renderNextLiveBanner(){
   const [, mm, dd] = next.date.split('-');
   const timeStr = next.time ? ` ${next.time}` : '';
 
-  let countHtml, emoji;
-  if(days === 0){ countHtml = `今日はイベント！`; emoji='🎉'; }
-  else if(days === 1){ countHtml = `あと <b>1</b> 日！`; emoji='🔥'; }
-  else { countHtml = `あと <b>${days}</b> 日`; emoji='✨'; }
+  let lineHtml, emoji;
+  if(days === 0){ lineHtml = `今日はイベントday💕`; emoji='🎉'; }
+  else if(days === 1){ lineHtml = `次のイベントまで あと <b>1</b> 日！`; emoji='🔥'; }
+  else { lineHtml = `次のイベントまで あと <b>${days}</b> 日`; emoji='✨'; }
 
   banner.innerHTML = `
     <div class="next-live-emoji">${emoji}</div>
     <div class="next-live-text">
-      <div class="next-live-count">次のイベントまで ${countHtml}</div>
+      <div class="next-live-count">${lineHtml}</div>
       <div class="next-live-sub">🎤 ${next.artist||'イベント'}（${+mm}/${+dd}${timeStr}）</div>
     </div>`;
   banner.classList.add('show');
@@ -4262,6 +4294,21 @@ async function hydrateFromIDB(){
   maybeAutoBackup();     // 1日1回・自動でこの端末内に控えを取る（案A）
   checkBackupReminder(); // しばらくバックアップしていなければ催促（案B）
 }
+
+// 使い方ガイド（🔰）メニュー
+document.getElementById('home-guide-wrap').addEventListener('click', ()=>{
+  document.getElementById('guide-menu-overlay').classList.remove('hidden');
+});
+document.getElementById('guide-howto-add').addEventListener('click', ()=>{
+  document.getElementById('guide-menu-overlay').classList.add('hidden');
+  window.open('guide.pdf', '_blank');   // ホーム画面の追加方法（PDF）
+});
+document.getElementById('guide-menu-close').addEventListener('click', ()=>{
+  document.getElementById('guide-menu-overlay').classList.add('hidden');
+});
+document.getElementById('guide-menu-overlay').addEventListener('click', e=>{
+  if(e.target === document.getElementById('guide-menu-overlay')) document.getElementById('guide-menu-overlay').classList.add('hidden');
+});
 
 // 初回案内ポップアップ：初めて開いた時だけ「ホーム画面に追加」を案内し、タップで使い方ガイド(PDF)を開く
 (function(){
