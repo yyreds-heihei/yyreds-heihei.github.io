@@ -1,6 +1,6 @@
 {
   "name": "Ricor Live",
-  "short_name": "ライブ記録",
+  "short_name": "Ricor Live",
   "description": "推し活・ライブ参戦の記録アプリ。全国のライブ会場マップ・足あと・セットリスト・座席。",
   "start_url": "/",
   "display": "standalone",
