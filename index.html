@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-114';
+const APP_VERSION = '20260531-115';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -333,6 +333,13 @@ if (stored !== APP_VERSION) {
   .record-chip-hint{font-size:0.62rem;color:#bbb;margin-top:4px;letter-spacing:0.02em}
   .record-photos-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .record-photo{width:56px;height:56px;border-radius:8px;object-fit:cover;cursor:pointer}
+  /* 1記録＝1カード */
+  .record-card.record-edit-tap{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:box-shadow 0.15s,transform 0.1s}
+  .record-card.record-edit-tap:active{transform:scale(0.995);box-shadow:0 2px 10px rgba(124,58,237,0.18)}
+  .record-date{display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:800;color:#6d28d9;margin-bottom:6px}
+  .record-edit-hint{margin-left:auto;font-size:0.66rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--accent-light),var(--accent));padding:3px 9px;border-radius:12px;white-space:nowrap}
+  .record-card-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+  .record-card.flash{animation:chipFlash 1.8s ease}
 
   /* RANKING PANEL */
   .ranking-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:900;display:flex;align-items:center;justify-content:flex-end}
@@ -2062,11 +2069,11 @@ function jumpToRecordsDate(ds){
   renderRecordsPanel();
   document.getElementById('records-overlay').classList.remove('hidden');
   setTimeout(()=>{
-    const chip = [...document.querySelectorAll('.record-visit-chip-tap')].find(c=> c.textContent.includes(ds));
-    if(chip){
-      chip.scrollIntoView({behavior:'smooth', block:'center'});
-      chip.classList.add('flash');
-      setTimeout(()=> chip.classList.remove('flash'), 2000);
+    const card = [...document.querySelectorAll('.record-card[data-date]')].find(c=> c.dataset.date === ds);
+    if(card){
+      card.scrollIntoView({behavior:'smooth', block:'center'});
+      card.classList.add('flash');
+      setTimeout(()=> card.classList.remove('flash'), 2000);
     }
   }, 200);
 }
@@ -3529,70 +3536,63 @@ function renderRecordsPanel(){
     tabsEl.style.display = 'none';
   }
 
-  // 選択年度でフィルタリング
-  const visitedVenues = VENUES_CLEAN.filter(v=>{
-    const recs = visited[v.id]||[];
-    if(recordsSelectedYear === 'all') return recs.length > 0;
-    return recs.some(r=> r.date && r.date.startsWith(recordsSelectedYear));
-  }).sort((a,b)=>{
-    // 選択年度内の最新訪問日順
-    const latestDate = recs => recs
-      .filter(r=> recordsSelectedYear==='all' || (r.date && r.date.startsWith(recordsSelectedYear)))
-      .map(r=>r.date||'').sort().reverse()[0] || '';
-    return latestDate(visited[b.id]||[]).localeCompare(latestDate(visited[a.id]||[]));
+  // 1記録＝1カードのフラットなリストを作成
+  let items = [];
+  VENUES_CLEAN.forEach(v=>{
+    (visited[v.id]||[]).forEach(r=>{
+      if(recordsSelectedYear !== 'all' && !(r.date && r.date.startsWith(recordsSelectedYear))) return;
+      items.push({ v, r, uid: r.uid || '' });
+    });
+  });
+  // 新しい順（年数が古いものが下に来る）。日付が無い記録は最後。
+  items.sort((a,b)=>{
+    const da = a.r.date || '', db = b.r.date || '';
+    if(da && db) return db.localeCompare(da);
+    if(da) return -1; if(db) return 1; return 0;
   });
 
-  if(!visitedVenues.length){
+  if(!items.length){
     content.innerHTML=`<div class="records-empty">${recordsSelectedYear==='all'?'まだ訪問記録がありません':`${recordsSelectedYear}年の記録はありません`}</div>`;
     return;
   }
 
-  content.innerHTML = visitedVenues.map(v=>{
-    const allRecs = visited[v.id]||[];
-    const recs = recordsSelectedYear === 'all'
-      ? allRecs
-      : allRecs.filter(r=> r.date && r.date.startsWith(recordsSelectedYear));
-    const photos = recs.flatMap(r=>r.photos||[]);
-    const artists = [...new Set(recs.map(r=>(r.artist||'').trim()).filter(Boolean))];
-    const artistText = artists.length ? `<span class="record-venue-artist">${artists.map(a=>`【${a}】`).join('')}</span>` : '';
-    return `<div class="record-card">
-      <div class="record-venue-name">${TYPE_ICON[v.type]} ${v.name}${artistText}</div>
-      <div class="record-venue-meta">${v.pref} · ${TYPE_LABEL[v.type]}</div>
-      <div class="record-visits">${recs.map(r=>`
-        <div class="record-visit-row">
-          <span class="record-visit-chip record-visit-chip-tap" data-venue="${v.id}" data-uid="${r.uid||''}" data-aidx="${allRecs.indexOf(r)}">
-            ✏️ ${r.date||'?'}${r.artist?' · '+r.artist:''}${r.tour?' / '+r.tour:''}${r.weather?' '+WEATHER_ICON[r.weather]:''}
-          </span>
-          <div class="record-visit-actions">
-            ${(r.setlist||[]).filter(s=>s&&s.trim()).length ? `<button class="record-visit-copy" data-venue="${v.id}" data-uid="${r.uid||''}" data-aidx="${allRecs.indexOf(r)}">セトリをコピー</button>` : ''}
-            <button class="record-visit-del" data-venue="${v.id}" data-uid="${r.uid||''}" data-aidx="${allRecs.indexOf(r)}">🗑 削除</button>
-          </div>
-        </div>`).join('')}</div>
-      ${photos.length ? `<div class="record-photos-row">${photos.slice(0,6).map((p,i)=>`<img class="record-photo" src="${p}" data-venue="${v.id}" data-idx="${i}">`).join('')}</div>` : ''}
+  content.innerHTML = items.map(it=>{
+    const {v, r, uid} = it;
+    const artist = (r.artist||'').trim();
+    const tour = (r.tour||'').trim();
+    const photos = r.photos||[];
+    const hasSetlist = (r.setlist||[]).filter(s=>s&&s.trim()).length > 0;
+    return `<div class="record-card record-edit-tap" data-venue="${v.id}" data-uid="${uid}" data-date="${r.date||''}">
+      <div class="record-date">📅 ${r.date||'日付未記録'}${r.weather?' '+WEATHER_ICON[r.weather]:''}<span class="record-edit-hint">✏️ タップで編集</span></div>
+      <div class="record-venue-name">${TYPE_ICON[v.type]} ${v.name}${artist?`<span class="record-venue-artist">【${artist}】</span>`:''}</div>
+      <div class="record-venue-meta">${v.pref} · ${TYPE_LABEL[v.type]}${tour?` / ${tour}`:''}</div>
+      ${photos.length ? `<div class="record-photos-row">${photos.slice(0,6).map((p,i)=>`<img class="record-photo" src="${p}" data-venue="${v.id}" data-uid="${uid}" data-idx="${i}">`).join('')}</div>` : ''}
+      <div class="record-card-actions">
+        ${hasSetlist ? `<button class="record-visit-copy" data-venue="${v.id}" data-uid="${uid}">セトリをコピー</button>` : ''}
+        <button class="record-visit-del" data-venue="${v.id}" data-uid="${uid}">🗑 削除</button>
+      </div>
     </div>`;
   }).join('');
 
-  // チップタップ → 該当レコードを編集モードで開く
-  content.querySelectorAll('.record-visit-chip-tap').forEach(chip=>{
-    chip.addEventListener('click', ()=>{
-      const vid = +chip.dataset.venue;
-      const uid = chip.dataset.uid;
-      const aidx = +chip.dataset.aidx;
-      const idx = uid ? (visited[vid]||[]).findIndex(r=> r.uid===uid) : aidx;
+  // カードタップ → その記録を編集モードで開く（ボタン・写真は除く）
+  content.querySelectorAll('.record-card.record-edit-tap').forEach(card=>{
+    card.addEventListener('click', e=>{
+      if(e.target.closest('.record-visit-copy, .record-visit-del, .record-photo')) return;
+      const vid = +card.dataset.venue;
+      const uid = card.dataset.uid;
+      const idx = (visited[vid]||[]).findIndex(r=> (r.uid||'')===uid);
+      if(idx < 0) return;
       openModal(vid);
-      if(idx >= 0) setTimeout(()=>startEditVisit(idx), 50);
+      setTimeout(()=>startEditVisit(idx), 50);
     });
   });
 
-  // セトリ「コピー」ボタン → クリップボードへ保存
+  // セトリ「コピー」
   content.querySelectorAll('.record-visit-copy').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
       const vid = +btn.dataset.venue;
-      const uid = btn.dataset.uid;
-      const aidx = +btn.dataset.aidx;
-      const recs = visited[vid]||[];
-      const rec = uid ? recs.find(r=>r.uid===uid) : recs[aidx];
+      const rec = (visited[vid]||[]).find(r=> (r.uid||'')===btn.dataset.uid);
       const songs = (rec?.setlist||[]).filter(s=>s&&s.trim());
       if(!songs.length) return;
       copiedSetlist = [...songs];
@@ -3600,18 +3600,15 @@ function renderRecordsPanel(){
     });
   });
 
-  // 削除ボタン → 該当レコードを削除
+  // 削除
   content.querySelectorAll('.record-visit-del').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
       const vid = +btn.dataset.venue;
-      const uid = btn.dataset.uid;
-      const aidx = +btn.dataset.aidx;
       const recs = visited[vid]||[];
-      const idx = uid ? recs.findIndex(r=> r.uid===uid) : aidx;
+      const idx = recs.findIndex(r=> (r.uid||'')===btn.dataset.uid);
       if(idx < 0 || !recs[idx]) return;
       const rec = recs[idx];
-      // 即削除（確認ダイアログなし）→ あとで「元に戻す」で取り消せる
       recs.splice(idx, 1);
       visited[vid] = recs;
       if(!visited[vid].length) delete visited[vid];
@@ -3625,10 +3622,13 @@ function renderRecordsPanel(){
     });
   });
 
+  // 写真タップ → その記録の写真だけでライトボックス
   content.querySelectorAll('.record-photo').forEach(img=>{
-    img.addEventListener('click', ()=>{
+    img.addEventListener('click', e=>{
+      e.stopPropagation();
       const vid = +img.dataset.venue;
-      const all = (visited[vid]||[]).flatMap(r=>r.photos||[]);
+      const rec = (visited[vid]||[]).find(r=> (r.uid||'')===img.dataset.uid);
+      const all = (rec?.photos)||[];
       openLightbox(all, +img.dataset.idx);
     });
   });
