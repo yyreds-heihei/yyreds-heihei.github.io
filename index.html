@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-117';
+const APP_VERSION = '20260531-118';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -1164,7 +1164,7 @@ if (stored !== APP_VERSION) {
       </div>
       <div style="margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;flex-wrap:wrap">
-          <label class="form-label" style="flex:1;min-width:90px">🛍 購入したグッズ</label>
+          <label class="form-label" style="flex:1;min-width:90px">🛍 グッズ・交通費・食費・宿泊代</label>
           <button class="setlist-add-btn" id="goods-add-btn" type="button">＋ グッズを追加</button>
         </div>
         <div id="goods-rows"></div>
@@ -2981,7 +2981,7 @@ function renderGoodsRows(){
     const row = document.createElement('div');
     row.className = 'goods-row';
     row.innerHTML = `
-      <input class="goods-name" type="text" value="${(g.name||'').replace(/"/g,'&quot;')}" placeholder="グッズ名（例：ペンライト）" maxlength="40" data-idx="${i}">
+      <input class="goods-name" type="text" value="${(g.name||'').replace(/"/g,'&quot;')}" placeholder="例：ペンライト / 新幹線 / 昼食" maxlength="40" data-idx="${i}">
       <span class="goods-yen">¥</span>
       <input class="goods-price" type="number" inputmode="numeric" min="0" max="9999999" value="${g.price!=null?g.price:''}" placeholder="0" data-idx="${i}">
       <button class="setlist-del" data-idx="${i}" type="button">✕</button>`;
@@ -3015,7 +3015,7 @@ function goodsHtml(r){
   const arr = goodsToPending(r);
   let html = '';
   if(arr.length){
-    html += `<div class="visit-goods"><div class="vg-title">🛍 購入グッズ</div>` +
+    html += `<div class="visit-goods"><div class="vg-title">🛍 グッズ・交通費・食費・宿泊代</div>` +
       arr.map(g=>`<div class="vg-item">・${g.name||'(名称なし)'}${g.price!=null?` <b>¥${(+g.price).toLocaleString()}</b>`:''}</div>`).join('') +
       `</div>`;
   }
