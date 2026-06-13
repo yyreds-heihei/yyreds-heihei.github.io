@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-115';
+const APP_VERSION = '20260531-116';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -234,6 +234,9 @@ if (stored !== APP_VERSION) {
   .visit-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
   .visit-tour{font-size:0.76rem;color:#7c3aed;font-weight:700;margin-bottom:4px}
   .visit-memo{font-size:0.78rem;color:#aaa;line-height:1.6;white-space:pre-wrap}
+  .visit-goods{font-size:0.78rem;color:#c98a3a;font-weight:600;margin-top:4px;overflow-wrap:break-word}
+  .visit-spent{font-size:0.82rem;color:#2bb673;font-weight:800;margin-top:4px}
+  .modal .visit-goods{color:#b56a00}
   .visit-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .visit-photo{width:60px;height:60px;border-radius:8px;object-fit:cover;cursor:pointer}
 
@@ -1148,6 +1151,17 @@ if (stored !== APP_VERSION) {
       <div class="form-group" style="margin-bottom:14px">
         <label class="form-label">メモ</label>
         <textarea class="form-memo" id="form-memo" placeholder=""></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">🛍 購入したグッズ</label>
+        <input class="form-input" type="text" id="form-goods" placeholder="例：ペンライト、Tシャツ、トレカ" maxlength="100">
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">💰 使った金額（総額）</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:1rem;color:#888;font-weight:700">¥</span>
+          <input class="form-input" type="number" id="form-spent" placeholder="例：12000" inputmode="numeric" min="0" max="9999999" style="flex:1;min-width:0">
+        </div>
       </div>
       <div style="margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;flex-wrap:wrap">
@@ -3010,6 +3024,8 @@ function openModal(id){
   document.getElementById('form-artist').value = '';
   document.getElementById('form-tour').value = '';
   document.getElementById('form-memo').value = '';
+  document.getElementById('form-goods').value = '';
+  document.getElementById('form-spent').value = '';
   // reset weather
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
   // reset setlist
@@ -3155,6 +3171,8 @@ function startEditVisit(idx){
   document.getElementById('form-artist').value = r.artist || '';
   document.getElementById('form-tour').value = r.tour || '';
   document.getElementById('form-memo').value = r.memo || '';
+  document.getElementById('form-goods').value = r.goods || '';
+  document.getElementById('form-spent').value = (r.spent!=null) ? r.spent : '';
   selectedWeather = r.weather || '';
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.toggle('selected', b.dataset.weather===selectedWeather));
   setPinSelected(r.pinEmoji || '');
@@ -3191,6 +3209,8 @@ function cancelEditVisit(){
   document.getElementById('form-artist').value = '';
   document.getElementById('form-tour').value = '';
   document.getElementById('form-memo').value = '';
+  document.getElementById('form-goods').value = '';
+  document.getElementById('form-spent').value = '';
   selectedWeather = '';
   document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
   setPinSelected('');
@@ -3221,6 +3241,8 @@ function renderVisitList(id){
       </div>
       ${r.tour ? `<div class="visit-tour">🎫 ${r.tour}</div>` : ''}
       ${r.memo ? `<div class="visit-memo">${r.memo}</div>` : ''}
+      ${r.goods ? `<div class="visit-goods">🛍 ${r.goods}</div>` : ''}
+      ${(r.spent!=null) ? `<div class="visit-spent">💰 ¥${(+r.spent).toLocaleString()}</div>` : ''}
       ${(r.setlist||[]).filter(s=>s).length ? `
         <div class="visit-setlist">
           <div class="visit-setlist-title">🎵 セットリスト（${r.setlist.filter(s=>s).length}曲）</div>
@@ -3286,6 +3308,8 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
       weather: selectedWeather,
       pinEmoji: selectedPinEmoji,
       memo: document.getElementById('form-memo').value.trim(),
+      goods: (document.getElementById('form-goods').value||'').trim(),
+      spent: (()=>{ const n = parseInt(document.getElementById('form-spent').value,10); return isNaN(n)||n<0 ? null : n; })(),
       setlist: pendingSetlist.filter(s=>s.trim()),
       photos: [...pendingPhotos],
       seatNo: (document.getElementById('form-seat').value||'').trim(),
@@ -3331,6 +3355,8 @@ document.getElementById('modal-save').addEventListener('click', ()=>{
   document.getElementById('form-artist').value='';
   document.getElementById('form-tour').value='';
   document.getElementById('form-memo').value='';
+  document.getElementById('form-goods').value='';
+  document.getElementById('form-spent').value='';
   // 「足あと」タブへ移動
   activeTab = 'records';
   tabSwitching = true;
@@ -3566,6 +3592,8 @@ function renderRecordsPanel(){
       <div class="record-date">📅 ${r.date||'日付未記録'}${r.weather?' '+WEATHER_ICON[r.weather]:''}<span class="record-edit-hint">✏️ タップで編集</span></div>
       <div class="record-venue-name">${TYPE_ICON[v.type]} ${v.name}${artist?`<span class="record-venue-artist">【${artist}】</span>`:''}</div>
       <div class="record-venue-meta">${v.pref} · ${TYPE_LABEL[v.type]}${tour?` / ${tour}`:''}</div>
+      ${r.goods ? `<div class="visit-goods">🛍 ${r.goods}</div>` : ''}
+      ${(r.spent!=null) ? `<div class="visit-spent">💰 ¥${(+r.spent).toLocaleString()}</div>` : ''}
       ${photos.length ? `<div class="record-photos-row">${photos.slice(0,6).map((p,i)=>`<img class="record-photo" src="${p}" data-venue="${v.id}" data-uid="${uid}" data-idx="${i}">`).join('')}</div>` : ''}
       <div class="record-card-actions">
         ${hasSetlist ? `<button class="record-visit-copy" data-venue="${v.id}" data-uid="${uid}">セトリをコピー</button>` : ''}
