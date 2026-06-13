@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-118';
+const APP_VERSION = '20260531-119';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -901,6 +901,19 @@ if (stored !== APP_VERSION) {
   </div>
 </div>
 
+<!-- セトリ まとめて入力（改行ごとに分割） -->
+<div class="cv-overlay hidden" id="setlist-bulk-modal">
+  <div class="cv-modal" style="max-height:86vh;display:flex;flex-direction:column">
+    <div class="cv-title">📝 まとめて入力</div>
+    <div class="cv-desc">メモやSNSからコピーした曲名を貼り付けてください。<b>改行ごとに1曲ずつ</b>自動で登録されます（行頭の「1.」「・」などの番号・記号は自動で取り除きます）。</div>
+    <textarea id="setlist-bulk-text" placeholder="例）&#10;1. 曲名A&#10;2. 曲名B&#10;・曲名C" style="width:100%;min-height:200px;background:#fff;border:1px solid #c8c8d8;border-radius:10px;color:#1a1a2a;padding:12px;font-size:16px;font-family:inherit;outline:none;resize:vertical"></textarea>
+    <div class="cv-actions" style="margin-top:14px">
+      <button class="btn-secondary" id="setlist-bulk-cancel" type="button">キャンセル</button>
+      <button class="btn-primary" id="setlist-bulk-ok" type="button">この内容で登録</button>
+    </div>
+  </div>
+</div>
+
 <!-- 足あと用 写真入力（永続）＋ 初回アクセス許可モーダル -->
 <input type="file" id="visit-photo-input" accept="image/*" multiple style="display:none">
 <div class="oshi-name-modal hidden" id="photo-perm-modal">
@@ -1180,7 +1193,8 @@ if (stored !== APP_VERSION) {
       <div style="margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px;flex-wrap:wrap">
           <label class="form-label" style="flex:1;min-width:90px">🎵 セットリスト <span id="setlist-count-label" style="color:#666;font-weight:400">（0/50曲）</span></label>
-          <div style="display:flex;gap:6px;flex-shrink:0">
+          <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+            <button class="setlist-add-btn" id="setlist-bulk-btn" type="button">📝 まとめて入力</button>
             <button class="setlist-add-btn" id="setlist-copy-btn" type="button">📋 貼り付け</button>
             <button class="setlist-add-btn" id="setlist-add-btn" type="button">＋ 曲を追加</button>
           </div>
@@ -3073,6 +3087,43 @@ document.getElementById('setlist-copy-btn').addEventListener('click', ()=>{
 });
 document.getElementById('setlist-copy-cancel').addEventListener('click', ()=>{
   document.getElementById('setlist-copy-modal').classList.add('hidden');
+});
+
+// ===== まとめて入力（コピーした曲リストを改行ごとに分割）=====
+function cleanSongLine(line){
+  let s = (line||'').trim();
+  if(!s) return '';
+  // 行頭の箇条書き記号（・- * ● ○ • ▪ 》＞ など）
+  s = s.replace(/^[\s]*[・\-–—*●○•▪◆◇》＞>‣·]+\s*/, '');
+  // 行頭の丸囲み数字 ①②③…
+  s = s.replace(/^[\s]*[①-⑳]\s*/, '');
+  // 行頭の「(M/EN/アンコール 等)＋番号＋区切り」例: 1. / 01) / M3： / EN1.
+  s = s.replace(/^[\s]*(?:M|m|EN|en|ｱﾝｺｰﾙ|アンコール|encore|Encore)?\s*[0-9０-９]+\s*[\.\．\)）:：、]\s*/, '');
+  return s.trim();
+}
+document.getElementById('setlist-bulk-btn').addEventListener('click', ()=>{
+  document.getElementById('setlist-bulk-text').value = '';
+  document.getElementById('setlist-bulk-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('setlist-bulk-text').focus(), 100);
+});
+document.getElementById('setlist-bulk-cancel').addEventListener('click', ()=>{
+  document.getElementById('setlist-bulk-modal').classList.add('hidden');
+});
+document.getElementById('setlist-bulk-modal').addEventListener('click', e=>{
+  if(e.target===document.getElementById('setlist-bulk-modal')) document.getElementById('setlist-bulk-modal').classList.add('hidden');
+});
+document.getElementById('setlist-bulk-ok').addEventListener('click', ()=>{
+  const raw = document.getElementById('setlist-bulk-text').value || '';
+  const songs = raw.split(/\r?\n/).map(cleanSongLine).filter(s=>s);
+  if(!songs.length){ alert('曲名が読み取れませんでした。\n1行に1曲ずつ貼り付けてください。'); return; }
+  const space = MAX_SETLIST - pendingSetlist.length;
+  if(space <= 0){ alert(`セットリストは${MAX_SETLIST}曲までです`); return; }
+  const added = songs.slice(0, space);
+  pendingSetlist.push(...added);
+  renderSetlistRows();
+  document.getElementById('setlist-bulk-modal').classList.add('hidden');
+  const over = songs.length > space ? `（上限のため${space}曲まで）` : '';
+  showMiniToast(`📝 ${added.length}曲を登録しました${over}`);
 });
 document.getElementById('setlist-copy-modal').addEventListener('click', e=>{
   if(e.target===document.getElementById('setlist-copy-modal')) document.getElementById('setlist-copy-modal').classList.add('hidden');
