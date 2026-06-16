@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-122';
+const APP_VERSION = '20260531-123';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -3718,7 +3718,6 @@ function renderRecordsPanel(){
       <div class="record-date">📅 ${r.date||'日付未記録'}${r.weather?' '+WEATHER_ICON[r.weather]:''}<span class="record-edit-hint">✏️ タップで編集</span></div>
       <div class="record-venue-name">${TYPE_ICON[v.type]} ${v.name}${artist?`<span class="record-venue-artist">【${artist}】</span>`:''}</div>
       <div class="record-venue-meta">${v.pref} · ${TYPE_LABEL[v.type]}${tour?` / ${tour}`:''}</div>
-      ${goodsHtml(r)}
       ${photos.length ? `<div class="record-photos-row">${photos.slice(0,6).map((p,i)=>`<img class="record-photo" src="${p}" data-venue="${v.id}" data-uid="${uid}" data-idx="${i}">`).join('')}</div>` : ''}
       <div class="record-card-actions">
         ${hasSetlist ? `<button class="record-visit-copy" data-venue="${v.id}" data-uid="${uid}">セトリをコピー</button>` : ''}
