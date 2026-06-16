@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-119';
+const APP_VERSION = '20260531-122';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -1259,6 +1259,11 @@ if (stored !== APP_VERSION) {
     <button class="guide-menu-item" id="guide-howto-add" type="button">
       <span class="gm-ico">📲</span>
       <span class="gm-txt">ホーム画面の追加方法<br><small>アプリのように快適に使えます</small></span>
+      <span class="gm-arrow">›</span>
+    </button>
+    <button class="guide-menu-item" id="guide-feedback" type="button">
+      <span class="gm-ico">💬</span>
+      <span class="gm-txt">ご意見・ご感想<br><small>感想・不具合・要望をお気軽に（1分）</small></span>
       <span class="gm-arrow">›</span>
     </button>
     <button class="backup-close" id="guide-menu-close" type="button">閉じる</button>
@@ -4522,6 +4527,10 @@ document.getElementById('home-guide-wrap').addEventListener('click', ()=>{
 document.getElementById('guide-howto-add').addEventListener('click', ()=>{
   document.getElementById('guide-menu-overlay').classList.add('hidden');
   openPdfViewer('guide.pdf', '📲 ホーム画面の追加方法');   // アプリ内でPDFを表示（✕で戻れる）
+});
+document.getElementById('guide-feedback').addEventListener('click', ()=>{
+  document.getElementById('guide-menu-overlay').classList.add('hidden');
+  window.open('https://docs.google.com/forms/d/e/1FAIpQLSe3cplXcqcBxLznLgOStuijS2A06kojG5WBxjLU4sYrqaahpw/viewform', '_blank', 'noopener');
 });
 document.getElementById('guide-menu-close').addEventListener('click', ()=>{
   document.getElementById('guide-menu-overlay').classList.add('hidden');
