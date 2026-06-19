@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-123';
+const APP_VERSION = '20260531-125';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -877,7 +877,7 @@ if (stored !== APP_VERSION) {
 <!-- 推し始めた日 モーダル -->
 <div class="oshi-name-modal hidden" id="oshi-start-modal">
   <div class="oshi-name-modal-inner">
-    <div class="oshi-name-modal-title">💕 推し始めた日を選ぶ</div>
+    <div class="oshi-name-modal-title">💕 応援を始めた日を選ぶ</div>
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <select class="form-input" id="os-year" style="font-size:16px"></select>
       <select class="form-input" id="os-month" style="font-size:16px"></select>
@@ -951,11 +951,31 @@ if (stored !== APP_VERSION) {
       <option value="theater">劇場</option>
       <option value="park">テーマパーク</option>
     </select>
-    <label class="cv-label">都道府県（任意）</label>
-    <input class="cv-input" type="text" id="cv-pref" placeholder="例：東京都" maxlength="12">
-    <label class="cv-label">市区町村（任意）</label>
-    <input class="cv-input" type="text" id="cv-city" placeholder="例：渋谷区 / 横浜市" maxlength="20">
-    <div class="cv-hint" style="font-size:0.72rem;color:#999;margin:-4px 0 10px;line-height:1.5">市区町村を入れると、その街の中心にマップのピンが立ちます。</div>
+    <label class="cv-label">国</label>
+    <select class="cv-input" id="cv-country">
+      <option value="日本">🇯🇵 日本</option>
+      <option value="韓国">🇰🇷 韓国</option>
+      <option value="台湾">🇹🇼 台湾</option>
+      <option value="香港">🇭🇰 香港</option>
+      <option value="中国">🇨🇳 中国</option>
+      <option value="アメリカ">🇺🇸 アメリカ</option>
+      <option value="イギリス">🇬🇧 イギリス</option>
+      <option value="フランス">🇫🇷 フランス</option>
+      <option value="ドイツ">🇩🇪 ドイツ</option>
+      <option value="シンガポール">🇸🇬 シンガポール</option>
+      <option value="タイ">🇹🇭 タイ</option>
+      <option value="オーストラリア">🇦🇺 オーストラリア</option>
+      <option value="カナダ">🇨🇦 カナダ</option>
+      <option value="その他">🌐 その他（海外）</option>
+    </select>
+    <div id="cv-jp-fields">
+      <label class="cv-label">都道府県（任意）</label>
+      <input class="cv-input" type="text" id="cv-pref" placeholder="例：東京都" maxlength="12">
+      <label class="cv-label">市区町村（任意）</label>
+      <input class="cv-input" type="text" id="cv-city" placeholder="例：渋谷区 / 横浜市" maxlength="20">
+      <div class="cv-hint" style="font-size:0.72rem;color:#999;margin:-4px 0 10px;line-height:1.5">市区町村を入れると、その街の中心にマップのピンが立ちます。</div>
+    </div>
+    <div id="cv-intl-note" class="cv-hint" style="display:none;font-size:0.74rem;color:#c2627e;margin:2px 0 10px;line-height:1.5">🌐 海外の会場は、下の「🗺️ マップ上で位置を指定する」から場所を指定してください。</div>
     <button class="cv-loc-btn" id="cv-map-pick-btn" type="button">🗺️ マップ上で位置を指定する</button>
     <div class="cv-loc-status" id="cv-loc-status">未指定（市区町村から自動で取得します）</div>
     <div class="cv-actions">
@@ -1921,8 +1941,8 @@ function renderHome(){
   }
 
   const sinceInner = data.startDate
-    ? `<div class="oshi-since" id="oshi-since-btn">💕 推し始めて ${formatOshiSince(data.startDate)}</div>`
-    : `<div class="oshi-since add" id="oshi-since-btn">＋ 推し始めた日を登録</div>`;
+    ? `<div class="oshi-since" id="oshi-since-btn">💕 応援を始めて ${formatOshiSince(data.startDate)}</div>`
+    : `<div class="oshi-since add" id="oshi-since-btn">＋ 応援を始めた日を登録</div>`;
   nameArea.innerHTML = data.photo ? `
     <div class="oshi-name">${name}</div>
     <div class="oshi-name-edit" id="oshi-name-edit-btn">✏️ 名前を変更</div>
@@ -2531,7 +2551,7 @@ applyVenueCoordOverrides();
 async function geocodeQuery(q){
   if(!q || !q.trim()) return null;
   try{
-    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&accept-language=ja&q=${encodeURIComponent(q.trim())}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=ja&q=${encodeURIComponent(q.trim())}`;
     const res = await fetch(url, {headers:{'Accept':'application/json'}});
     if(res.ok){ const d = await res.json(); if(d && d.length){ const lat=parseFloat(d[0].lat), lng=parseFloat(d[0].lon); if(!isNaN(lat)&&!isNaN(lng)) return [lat,lng]; } }
   }catch(e){ console.warn('geocodeQuery failed:', e); }
@@ -2541,13 +2561,24 @@ async function geocodeQuery(q){
 function openCustomVenueModal(){
   document.getElementById('cv-name').value='';
   document.getElementById('cv-type').value='custom';
+  document.getElementById('cv-country').value='日本';
   document.getElementById('cv-pref').value='';
   document.getElementById('cv-city').value='';
   cvPickedCoord = null; cvPickTemp = null;
+  updateCvCountryUI();
   updateCvLocStatus();
   document.getElementById('cv-overlay').classList.remove('hidden');
   setTimeout(()=>document.getElementById('cv-name').focus(), 100);
 }
+// 国の選択に応じて入力欄を切替（日本＝住所自動取得 / 海外＝マップ指定のみ）
+function isCvOverseas(){ return (document.getElementById('cv-country').value || '日本') !== '日本'; }
+function updateCvCountryUI(){
+  const overseas = isCvOverseas();
+  document.getElementById('cv-jp-fields').style.display = overseas ? 'none' : '';
+  document.getElementById('cv-intl-note').style.display = overseas ? '' : 'none';
+  updateCvLocStatus();
+}
+document.getElementById('cv-country').addEventListener('change', updateCvCountryUI);
 
 // ===== マップで位置を指定（新規カスタム会場 ＆ 既存会場の編集 共用）=====
 let cvPickedCoord = null;       // 新規カスタム会場用の手動座標 [lat,lng]
@@ -2561,6 +2592,9 @@ function updateCvLocStatus(){
   if(cvPickedCoord){
     el.textContent = `✓ マップで指定済み（${cvPickedCoord[0].toFixed(4)}, ${cvPickedCoord[1].toFixed(4)}）`;
     el.style.color = '#2bb673';
+  } else if(isCvOverseas()){
+    el.textContent = '未指定（海外の会場はマップで位置を指定してください）';
+    el.style.color = '#c2627e';
   } else {
     el.textContent = '未指定（市区町村から自動で取得します）';
     el.style.color = '#999';
@@ -2689,11 +2723,18 @@ document.getElementById('cv-overlay').addEventListener('click', e=>{
 document.getElementById('cv-save').addEventListener('click', async ()=>{
   const name = document.getElementById('cv-name').value.trim();
   const type = document.getElementById('cv-type').value || 'custom';
-  const prefIn = document.getElementById('cv-pref').value.trim();
-  const city = document.getElementById('cv-city').value.trim();
+  const country = document.getElementById('cv-country').value || '日本';
+  const overseas = country !== '日本';
+  const prefIn = overseas ? '' : document.getElementById('cv-pref').value.trim();
+  const city = overseas ? '' : document.getElementById('cv-city').value.trim();
   if(!name){ alert('会場名を入力してください'); return; }
-  const venue = { id: nextCustomId(), name, pref: prefIn || 'その他', city, type, custom:true };
-  // 位置：①マップで手動指定が最優先 ②なければ市区町村/都道府県から自動取得
+  // 海外はマップでの位置指定が必須（住所自動取得は日本のみ対応）
+  if(overseas && !cvPickedCoord){
+    alert('海外の会場は「🗺️ マップ上で位置を指定する」から位置を指定してください');
+    return;
+  }
+  const venue = { id: nextCustomId(), name, country, pref: overseas ? country : (prefIn || 'その他'), city, type, custom:true };
+  // 位置：①マップで手動指定が最優先 ②なければ市区町村/都道府県から自動取得（日本のみ）
   const saveBtn = document.getElementById('cv-save');
   let coord = null;
   if(cvPickedCoord){
