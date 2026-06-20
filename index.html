@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-125';
+const APP_VERSION = '20260531-126';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -4037,12 +4037,14 @@ document.getElementById('ranking-overlay').addEventListener('click', e=>{
   ['records-panel','ranking-panel'].forEach(cls=>{
     const panel = document.querySelector('.'+cls);
     if(!panel) return;
-    let startX=0, startY=0;
+    let startX=0, startY=0, swipeIgnore=false;
     panel.addEventListener('touchstart', e=>{
       startX=e.touches[0].clientX; startY=e.touches[0].clientY;
+      // 横スクロールする西暦タブ上のスワイプは、タブ切替の対象外にする
+      swipeIgnore = !!(e.target.closest && e.target.closest('.records-year-tabs'));
     }, {passive:true});
     panel.addEventListener('touchend', e=>{
-      if(!isMobile()) return;
+      if(!isMobile() || swipeIgnore) return;
       const dx = e.changedTouches[0].clientX - startX;
       const dy = Math.abs(e.changedTouches[0].clientY - startY);
       if(dx>80 && dy<60){
