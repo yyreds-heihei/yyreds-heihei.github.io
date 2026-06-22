@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-126';
+const APP_VERSION = '20260531-127';
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -3139,13 +3139,16 @@ document.getElementById('setlist-copy-cancel').addEventListener('click', ()=>{
 function cleanSongLine(line){
   let s = (line||'').trim();
   if(!s) return '';
-  // 行頭の箇条書き記号（・- * ● ○ • ▪ 》＞ など）
-  s = s.replace(/^[\s]*[・\-–—*●○•▪◆◇》＞>‣·]+\s*/, '');
+  // 行頭の箇条書き記号（・ ･ - * ● ○ • ▪ 》＞ 等／全角・半角の中黒も網羅）
+  s = s.replace(/^[\s]*[・･\-–—*●○•▪◆◇》＞>‣·∙⋅‧]+\s*/, '');
   // 行頭の丸囲み数字 ①②③…
   s = s.replace(/^[\s]*[①-⑳]\s*/, '');
   // 行頭の「(M/EN/アンコール 等)＋番号＋区切り」例: 1. / 01) / M3： / EN1.
   s = s.replace(/^[\s]*(?:M|m|EN|en|ｱﾝｺｰﾙ|アンコール|encore|Encore)?\s*[0-9０-９]+\s*[\.\．\)）:：、]\s*/, '');
-  return s.trim();
+  s = s.trim();
+  // 文字（文字・数字・かな・漢字）を1つも含まない行＝区切り記号だけの行は曲名でないので除外
+  if(!/[\p{L}\p{N}]/u.test(s)) return '';
+  return s;
 }
 document.getElementById('setlist-bulk-btn').addEventListener('click', ()=>{
   document.getElementById('setlist-bulk-text').value = '';
