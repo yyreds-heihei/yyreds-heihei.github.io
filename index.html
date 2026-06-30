@@ -11,7 +11,9 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-128';
+const APP_VERSION = '20260531-136';
+// ★有料化スイッチ：false=全員すべて無料（無料公開期間）／true=有料化（既存ユーザーは自動で無料優遇）
+const PAYWALL_ACTIVE = false;
 const stored = localStorage.getItem('app_version');
 if (stored !== APP_VERSION) {
   // バージョンが変わっていたらキャッシュを全消去して再読み込み
@@ -474,8 +476,8 @@ if (stored !== APP_VERSION) {
   .speech-bubble-name{font-size:0.65rem;color:#888;margin-top:6px;text-align:right}
   /* 推し名前 */
   .oshi-name-area{text-align:center}
-  .oshi-name{display:inline-block;font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:6px;background:rgba(0,0,0,0.45);padding:4px 14px;border-radius:20px;backdrop-filter:blur(4px)}
-  .oshi-name-edit{display:inline-block;font-size:0.7rem;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;background:rgba(0,0,0,0.4);padding:3px 10px;border-radius:12px;backdrop-filter:blur(4px)}
+  .oshi-name{display:inline-block;font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:6px;background:rgba(0,0,0,0.45);padding:4px 14px;border-radius:20px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+  .oshi-name-edit{display:inline-block;font-size:0.7rem;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;background:rgba(0,0,0,0.4);padding:3px 10px;border-radius:12px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
   /* 推し始めて〜年〜日 */
   .oshi-since-row{margin-top:10px}
   .oshi-since{display:inline-block;font-size:0.78rem;font-weight:800;color:var(--accent-text);cursor:pointer;-webkit-tap-highlight-color:transparent;background:linear-gradient(135deg,var(--accent-light),var(--accent));padding:6px 16px;border-radius:16px;box-shadow:0 3px 12px rgba(0,0,0,0.25)}
@@ -498,13 +500,13 @@ if (stored !== APP_VERSION) {
   .home-cal-wrap{position:absolute;right:16px;bottom:calc(52px + env(safe-area-inset-bottom,0));z-index:12;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .home-cal-btn{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:var(--accent-text);font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.35);-webkit-tap-highlight-color:transparent;transition:transform 0.15s}
   .home-cal-btn:active{transform:scale(0.92)}
-  .home-cal-label{font-size:0.6rem;font-weight:700;color:#fff;background:rgba(0,0,0,0.45);padding:3px 9px;border-radius:10px;backdrop-filter:blur(4px);white-space:nowrap}
+  .home-cal-label{font-size:0.6rem;font-weight:700;color:#fff;background:rgba(0,0,0,0.45);padding:3px 9px;border-radius:10px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);white-space:nowrap}
 
   /* 使い方ガイド（🔰）ボタン：ホーム左下 */
   .home-guide-wrap{position:absolute;left:16px;bottom:calc(52px + env(safe-area-inset-bottom,0));z-index:12;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .home-guide-btn{width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.35);-webkit-tap-highlight-color:transparent;transition:transform 0.15s}
   .home-guide-btn:active{transform:scale(0.92)}
-  .home-guide-label{font-size:0.6rem;font-weight:700;color:#fff;background:rgba(0,0,0,0.45);padding:3px 9px;border-radius:10px;backdrop-filter:blur(4px);white-space:nowrap}
+  .home-guide-label{font-size:0.6rem;font-weight:700;color:#fff;background:rgba(0,0,0,0.45);padding:3px 9px;border-radius:10px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);white-space:nowrap}
 
   /* ガイドメニューの項目 */
   .guide-menu-item{width:100%;display:flex;align-items:center;gap:12px;background:#faf8ff;border:1px solid #ece7fb;border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;transition:background 0.12s}
@@ -584,13 +586,13 @@ if (stored !== APP_VERSION) {
   .visit-setlist-item span{color:#555;font-weight:700;flex-shrink:0;width:20px;text-align:right}
 
   /* 設定ボタン（ホーム左上） */
-  .home-settings-btn{position:absolute;top:calc(12px + env(safe-area-inset-top,0));left:12px;z-index:11;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.45);border:1.5px solid rgba(255,255,255,0.25);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent;transition:all 0.15s}
+  .home-settings-btn{position:absolute;top:calc(12px + env(safe-area-inset-top,0));left:12px;z-index:11;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.45);border:1.5px solid rgba(255,255,255,0.25);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent;transition:all 0.15s}
   .home-settings-btn:active{background:rgba(124,58,237,0.6)}
   /* 背景変更ボタン */
   .home-bg-wrap{position:absolute;top:calc(12px + env(safe-area-inset-top,0));right:12px;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:10;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .home-bg-btn{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent-light),var(--accent));border:none;color:var(--accent-text);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(124,58,237,0.5);transition:all 0.15s}
   .home-bg-btn:active{transform:scale(0.92)}
-  .home-bg-label{font-size:0.55rem;color:#fff;font-weight:600;letter-spacing:0.02em;white-space:nowrap;background:rgba(0,0,0,0.45);padding:2px 6px;border-radius:6px;backdrop-filter:blur(4px)}
+  .home-bg-label{font-size:0.55rem;color:#fff;font-weight:600;letter-spacing:0.02em;white-space:nowrap;background:rgba(0,0,0,0.45);padding:2px 6px;border-radius:6px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 
   /* 名前入力モーダル */
   /* 画像クロップモーダル */
@@ -620,6 +622,7 @@ if (stored !== APP_VERSION) {
   .pin-row{display:flex;flex-wrap:wrap;gap:8px}
   .pin-btn{width:42px;height:42px;border-radius:10px;border:2px solid #d0d0d8;background:#f3f3f8;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;-webkit-tap-highlight-color:transparent;transition:all 0.12s}
   .pin-btn.selected{border-color:#7c3aed;background:#f0ecff}
+  .pin-row.free .pin-btn:not(.pin-default){opacity:0.4}
   .pin-btn .pin-heart{color:var(--accent);font-size:1.55rem;line-height:1}
   .marker-emoji{font-size:24px;line-height:1;text-align:center;cursor:pointer;transition:transform 0.15s;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))}
   .marker-emoji:hover{transform:scale(1.3)}
@@ -966,6 +969,16 @@ if (stored !== APP_VERSION) {
       <option value="タイ">🇹🇭 タイ</option>
       <option value="オーストラリア">🇦🇺 オーストラリア</option>
       <option value="カナダ">🇨🇦 カナダ</option>
+      <option value="イタリア">🇮🇹 イタリア</option>
+      <option value="スペイン">🇪🇸 スペイン</option>
+      <option value="オランダ">🇳🇱 オランダ</option>
+      <option value="ベルギー">🇧🇪 ベルギー</option>
+      <option value="スウェーデン">🇸🇪 スウェーデン</option>
+      <option value="ノルウェー">🇳🇴 ノルウェー</option>
+      <option value="デンマーク">🇩🇰 デンマーク</option>
+      <option value="フィンランド">🇫🇮 フィンランド</option>
+      <option value="メキシコ">🇲🇽 メキシコ</option>
+      <option value="ブラジル">🇧🇷 ブラジル</option>
       <option value="その他">🌐 その他（海外）</option>
     </select>
     <div id="cv-jp-fields">
@@ -1022,6 +1035,15 @@ if (stored !== APP_VERSION) {
     <div class="backup-title">📱 機種変更・データ引き継ぎ</div>
     <div class="backup-desc">足あと記録・推し写真・背景・名前をまるごと引き継げます。</div>
 
+    <div class="theme-section" id="premium-section">
+      <div class="theme-title">✨ プレミアム <span id="premium-status-badge" style="font-size:0.72rem;font-weight:700"></span></div>
+      <div class="theme-sub">写真の複数枚・お金の管理・海外会場の登録・バックアップ・フォント変更などが使えます。</div>
+      <button class="backup-btn" id="premium-open-btn" style="background:linear-gradient(135deg,var(--accent-light),var(--accent));color:var(--accent-text)">✨ プレミアムについて / キーを入力</button>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.7rem;color:#999;margin-top:8px">
+        <input type="checkbox" id="premium-test-toggle"> （テスト用）プレミアムをONにする
+      </label>
+    </div>
+
     <div class="theme-section">
       <div class="theme-title">🎨 テーマカラー</div>
       <div class="theme-sub">下のタブ・ホームのボタン・登録完了ハートの色が一括で変わります。</div>
@@ -1035,6 +1057,16 @@ if (stored !== APP_VERSION) {
       <div class="theme-title">🔤 フォント（書体）</div>
       <div class="theme-sub">アプリ全体の文字の書体を変えられます。</div>
       <div class="font-chips" id="font-chips"></div>
+    </div>
+
+    <div class="theme-section">
+      <div class="theme-title">💬 自分のメッセージ</div>
+      <div class="theme-sub">推しからの言葉に、自分で考えたメッセージも追加できます（ホームにランダムで表示）。</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input type="text" id="custom-msg-input" placeholder="例：今日もおつかれさま！" maxlength="60" style="flex:1;min-width:0;padding:10px 12px;border:2px solid #d0d0d8;border-radius:10px;font-size:16px;background:#fff;color:#333">
+        <button id="custom-msg-add" type="button" style="flex:0 0 auto;background:linear-gradient(135deg,var(--accent-light),var(--accent));color:var(--accent-text);border:none;border-radius:10px;font-weight:700;font-size:0.85rem;padding:0 16px;cursor:pointer;-webkit-tap-highlight-color:transparent">追加</button>
+      </div>
+      <div id="custom-msg-list"></div>
     </div>
 
     <div class="backup-step">
@@ -1061,6 +1093,43 @@ if (stored !== APP_VERSION) {
       💾 引き継ぎ対象：足あと記録・推し写真・背景画像・推しの名前<br>
       🔁 インポートは既存データとマージされます（重複なし）<br>
       📂 LINE以外：Google Drive・メールで自分に送るなども可
+    </div>
+  </div>
+</div>
+
+<!-- プレミアム案内モーダル -->
+<div class="cv-overlay hidden" id="premium-overlay" style="z-index:10020">
+  <div class="cv-modal">
+    <div class="cv-title">✨ プレミアム機能</div>
+    <div class="cv-desc" id="premium-desc">この機能はプレミアムで使えます。</div>
+    <ul style="margin:4px 0 12px;padding-left:1.2em;font-size:0.85rem;line-height:1.9;color:#444">
+      <li>📷 写真を複数枚 登録</li>
+      <li>💰 お金の管理（グッズ・交通費・食費・宿泊）</li>
+      <li>🌍 海外の会場を登録（世界地図）</li>
+      <li>📍 マップピンの絵文字（無料は推しカラーのハート）</li>
+      <li>💾 バックアップ（データの書き出し・復元）</li>
+      <li>🅰️ フォント変更・🏆 ランキング</li>
+    </ul>
+    <div style="background:#fff4fa;border:1px dashed #f0aecb;border-radius:10px;padding:10px 12px;font-size:0.8rem;color:#9a6a86;margin-bottom:12px">💎 ¥150 買い切り（近日提供予定）。一度購入すれば、機種変更後もキーで引き継げます。</div>
+    <label class="cv-label">ライセンスキーをお持ちの方</label>
+    <input class="cv-input" type="text" id="premium-key-input" placeholder="キーを入力" autocapitalize="characters">
+    <div class="cv-actions">
+      <button class="btn-secondary" id="premium-close" type="button">閉じる</button>
+      <button class="btn-primary" id="premium-activate" type="button">解放する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 購入完了モーダル（キー表示） -->
+<div class="cv-overlay hidden" id="purchase-success-overlay" style="z-index:10021">
+  <div class="cv-modal">
+    <div class="cv-title">🎉 ご購入ありがとうございます！</div>
+    <div class="cv-desc">プレミアム機能がすべて使えるようになりました✨</div>
+    <div style="font-size:0.82rem;color:#444;margin:6px 0 8px">あなたのライセンスキー（機種変更の時に使います。スクショ等で保存してください）：</div>
+    <div id="purchase-key-box" style="font-size:1.05rem;font-weight:800;letter-spacing:1px;color:#6b4a82;background:#f0ecff;border:1px dashed #c8b8f0;border-radius:10px;padding:14px;text-align:center;word-break:break-all">RL-XXXX-XXXX-XXXX-XXXX</div>
+    <button class="btn-secondary" id="purchase-key-copy" type="button" style="margin-top:8px;width:100%">📋 キーをコピー</button>
+    <div class="cv-actions">
+      <button class="btn-primary" id="purchase-success-close" type="button" style="width:100%">はじめる</button>
     </div>
   </div>
 </div>
@@ -1860,6 +1929,12 @@ const MESSAGES = {
   ]
 };
 
+// 自分で追加したメッセージ（時間帯に関係なく常に候補に入る）
+function loadCustomMessages(){
+  try{ const a = JSON.parse(localStorage.getItem('custom_messages')||'[]'); return Array.isArray(a)?a:[]; }
+  catch{ return []; }
+}
+function saveCustomMessages(arr){ try{ localStorage.setItem('custom_messages', JSON.stringify(arr)); }catch(e){} }
 function getOshiMessage(){
   const h = new Date().getHours();
   let timeKey;
@@ -1867,8 +1942,10 @@ function getOshiMessage(){
   else if(h>=11 && h<17) timeKey='afternoon';
   else if(h>=17 && h<21) timeKey='evening';
   else timeKey='night';
-  const arr = MESSAGES[timeKey];
-  return arr[Math.floor(Math.random() * arr.length)];
+  const base = MESSAGES[timeKey] || [];
+  const custom = loadCustomMessages();
+  const pool = custom.length ? base.concat(custom) : base;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 // 推しデータはメモリキャッシュを正とする（IndexedDBから読み戻した最新を保持）。
@@ -2578,7 +2655,14 @@ function updateCvCountryUI(){
   document.getElementById('cv-intl-note').style.display = overseas ? '' : 'none';
   updateCvLocStatus();
 }
-document.getElementById('cv-country').addEventListener('change', updateCvCountryUI);
+document.getElementById('cv-country').addEventListener('change', ()=>{
+  // 海外会場の登録はプレミアム機能。無料の人が海外を選んだら案内して日本に戻す
+  if(isCvOverseas() && !isPremium()){
+    openPremiumModal('海外の会場の登録');
+    document.getElementById('cv-country').value = '日本';
+  }
+  updateCvCountryUI();
+});
 
 // ===== マップで位置を指定（新規カスタム会場 ＆ 既存会場の編集 共用）=====
 let cvPickedCoord = null;       // 新規カスタム会場用の手動座標 [lat,lng]
@@ -2889,6 +2973,9 @@ function setPinSelected(emoji){
   document.querySelectorAll('#pin-row .pin-btn').forEach(b=>{
     b.classList.toggle('selected', (b.dataset.emoji||'') === selectedPinEmoji);
   });
+  // 無料は絵文字ピンを薄く表示（推しカラーのハートのみ選べる）
+  const row = document.getElementById('pin-row');
+  if(row) row.classList.toggle('free', !isPremium());
 }
 let pendingSetlist = []; // セットリスト（文字列の配列）
 let copiedSetlist = null; // コピーしたセットリスト（貼り付け用クリップボード）
@@ -3036,6 +3123,8 @@ function updateSpentDisplay(){
 function renderGoodsRows(){
   const container = document.getElementById('goods-rows');
   if(!container) return;
+  const addBtn = document.getElementById('goods-add-btn');
+  if(addBtn) addBtn.textContent = isPremium() ? '＋ グッズを追加' : '🔒 プレミアムで解放';
   container.innerHTML = '';
   pendingGoods.forEach((g, i)=>{
     const row = document.createElement('div');
@@ -3059,6 +3148,7 @@ function renderGoodsRows(){
   });
 }
 document.getElementById('goods-add-btn').addEventListener('click', ()=>{
+  if(!isPremium()){ openPremiumModal('お金の管理'); return; }   // 有料機能
   if(pendingGoods.length >= MAX_GOODS) return;
   pendingGoods.push({name:'', price:null});
   renderGoodsRows();
@@ -3225,7 +3315,10 @@ document.getElementById('weather-row').addEventListener('click', e=>{
 document.getElementById('pin-row').addEventListener('click', e=>{
   const btn = e.target.closest('.pin-btn');
   if(!btn) return;
-  setPinSelected(btn.dataset.emoji || '');
+  const emoji = btn.dataset.emoji || '';
+  // 絵文字ピンはプレミアム。無料は推しカラーのハートのみ
+  if(emoji && !isPremium()){ openPremiumModal('マップピンの絵文字'); return; }
+  setPinSelected(emoji);
 });
 
 function closeModal(){
@@ -3244,7 +3337,8 @@ function renderPhotoRow(){
   const row = document.getElementById('photo-row');
   row.innerHTML = '';
   const label = document.getElementById('photo-count-label');
-  if(label) label.textContent = `（${pendingPhotos.length}/${MAX_PHOTOS}枚）`;
+  const photoLimit = isPremium() ? MAX_PHOTOS : 1;   // 無料は1枚／プレミアムは複数
+  if(label) label.textContent = isPremium() ? `（${pendingPhotos.length}/${MAX_PHOTOS}枚）` : `（${pendingPhotos.length}/1枚）`;
 
   pendingPhotos.forEach((ph, i)=>{
     const wrap = document.createElement('div');
@@ -3262,12 +3356,20 @@ function renderPhotoRow(){
     row.appendChild(wrap);
   });
 
-  if(pendingPhotos.length < MAX_PHOTOS){
+  if(pendingPhotos.length < photoLimit){
     const addBtn = document.createElement('div');
     addBtn.className = 'photo-add';
     addBtn.innerHTML = `<span>📷</span>`;
     addBtn.addEventListener('click', handlePhotoAddClick);
     row.appendChild(addBtn);
+  } else if(!isPremium()){
+    // 無料は1枚まで。2枚目以降は🔒でプレミアム案内へ
+    const lock = document.createElement('div');
+    lock.className = 'photo-add';
+    lock.title = '写真の複数枚はプレミアム機能です';
+    lock.innerHTML = `<span>🔒</span>`;
+    lock.addEventListener('click', ()=>openPremiumModal('写真の複数枚'));
+    row.appendChild(lock);
   }
 }
 
@@ -3282,7 +3384,8 @@ function handlePhotoAddClick(){
 
 // 永続の写真入力（一度だけ処理を登録）／Canvasで自動圧縮して容量オーバーを防ぐ
 document.getElementById('visit-photo-input').addEventListener('change', e=>{
-  const files = Array.from(e.target.files).slice(0, MAX_PHOTOS - pendingPhotos.length);
+  const photoLimit = isPremium() ? MAX_PHOTOS : 1;   // 無料は1枚まで
+  const files = Array.from(e.target.files).slice(0, photoLimit - pendingPhotos.length);
   if(!files.length){ e.target.value=''; return; }
   let loaded = 0;
   const done = ()=>{ loaded++; if(loaded===files.length) renderPhotoRow(); };
@@ -3760,7 +3863,7 @@ function renderRecordsPanel(){
     const hasSetlist = (r.setlist||[]).filter(s=>s&&s.trim()).length > 0;
     return `<div class="record-card record-edit-tap" data-venue="${v.id}" data-uid="${uid}" data-date="${r.date||''}">
       <div class="record-date">📅 ${r.date||'日付未記録'}${r.weather?' '+WEATHER_ICON[r.weather]:''}<span class="record-edit-hint">✏️ タップで編集</span></div>
-      <div class="record-venue-name">${TYPE_ICON[v.type]} ${v.name}${artist?`<span class="record-venue-artist">【${artist}】</span>`:''}</div>
+      <div class="record-venue-name">${r.pinEmoji ? r.pinEmoji+' ' : '<span style="color:var(--accent)">&#9829;</span> '}${TYPE_ICON[v.type]} ${v.name}${artist?`<span class="record-venue-artist">【${artist}】</span>`:''}</div>
       <div class="record-venue-meta">${v.pref} · ${TYPE_LABEL[v.type]}${tour?` / ${tour}`:''}</div>
       ${photos.length ? `<div class="record-photos-row">${photos.slice(0,6).map((p,i)=>`<img class="record-photo" src="${p}" data-venue="${v.id}" data-uid="${uid}" data-idx="${i}">`).join('')}</div>` : ''}
       <div class="record-card-actions">
@@ -3947,6 +4050,7 @@ document.getElementById('ranking-tabs').addEventListener('click', e=>{
 });
 
 document.getElementById('btn-open-ranking').addEventListener('click', ()=>{
+  if(!isPremium()){ openPremiumModal('ランキング'); return; }   // 有料機能
   renderRankingPanel();
   document.getElementById('ranking-overlay').classList.remove('hidden');
 });
@@ -3964,6 +4068,8 @@ let tabSwitching = false; // タブ切替中フラグ（誤クローズ防止）
 
 function switchTab(tab){
   if(activeTab === tab) return;
+  // ランキングはプレミアム機能。無料の人にはタブ移動せず案内
+  if(tab === 'ranking' && !isPremium()){ openPremiumModal('ランキング'); return; }
   activeTab = tab;
   tabSwitching = true;
   setTimeout(()=>{ tabSwitching = false; }, 400);
@@ -4221,7 +4327,11 @@ function renderFontChips(){
     `<button type="button" class="font-chip${o.key===cur?' active':''}" data-font="${o.key}" style="font-family:${o.stack.replace(/"/g,'&quot;')}">${o.label}</button>`
   ).join('');
   wrap.querySelectorAll('.font-chip').forEach(el=>{
-    el.addEventListener('click', ()=> setAppFont(el.dataset.font));
+    el.addEventListener('click', ()=>{
+      // デフォルト以外のフォントはプレミアム機能
+      if(el.dataset.font !== 'default' && !isPremium()){ openPremiumModal('フォントの変更'); return; }
+      setAppFont(el.dataset.font);
+    });
   });
 }
 
@@ -4242,9 +4352,51 @@ document.getElementById('btn-settings').addEventListener('click', ()=>{
   renderThemeSwatches();
   renderFontChips();
   renderAutoBackupList();
+  updatePremiumSection();
+  renderCustomMessages();
   const ci = document.getElementById('theme-color-input');
   if(ci) ci.value = getThemeColor();
 });
+
+// 自分のメッセージ：一覧表示・追加・削除
+function renderCustomMessages(){
+  const list = document.getElementById('custom-msg-list');
+  if(!list) return;
+  const msgs = loadCustomMessages();
+  if(!msgs.length){
+    list.innerHTML = '<div style="font-size:0.78rem;color:#999;padding:4px 2px">まだありません。上の欄から追加できます。</div>';
+    return;
+  }
+  list.innerHTML = '';
+  msgs.forEach((m, i)=>{
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e6e6f0;border-radius:10px;padding:8px 10px;margin-bottom:6px';
+    const txt = document.createElement('div');
+    txt.style.cssText = 'flex:1;min-width:0;font-size:0.85rem;color:#333;word-break:break-word';
+    txt.textContent = m;
+    const del = document.createElement('button');
+    del.textContent = '✕';
+    del.type = 'button';
+    del.style.cssText = 'flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:#f0ecff;border:none;color:#7c3aed;font-size:0.7rem;cursor:pointer;-webkit-tap-highlight-color:transparent';
+    del.addEventListener('click', ()=>{
+      const arr = loadCustomMessages(); arr.splice(i,1); saveCustomMessages(arr); renderCustomMessages();
+    });
+    row.appendChild(txt); row.appendChild(del); list.appendChild(row);
+  });
+}
+function addCustomMessage(){
+  const input = document.getElementById('custom-msg-input');
+  const v = (input.value||'').trim();
+  if(!v) return;
+  const arr = loadCustomMessages();
+  if(arr.length >= 50){ alert('メッセージは50件までです'); return; }
+  arr.push(v); saveCustomMessages(arr);
+  input.value = '';
+  renderCustomMessages();
+  if(typeof showMiniToast==='function') showMiniToast('💬 メッセージを追加しました');
+}
+document.getElementById('custom-msg-add').addEventListener('click', addCustomMessage);
+document.getElementById('custom-msg-input').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addCustomMessage(); } });
 document.getElementById('backup-close').addEventListener('click', ()=>{
   document.getElementById('backup-overlay').classList.add('hidden');
 });
@@ -4255,6 +4407,140 @@ document.getElementById('backup-overlay').addEventListener('click', e=>{
   if(e.target===document.getElementById('backup-overlay'))
     document.getElementById('backup-overlay').classList.add('hidden');
 });
+
+/* ===== プレミアム（有料機能の開放） ===== */
+// 購入者のみ true。STEP3でCloudflare Workerによるキー照合に置き換える。
+// 有料化前（PAYWALL_ACTIVE=false）は全員すべて無料で使える。
+function isPremium(){
+  if(!PAYWALL_ACTIVE) return true;   // 無料公開期間中は全機能を開放
+  return localStorage.getItem('premium_unlocked') === '1';
+}
+// 既存ユーザー優遇：有料化より前から使っている人には自動でプレミアムを付与（一度だけ）
+function grandfatherExistingUsers(){
+  if(!PAYWALL_ACTIVE) return;                              // 無料期間中は何もしない
+  if(localStorage.getItem('grandfather_checked')) return;  // 判定は一度だけ
+  if(localStorage.getItem('premium_unlocked') === '1'){ localStorage.setItem('grandfather_checked','1'); return; }
+  // 「以前から使っている人」かを判定（前バージョンを開いた or 既にデータがある）
+  let existing = !!stored;   // stored=以前のapp_version。新規はnull
+  try{
+    if(!existing){
+      const lv = localStorage.getItem('live_visited');
+      if(lv && lv!=='{}' && lv!=='[]' && lv!=='null') existing = true;
+      if(localStorage.getItem('oshi_data')) existing = true;
+      if(localStorage.getItem('theme_color')) existing = true;
+      if(localStorage.getItem('app_font')) existing = true;
+      const cv = localStorage.getItem('custom_venues');
+      if(cv && cv!=='[]') existing = true;
+    }
+  }catch(e){}
+  if(existing){
+    localStorage.setItem('premium_unlocked','1');
+    localStorage.setItem('premium_grandfathered','1');
+  }
+  localStorage.setItem('grandfather_checked','1');
+}
+grandfatherExistingUsers();
+function setPremiumUnlocked(on){
+  if(on) localStorage.setItem('premium_unlocked','1');
+  else localStorage.removeItem('premium_unlocked');
+  applyPremiumState();
+}
+// プレミアム状態の変化を画面に反映（再描画が必要な箇所）
+function applyPremiumState(){
+  if(typeof renderPhotoRow === 'function' && document.getElementById('photo-row')) renderPhotoRow();
+  updatePremiumSection();
+}
+// 設定モーダルのプレミアム欄の表示を更新
+function updatePremiumSection(){
+  const badge = document.getElementById('premium-status-badge');
+  if(badge){ badge.textContent = isPremium() ? '（有効✨）' : '（未購入）'; badge.style.color = isPremium() ? '#2bb673' : '#999'; }
+  const t = document.getElementById('premium-test-toggle');
+  if(t) t.checked = isPremium();
+}
+// プレミアム案内モーダルを開く（featureは「写真の複数枚」等の機能名）
+function openPremiumModal(feature){
+  const d = document.getElementById('premium-desc');
+  if(d) d.textContent = feature ? `「${feature}」はプレミアム機能です✨` : 'プレミアムで使える機能です✨';
+  const ki = document.getElementById('premium-key-input');
+  if(ki) ki.value = '';
+  document.getElementById('premium-overlay').classList.remove('hidden');
+}
+// ライセンス用のCloudflare WorkerのURL
+const LICENSE_API = 'https://ricor-license.cracion89.workers.dev';
+document.getElementById('premium-open-btn').addEventListener('click', ()=>openPremiumModal());
+document.getElementById('premium-close').addEventListener('click', ()=>document.getElementById('premium-overlay').classList.add('hidden'));
+document.getElementById('premium-overlay').addEventListener('click', e=>{
+  if(e.target===document.getElementById('premium-overlay')) document.getElementById('premium-overlay').classList.add('hidden');
+});
+document.getElementById('premium-activate').addEventListener('click', async ()=>{
+  const input = document.getElementById('premium-key-input');
+  const btn = document.getElementById('premium-activate');
+  const k = (input.value||'').trim().toUpperCase();
+  if(!k){ alert('ライセンスキーを入力してください'); return; }
+  // 開発用ショートカット（ローンチ前に削除）
+  if(k === 'TEST-UNLOCK'){
+    setPremiumUnlocked(true);
+    document.getElementById('premium-overlay').classList.add('hidden');
+    if(typeof showMiniToast==='function') showMiniToast('✨ プレミアムを解放しました');
+    return;
+  }
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '確認中…';
+  try{
+    const r = await fetch(LICENSE_API + '/verify?key=' + encodeURIComponent(k));
+    const d = await r.json();
+    if(d && d.valid){
+      localStorage.setItem('premium_key', k);
+      setPremiumUnlocked(true);
+      document.getElementById('premium-overlay').classList.add('hidden');
+      if(typeof showMiniToast==='function') showMiniToast('✨ プレミアムを解放しました');
+    } else {
+      alert('ライセンスキーが正しくありません。\nご購入時に表示・保存したキーをご確認ください。');
+    }
+  }catch(e){
+    alert('通信エラーが発生しました。電波の良い場所で、もう一度お試しください。');
+  }finally{
+    btn.disabled = false; btn.textContent = orig;
+  }
+});
+document.getElementById('premium-test-toggle').addEventListener('change', e=>{
+  setPremiumUnlocked(e.target.checked);
+});
+updatePremiumSection();
+
+// 購入完了モーダル
+function showPurchaseSuccess(key){
+  const box = document.getElementById('purchase-key-box');
+  if(box) box.textContent = key || '';
+  document.getElementById('purchase-success-overlay').classList.remove('hidden');
+}
+document.getElementById('purchase-success-close').addEventListener('click', ()=>{
+  document.getElementById('purchase-success-overlay').classList.add('hidden');
+});
+document.getElementById('purchase-key-copy').addEventListener('click', ()=>{
+  const k = document.getElementById('purchase-key-box').textContent || '';
+  if(navigator.clipboard){ navigator.clipboard.writeText(k).then(()=>{ if(typeof showMiniToast==='function') showMiniToast('📋 キーをコピーしました'); }); }
+});
+
+// 購入完了でアプリに戻ってきた時（?activate=セッションID）→ キー発行して解放
+(async function handleActivation(){
+  let sid;
+  try{ sid = new URLSearchParams(location.search).get('activate'); }catch(e){ return; }
+  if(!sid) return;
+  try{
+    const r = await fetch(LICENSE_API + '/issue?session_id=' + encodeURIComponent(sid));
+    const d = await r.json();
+    if(d && d.valid && d.key){
+      localStorage.setItem('premium_key', d.key);
+      setPremiumUnlocked(true);
+      showPurchaseSuccess(d.key);
+    } else {
+      console.warn('activation failed', d);
+    }
+  }catch(e){ console.warn('activation error', e); }
+  // URLから ?activate を消す（再読込での二重実行を防ぐ）
+  try{ history.replaceState(null, '', location.origin + location.pathname); }catch(e){}
+})();
 /* ===== 自動バックアップ（案A）＆ 催促リマインド（案B） ===== */
 const AUTO_BK_KEEP = 2;     // 直近2日分を保持
 const REMIND_DAYS  = 7;     // この日数バックアップしていなければ催促
@@ -4390,6 +4676,7 @@ document.getElementById('bk-reminder-close')?.addEventListener('click', ()=>{
 });
 
 document.getElementById('backup-export').addEventListener('click', ()=>{
+  if(!isPremium()){ openPremiumModal('バックアップ（データの書き出し）'); return; }   // 有料機能
   localStorage.setItem('last_export_at', todayStr());   // 催促リマインドの基準を更新
   document.getElementById('bk-reminder')?.classList.add('hidden');
   const oshiData = loadOshiData();
@@ -4410,6 +4697,7 @@ document.getElementById('backup-export').addEventListener('click', ()=>{
   URL.revokeObjectURL(url);
 });
 document.getElementById('backup-import-btn').addEventListener('click', ()=>{
+  if(!isPremium()){ openPremiumModal('バックアップ（データの復元）'); return; }   // 有料機能
   document.getElementById('backup-import-input').click();
 });
 document.getElementById('backup-import-input').addEventListener('change', e=>{
