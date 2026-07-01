@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-136';
+const APP_VERSION = '20260531-137';
 // ★有料化スイッチ：false=全員すべて無料（無料公開期間）／true=有料化（既存ユーザーは自動で無料優遇）
 const PAYWALL_ACTIVE = false;
 const stored = localStorage.getItem('app_version');
@@ -3863,7 +3863,7 @@ function renderRecordsPanel(){
     const hasSetlist = (r.setlist||[]).filter(s=>s&&s.trim()).length > 0;
     return `<div class="record-card record-edit-tap" data-venue="${v.id}" data-uid="${uid}" data-date="${r.date||''}">
       <div class="record-date">📅 ${r.date||'日付未記録'}${r.weather?' '+WEATHER_ICON[r.weather]:''}<span class="record-edit-hint">✏️ タップで編集</span></div>
-      <div class="record-venue-name">${r.pinEmoji ? r.pinEmoji+' ' : '<span style="color:var(--accent)">&#9829;</span> '}${TYPE_ICON[v.type]} ${v.name}${artist?`<span class="record-venue-artist">【${artist}】</span>`:''}</div>
+      <div class="record-venue-name">${r.pinEmoji ? r.pinEmoji+' ' : '<span style="color:var(--accent)">&#9829;</span> '}${v.name}${artist?`<span class="record-venue-artist">【${artist}】</span>`:''}</div>
       <div class="record-venue-meta">${v.pref} · ${TYPE_LABEL[v.type]}${tour?` / ${tour}`:''}</div>
       ${photos.length ? `<div class="record-photos-row">${photos.slice(0,6).map((p,i)=>`<img class="record-photo" src="${p}" data-venue="${v.id}" data-uid="${uid}" data-idx="${i}">`).join('')}</div>` : ''}
       <div class="record-card-actions">
