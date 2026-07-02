@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 // アプリバージョン：更新のたびに番号を上げる
-const APP_VERSION = '20260531-137';
+const APP_VERSION = '20260531-142';
 // ★有料化スイッチ：false=全員すべて無料（無料公開期間）／true=有料化（既存ユーザーは自動で無料優遇）
 const PAYWALL_ACTIVE = false;
 const stored = localStorage.getItem('app_version');
@@ -409,6 +409,9 @@ if (stored !== APP_VERSION) {
   .theme-swatch.active{border-color:#1a1a2a;box-shadow:0 0 0 2px #fff inset,0 2px 8px rgba(0,0,0,0.25)}
   .theme-custom{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:0.82rem;font-weight:700;color:#444;background:#fff;border:1px solid #ece7fb;border-radius:10px;padding:8px 12px;cursor:pointer}
   .theme-custom input[type=color]{width:46px;height:32px;border:none;background:none;padding:0;cursor:pointer}
+  .msg-mode-row{display:flex;gap:8px;margin-bottom:8px}
+  .msg-mode-btn{flex:1;padding:9px 8px;border-radius:10px;border:2px solid #d0d0d8;background:#fff;color:#555;font-size:0.82rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.12s}
+  .msg-mode-btn.active{border-color:var(--accent);background:#f0ecff;color:#4c1d95}
   .font-chips{display:flex;flex-wrap:wrap;gap:8px}
   .font-chip{padding:9px 14px;border-radius:12px;border:2px solid #d0d0d8;background:#fff;color:#333;font-size:0.92rem;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 0.12s}
   .font-chip.active{border-color:#7c3aed;background:#f0ecff;color:#4c1d95;font-weight:700}
@@ -1060,8 +1063,13 @@ if (stored !== APP_VERSION) {
     </div>
 
     <div class="theme-section">
-      <div class="theme-title">💬 自分のメッセージ</div>
-      <div class="theme-sub">推しからの言葉に、自分で考えたメッセージも追加できます（ホームにランダムで表示）。</div>
+      <div class="theme-title">💬 吹き出しのメッセージ</div>
+      <div class="theme-sub">吹き出しに出る言葉に、自分で考えたメッセージも追加できます。</div>
+      <div class="msg-mode-row">
+        <button type="button" class="msg-mode-btn" data-mode="mix">ミックス</button>
+        <button type="button" class="msg-mode-btn" data-mode="custom_only">💕 入力した言葉のみ</button>
+      </div>
+      <div class="theme-sub" id="msg-mode-hint" style="margin-top:-2px;margin-bottom:10px"></div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <input type="text" id="custom-msg-input" placeholder="例：今日もおつかれさま！" maxlength="60" style="flex:1;min-width:0;padding:10px 12px;border:2px solid #d0d0d8;border-radius:10px;font-size:16px;background:#fff;color:#333">
         <button id="custom-msg-add" type="button" style="flex:0 0 auto;background:linear-gradient(135deg,var(--accent-light),var(--accent));color:var(--accent-text);border:none;border-radius:10px;font-weight:700;font-size:0.85rem;padding:0 16px;cursor:pointer;-webkit-tap-highlight-color:transparent">追加</button>
@@ -1110,7 +1118,9 @@ if (stored !== APP_VERSION) {
       <li>💾 バックアップ（データの書き出し・復元）</li>
       <li>🅰️ フォント変更・🏆 ランキング</li>
     </ul>
-    <div style="background:#fff4fa;border:1px dashed #f0aecb;border-radius:10px;padding:10px 12px;font-size:0.8rem;color:#9a6a86;margin-bottom:12px">💎 ¥150 買い切り（近日提供予定）。一度購入すれば、機種変更後もキーで引き継げます。</div>
+    <button id="premium-buy-btn" type="button" style="display:none;width:100%;background:linear-gradient(135deg,var(--accent-light),var(--accent));color:var(--accent-text);border:none;border-radius:12px;font-weight:800;font-size:1rem;padding:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-bottom:6px">✨ ¥150 で購入して解放する</button>
+    <div id="premium-buy-note" style="display:none;font-size:0.72rem;color:#999;text-align:center;margin-bottom:12px">💎 買い切り¥150。一度購入すれば、機種変更後もキーで引き継げます。</div>
+    <div id="premium-free-note" style="background:#fff4fa;border:1px dashed #f0aecb;border-radius:10px;padding:10px 12px;font-size:0.82rem;color:#9a6a86;margin-bottom:12px">🎁 現在は<b>お試し無料公開中</b>！すべての機能を無料でお使いいただけます。</div>
     <label class="cv-label">ライセンスキーをお持ちの方</label>
     <input class="cv-input" type="text" id="premium-key-input" placeholder="キーを入力" autocapitalize="characters">
     <div class="cv-actions">
@@ -1418,6 +1428,7 @@ const VENUES_CLEAN = [
   {id:14, name:'大阪城ホール', lat:34.6873, lng:135.5301, pref:'大阪府', type:'arena', cap:16000, seat:'https://www.osaka-johall.com/'},
   {id:15, name:'横浜BUNTAI', lat:35.4440, lng:139.6380, pref:'神奈川県', type:'arena', cap:10000, seat:'https://yokohama-buntai.jp/'},
   {id:16, name:'マリンメッセ福岡Aホール', lat:33.6073, lng:130.4021, pref:'福岡県', type:'arena', cap:15000, seat:'https://www.marinemesse.or.jp/'},
+  {id:503, name:'セキスイハイムスーパーアリーナ', lat:38.3375, lng:140.9531, pref:'宮城県', type:'arena', cap:7000, seat:'https://www.mspf.jp/grande21/index.php?action=sisetu_shoukai_arena'},
   {id:17, name:'インテックス大阪', lat:34.6383, lng:135.4217, pref:'大阪府', type:'arena', cap:14000, seat:'https://www.intex-osaka.com/jp/'},
   {id:18, name:'幕張メッセ国際展示場', lat:35.6480, lng:140.0360, pref:'千葉県', type:'arena', cap:15000, seat:'https://www.m-messe.co.jp/'},
   {id:19, name:'ゼビオアリーナ仙台', lat:38.2303, lng:140.8870, pref:'宮城県', type:'arena', cap:8000, seat:'https://xebio-arena-sendai.jp/'},
@@ -1935,6 +1946,9 @@ function loadCustomMessages(){
   catch{ return []; }
 }
 function saveCustomMessages(arr){ try{ localStorage.setItem('custom_messages', JSON.stringify(arr)); }catch(e){} }
+// メッセージ表示モード：'mix'=デフォルト＋自分の言葉をランダム／'custom_only'=自分の言葉だけ
+function getMsgMode(){ return localStorage.getItem('msg_mode') || 'mix'; }
+function setMsgMode(m){ try{ localStorage.setItem('msg_mode', m); }catch(e){} }
 function getOshiMessage(){
   const h = new Date().getHours();
   let timeKey;
@@ -1944,7 +1958,12 @@ function getOshiMessage(){
   else timeKey='night';
   const base = MESSAGES[timeKey] || [];
   const custom = loadCustomMessages();
-  const pool = custom.length ? base.concat(custom) : base;
+  let pool;
+  if(getMsgMode()==='custom_only' && custom.length){
+    pool = custom;                                   // 自分の言葉だけ
+  } else {
+    pool = custom.length ? base.concat(custom) : base; // ミックス（自分の言葉が無い時もこちら）
+  }
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -4354,8 +4373,24 @@ document.getElementById('btn-settings').addEventListener('click', ()=>{
   renderAutoBackupList();
   updatePremiumSection();
   renderCustomMessages();
+  renderMsgMode();
   const ci = document.getElementById('theme-color-input');
   if(ci) ci.value = getThemeColor();
+});
+
+// メッセージ表示モードの選択UI
+function renderMsgMode(){
+  const mode = getMsgMode();
+  document.querySelectorAll('.msg-mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
+  const hint = document.getElementById('msg-mode-hint');
+  if(hint){
+    hint.textContent = mode==='custom_only'
+      ? '※ 自分で追加した言葉だけを表示します（未登録の時はデフォルトの言葉が出ます）。'
+      : '※ デフォルトの言葉と自分の言葉が、ランダムで表示されます。';
+  }
+}
+document.querySelectorAll('.msg-mode-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{ setMsgMode(btn.dataset.mode); renderMsgMode(); });
 });
 
 // 自分のメッセージ：一覧表示・追加・削除
@@ -4463,10 +4498,20 @@ function openPremiumModal(feature){
   if(d) d.textContent = feature ? `「${feature}」はプレミアム機能です✨` : 'プレミアムで使える機能です✨';
   const ki = document.getElementById('premium-key-input');
   if(ki) ki.value = '';
+  // 有料化スイッチがONの時だけ「購入」ボタンを表示（無料期間中は無料公開の案内）
+  const buyBtn = document.getElementById('premium-buy-btn');
+  const buyNote = document.getElementById('premium-buy-note');
+  const freeNote = document.getElementById('premium-free-note');
+  if(buyBtn) buyBtn.style.display = PAYWALL_ACTIVE ? '' : 'none';
+  if(buyNote) buyNote.style.display = PAYWALL_ACTIVE ? '' : 'none';
+  if(freeNote) freeNote.style.display = PAYWALL_ACTIVE ? 'none' : '';
   document.getElementById('premium-overlay').classList.remove('hidden');
 }
 // ライセンス用のCloudflare WorkerのURL
 const LICENSE_API = 'https://ricor-license.cracion89.workers.dev';
+// Stripeの支払いリンク（★本番化時に本番モードのリンクへ差し替える）
+const PAYMENT_LINK = 'https://buy.stripe.com/test_eVq00j0Z34iC7v3eIv1ck00';
+document.getElementById('premium-buy-btn').addEventListener('click', ()=>{ location.href = PAYMENT_LINK; });
 document.getElementById('premium-open-btn').addEventListener('click', ()=>openPremiumModal());
 document.getElementById('premium-close').addEventListener('click', ()=>document.getElementById('premium-overlay').classList.add('hidden'));
 document.getElementById('premium-overlay').addEventListener('click', e=>{
